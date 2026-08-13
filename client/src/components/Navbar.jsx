@@ -1,163 +1,182 @@
-import { ShoppingBag, Menu, X } from "lucide-react";
+import {
+  Menu,
+  ShoppingCart,
+  X,
+} from "lucide-react";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 function Navbar() {
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <>
-      <header className="fixed left-0 top-0 z-50 w-full">
+    <header className="fixed left-0 top-0 z-50 w-full border-b border-white/10 bg-[#050505]/80 backdrop-blur-xl">
 
-        <div className="mx-auto max-w-[1400px] px-5 py-5 sm:px-8">
+      <nav className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
 
-          <nav className="flex items-center justify-between">
+        {/* ================= LOGO ================= */}
 
-            {/* Logo */}
+        <a
+          href="/"
+          className="text-xl font-black tracking-[-0.06em] text-white"
+        >
+          NEXA<span className="text-[#00E5FF]">TECH</span>
+        </a>
 
-            <a
-              href="/"
-              className="group flex items-center gap-3"
-            >
 
-              <span className="flex h-8 w-8 items-center justify-center bg-white text-black transition group-hover:bg-[#00E5FF]">
-                <span className="text-sm font-black">
-                  N
-                </span>
-              </span>
+        {/* ================= DESKTOP NAV ================= */}
 
-              <span className="text-lg font-bold tracking-[-0.04em] text-white">
-                nexatech
-              </span>
+        <div className="hidden items-center gap-8 md:flex">
 
-            </a>
+          <a
+            href="/"
+            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
+          >
+            Home
+          </a>
 
-            {/* Desktop Navigation */}
+          <a
+            href="/products"
+            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
+          >
+            Products
+          </a>
 
-            <div className="hidden items-center gap-8 md:flex">
+          <a
+            href="/#categories"
+            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
+          >
+            Categories
+          </a>
 
-              <a
-                href="/products"
-                className="text-sm text-gray-400 transition hover:text-white"
-              >
-                Products
-              </a>
+          <a
+            href="/#ai"
+            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
+          >
+            AI
+          </a>
 
-              <a
-                href="#categories"
-                className="text-sm text-gray-400 transition hover:text-white"
-              >
-                Categories
-              </a>
-
-              <a
-                href="#ai"
-                className="text-sm text-gray-400 transition hover:text-white"
-              >
-                AI
-              </a>
-
-              <a
-                href="#about"
-                className="text-sm text-gray-400 transition hover:text-white"
-              >
-                About
-              </a>
-
-            </div>
-
-            {/* Right */}
-
-            <div className="flex items-center gap-3">
-
-              <a
-                href="/cart"
-                className="group flex items-center gap-2 border border-white/10 px-4 py-2.5 text-sm text-white transition hover:border-white/30"
-              >
-
-                <ShoppingBag
-                  size={16}
-                  className="transition group-hover:scale-110"
-                />
-
-                <span className="hidden sm:block">
-                  Cart
-                </span>
-
-              </a>
-
-              <button
-                onClick={() => setOpen(!open)}
-                className="flex h-10 w-10 items-center justify-center border border-white/10 md:hidden"
-              >
-                {open ? (
-                  <X size={18} />
-                ) : (
-                  <Menu size={18} />
-                )}
-              </button>
-
-            </div>
-
-          </nav>
+          <a
+            href="/#about"
+            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
+          >
+            About
+          </a>
 
         </div>
 
-      </header>
 
-      {/* Mobile Menu */}
+        {/* ================= RIGHT ACTIONS ================= */}
 
-      <AnimatePresence>
+        <div className="flex items-center gap-3">
 
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-[80px] z-40 border-y border-white/10 bg-[#050505] p-6 md:hidden"
+          {/* Cart */}
+
+          <a
+            href="/cart"
+            aria-label="Shopping cart"
+            className="group flex h-10 w-10 items-center justify-center border border-white/10 text-gray-400 transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
           >
+            <ShoppingCart
+              size={18}
+              className="transition group-hover:scale-110"
+            />
+          </a>
 
-            <div className="flex flex-col gap-6">
 
-              <a
-                href="/products"
-                onClick={() => setOpen(false)}
-                className="text-lg text-white"
-              >
-                Products
-              </a>
+          {/* Login */}
 
-              <a
-                href="#categories"
-                onClick={() => setOpen(false)}
-                className="text-lg text-white"
-              >
-                Categories
-              </a>
+          <a
+            href="/login"
+            className="hidden h-10 items-center border border-white/20 px-5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black sm:flex"
+          >
+            Login
+          </a>
 
-              <a
-                href="#ai"
-                onClick={() => setOpen(false)}
-                className="text-lg text-white"
-              >
-                AI
-              </a>
 
-              <a
-                href="#about"
-                onClick={() => setOpen(false)}
-                className="text-lg text-white"
-              >
-                About
-              </a>
+          {/* Mobile Menu */}
 
-            </div>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+            className="flex h-10 w-10 items-center justify-center border border-white/10 text-gray-400 transition hover:border-white/30 hover:text-white md:hidden"
+          >
+            {menuOpen ? (
+              <X size={19} />
+            ) : (
+              <Menu size={19} />
+            )}
+          </button>
 
-          </motion.div>
-        )}
+        </div>
 
-      </AnimatePresence>
-    </>
+      </nav>
+
+
+      {/* ================= MOBILE MENU ================= */}
+
+      {menuOpen && (
+        <div className="border-t border-white/10 bg-[#050505] md:hidden">
+
+          <div className="mx-auto flex max-w-[1400px] flex-col px-5 py-6">
+
+            <a
+              href="/"
+              onClick={() => setMenuOpen(false)}
+              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
+            >
+              Home
+            </a>
+
+            <a
+              href="/products"
+              onClick={() => setMenuOpen(false)}
+              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
+            >
+              Products
+            </a>
+
+            <a
+              href="/#categories"
+              onClick={() => setMenuOpen(false)}
+              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
+            >
+              Categories
+            </a>
+
+            <a
+              href="/#ai"
+              onClick={() => setMenuOpen(false)}
+              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
+            >
+              AI
+            </a>
+
+            <a
+              href="/#about"
+              onClick={() => setMenuOpen(false)}
+              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
+            >
+              About
+            </a>
+
+
+            {/* Mobile Login */}
+
+            <a
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              className="mt-5 flex items-center justify-center border border-[#00E5FF]/40 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-[#00E5FF] transition hover:bg-[#00E5FF] hover:text-black"
+            >
+              Login
+            </a>
+
+          </div>
+
+        </div>
+      )}
+
+    </header>
   );
 }
 

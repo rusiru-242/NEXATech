@@ -9,6 +9,8 @@ function Home() {
   return (
     <div className="min-h-screen bg-[#050505] text-white">
 
+      {/* ================= NAVBAR ================= */}
+
       <Navbar />
 
       <main>
@@ -27,7 +29,7 @@ function Home() {
               Trusted Technology
             </p>
 
-            <div className="grid grid-cols-2 gap-y-8 text-xl font-bold tracking-[-0.04em] text-gray-600 sm:grid-cols-4 lg:grid-cols-7">
+            <div className="grid grid-cols-2 gap-y-8 text-xl font-bold tracking-[-0.04em] text-gray-500 sm:grid-cols-4 lg:grid-cols-7">
 
               <span className="transition hover:text-white">
                 APPLE
@@ -78,9 +80,11 @@ function Home() {
 
             <h2 className="mt-5 text-5xl font-bold leading-[0.95] tracking-[-0.06em] sm:text-7xl">
               SHOP THE
+
               <span className="block text-gray-600">
                 FUTURE.
               </span>
+
             </h2>
 
           </div>
@@ -112,7 +116,9 @@ function Home() {
                     0{index + 1}
                   </span>
 
-                  <h3 className="text-3xl font-semibold tracking-[-0.04em] text-gray-300 transition group-hover:text-white sm:text-5xl">
+                  {/* Smaller Category Font */}
+
+                  <h3 className="text-2xl font-semibold tracking-[-0.04em] text-gray-300 transition group-hover:text-white sm:text-4xl">
                     {category}
                   </h3>
 
@@ -144,6 +150,7 @@ function Home() {
             <div className="mt-16 grid gap-12 sm:grid-cols-3">
 
               <div>
+
                 <p className="text-6xl font-bold tracking-[-0.06em] sm:text-7xl">
                   10K+
                 </p>
@@ -151,9 +158,11 @@ function Home() {
                 <p className="mt-3 text-sm text-gray-500">
                   Premium Products
                 </p>
+
               </div>
 
               <div>
+
                 <p className="text-6xl font-bold tracking-[-0.06em] sm:text-7xl">
                   50K+
                 </p>
@@ -161,9 +170,11 @@ function Home() {
                 <p className="mt-3 text-sm text-gray-500">
                   Happy Customers
                 </p>
+
               </div>
 
               <div>
+
                 <p className="text-6xl font-bold tracking-[-0.06em] sm:text-7xl">
                   4.9
                 </p>
@@ -171,6 +182,7 @@ function Home() {
                 <p className="mt-3 text-sm text-gray-500">
                   Average Rating
                 </p>
+
               </div>
 
             </div>
@@ -196,9 +208,11 @@ function Home() {
 
               <h2 className="mt-5 text-5xl font-bold tracking-[-0.06em] sm:text-7xl">
                 FEATURED
+
                 <span className="block text-gray-600">
                   PRODUCTS.
                 </span>
+
               </h2>
 
             </div>
@@ -261,9 +275,11 @@ function Home() {
 
                 <h2 className="mt-5 text-5xl font-bold leading-[0.9] tracking-[-0.07em] sm:text-7xl">
                   SHOPPING,
+
                   <span className="block text-gray-600">
                     REIMAGINED.
                   </span>
+
                 </h2>
 
               </div>
@@ -276,7 +292,10 @@ function Home() {
                   needs.
                 </p>
 
-                <button className="mt-8 border border-white/20 px-6 py-3 text-sm font-semibold transition hover:border-[#00E5FF] hover:text-[#00E5FF]">
+                <button
+                  type="button"
+                  className="mt-8 border border-white/20 px-6 py-3 text-sm font-semibold transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+                >
                   AI FEATURES — COMING SOON
                 </button>
 
@@ -305,9 +324,11 @@ function Home() {
 
               <h2 className="mt-5 text-5xl font-bold leading-[0.9] tracking-[-0.07em] sm:text-7xl">
                 BUILD YOUR
+
                 <span className="block text-gray-600">
                   PERFECT SETUP.
                 </span>
+
               </h2>
 
               <p className="mt-8 max-w-md text-base leading-7 text-gray-500">
@@ -372,8 +393,10 @@ function Home() {
 
             <div>
 
-              <p className="text-lg font-bold">
-                nexatech
+              {/* NEXATECH - FULL CAPITAL */}
+
+              <p className="text-lg font-bold tracking-tight">
+                NEXATECH
               </p>
 
               <p className="mt-2 text-xs text-gray-600">
@@ -383,7 +406,7 @@ function Home() {
             </div>
 
             <p className="text-xs text-gray-700">
-              © 2026 NexaTech. All rights reserved.
+              © 2026 NEXATECH. All rights reserved.
             </p>
 
           </div>
