@@ -138,7 +138,7 @@ function Hero() {
       {/* Bottom label */}
 
       <div className="absolute bottom-5 right-6 z-20 hidden text-[10px] uppercase tracking-[0.3em] text-gray-600 sm:right-8 md:block">
-        Scroll to explore
+        
       </div>
 
     </section>

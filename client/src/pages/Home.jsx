@@ -69,7 +69,7 @@ function Home() {
 
         <section
           id="categories"
-          className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8"
+          className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8 scroll-mt-20"
         >
 
           <div className="mb-16 max-w-3xl">
@@ -260,7 +260,7 @@ function Home() {
 
         <section
           id="ai"
-          className="border-y border-white/10"
+          className="border-y border-white/10 scroll-mt-20"
         >
 
           <div className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8">
@@ -311,7 +311,7 @@ function Home() {
 
         <section
           id="about"
-          className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8"
+          className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8 scroll-mt-20"
         >
 
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
