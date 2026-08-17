@@ -9,6 +9,7 @@ import Wishlist from "./pages/Wishlist";
 import Compare from "./pages/Compare";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Account from "./pages/Account";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -33,6 +34,7 @@ function App() {
         <Route path="/compare" element={<Compare />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/account" element={<Account />} />
 
         {/* Admin */}
         <Route path="/admin" element={<AdminDashboard />} />

@@ -5,20 +5,103 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    const email = formData.email.trim().toLowerCase();
+    const password = formData.password;
+
+    if (!email || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Invalid email or password."
+        );
+      }
+
+      // Save authentication data
+      localStorage.setItem("nexatech_token", data.token);
+      localStorage.setItem(
+        "nexatech_user",
+        JSON.stringify(data.user)
+      );
+
+      setSuccess("Login successful! Redirecting...");
+
+      setTimeout(() => {
+        navigate("/");
+      }, 800);
+    } catch (err) {
+      console.error("Login Error:", err);
+
+      setError(
+        err.message ||
+          "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
 
       {/* ================= AUTH NAVBAR ================= */}
       <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
-
         <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
 
-          {/* ================= LOGO ================= */}
+          {/* LOGO */}
           <Link
             to="/"
             className="text-xl font-black tracking-[-0.06em]"
@@ -27,7 +110,7 @@ function Login() {
             <span className="text-[#00E5FF]">TECH</span>
           </Link>
 
-          {/* ================= REGISTER BUTTON ================= */}
+          {/* REGISTER */}
           <Link
             to="/register"
             className="hidden h-10 items-center border border-white/20 px-5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black sm:flex"
@@ -35,31 +118,19 @@ function Login() {
             Register
           </Link>
 
-
-
-
-         
-
-
-
-
-
-
-
         </div>
-
       </header>
 
       {/* ================= MAIN ================= */}
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pb-16 pt-28">
 
-        {/* ================= BACKGROUND GLOW ================= */}
+        {/* BACKGROUND GLOW */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00e5ff]/[0.05] blur-[140px]" />
 
-        {/* ================= BACKGROUND GRID ================= */}
+        {/* BACKGROUND GRID */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:32px_32px]" />
 
-        {/* ================= LOGIN CONTAINER ================= */}
+        {/* LOGIN CONTAINER */}
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,7 +138,7 @@ function Login() {
           className="relative z-10 w-full max-w-md"
         >
 
-          {/* ================= HEADER ================= */}
+          {/* HEADER */}
           <div className="mb-8 text-center">
 
             <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-[#00e5ff]">
@@ -88,12 +159,29 @@ function Login() {
 
           </div>
 
-          {/* ================= LOGIN CARD ================= */}
+          {/* LOGIN CARD */}
           <div className="border border-white/10 bg-[#090909] p-6 shadow-2xl sm:p-8">
 
-            <form className="space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
 
-              {/* ================= EMAIL ================= */}
+              {/* ERROR */}
+              {error && (
+                <div className="border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+                  {error}
+                </div>
+              )}
+
+              {/* SUCCESS */}
+              {success && (
+                <div className="border border-[#00e5ff]/20 bg-[#00e5ff]/5 px-4 py-3 text-sm text-[#00e5ff]">
+                  {success}
+                </div>
+              )}
+
+              {/* EMAIL */}
               <div>
 
                 <label
@@ -112,7 +200,11 @@ function Login() {
 
                   <input
                     id="email"
+                    name="email"
                     type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    autoComplete="email"
                     placeholder="you@example.com"
                     className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/60 focus:bg-[#00e5ff]/[0.02]"
                   />
@@ -121,7 +213,7 @@ function Login() {
 
               </div>
 
-              {/* ================= PASSWORD ================= */}
+              {/* PASSWORD */}
               <div>
 
                 <div className="mb-2 flex items-center justify-between">
@@ -151,7 +243,11 @@ function Login() {
 
                   <input
                     id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    autoComplete="current-password"
                     placeholder="Enter your password"
                     className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-20 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/60 focus:bg-[#00e5ff]/[0.02]"
                   />
@@ -170,12 +266,16 @@ function Login() {
 
               </div>
 
-              {/* ================= REMEMBER ME ================= */}
+              {/* REMEMBER ME */}
               <div className="flex items-center gap-3">
 
                 <input
                   id="remember"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) =>
+                    setRememberMe(e.target.checked)
+                  }
                   className="h-3.5 w-3.5 accent-[#00e5ff]"
                 />
 
@@ -188,22 +288,25 @@ function Login() {
 
               </div>
 
-              {/* ================= SIGN IN ================= */}
+              {/* SIGN IN */}
               <button
                 type="submit"
-                className="group flex h-12 w-full items-center justify-center gap-3 bg-[#00e5ff] text-sm font-bold text-black transition hover:bg-white"
+                disabled={loading}
+                className="group flex h-12 w-full items-center justify-center gap-3 bg-[#00e5ff] text-sm font-bold text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Sign In
+                {loading ? "Signing In..." : "Sign In"}
 
-                <ArrowRight
-                  size={16}
-                  className="transition-transform group-hover:translate-x-1"
-                />
+                {!loading && (
+                  <ArrowRight
+                    size={16}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
               </button>
 
             </form>
 
-            {/* ================= DIVIDER ================= */}
+            {/* DIVIDER */}
             <div className="my-7 flex items-center gap-4">
 
               <div className="h-px flex-1 bg-white/10" />
@@ -216,23 +319,21 @@ function Login() {
 
             </div>
 
-            {/* ================= GOOGLE LOGIN ================= */}
+            {/* GOOGLE LOGIN */}
             <button
               type="button"
               className="flex h-12 w-full items-center justify-center gap-3 border border-white/10 bg-white/[0.02] text-xs font-semibold text-gray-400 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
             >
-
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-black">
                 G
               </span>
 
               Continue with Google
-
             </button>
 
           </div>
 
-          {/* ================= SECURITY ================= */}
+          {/* SECURITY */}
           <p className="mt-8 text-center text-[9px] uppercase tracking-[0.2em] text-gray-800">
             Secure · Private · NEXATECH
           </p>
