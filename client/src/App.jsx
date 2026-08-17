@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -20,6 +21,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
 
         {/* Customer */}
