@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Backend environment
+backend/.env
+
+# Frontend environment
+client/.env
+client/.env.*
+
+# Logs
+*.log
+logs/
+
+# Build files
+dist/
+build/
+
+# Vite
+.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp

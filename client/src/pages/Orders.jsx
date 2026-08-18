@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -8,6 +9,8 @@ import {
   XCircle,
   Loader2,
   ShoppingBag,
+  CreditCard,
+  CircleAlert,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 
@@ -57,6 +60,10 @@ function Orders() {
     }
   };
 
+  // ==========================================
+  // ORDER STATUS ICON
+  // ==========================================
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "delivered":
@@ -76,6 +83,10 @@ function Orders() {
     }
   };
 
+  // ==========================================
+  // ORDER STATUS STYLE
+  // ==========================================
+
   const getStatusStyle = (status) => {
     switch (status) {
       case "delivered":
@@ -90,10 +101,57 @@ function Orders() {
       case "cancelled":
         return "text-red-400 bg-red-400/10 border-red-400/20";
 
+      case "pending":
+        return "text-gray-400 bg-gray-400/10 border-gray-400/20";
+
       default:
         return "text-gray-400 bg-gray-400/10 border-gray-400/20";
     }
   };
+
+  // ==========================================
+  // PAYMENT STATUS ICON
+  // ==========================================
+
+  const getPaymentStatusIcon = (status) => {
+    switch (status) {
+      case "paid":
+        return <CheckCircle size={15} />;
+
+      case "failed":
+        return <XCircle size={15} />;
+
+      case "pending":
+        return <Clock size={15} />;
+
+      default:
+        return <CircleAlert size={15} />;
+    }
+  };
+
+  // ==========================================
+  // PAYMENT STATUS STYLE
+  // ==========================================
+
+  const getPaymentStatusStyle = (status) => {
+    switch (status) {
+      case "paid":
+        return "text-green-400 bg-green-400/10 border-green-400/20";
+
+      case "failed":
+        return "text-red-400 bg-red-400/10 border-red-400/20";
+
+      case "pending":
+        return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
+
+      default:
+        return "text-gray-400 bg-gray-400/10 border-gray-400/20";
+    }
+  };
+
+  // ==========================================
+  // FORMAT STATUS
+  // ==========================================
 
   const formatStatus = (status) => {
     if (!status) return "Pending";
@@ -101,13 +159,23 @@ function Orders() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  // ==========================================
+  // FORMAT DATE
+  // ==========================================
+
   const formatDate = (date) => {
+    if (!date) return "N/A";
+
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
   };
+
+  // ==========================================
+  // LOADING
+  // ==========================================
 
   if (loading) {
     return (
@@ -116,7 +184,11 @@ function Orders() {
 
         <div className="flex min-h-[70vh] items-center justify-center">
           <div className="flex items-center gap-3 text-gray-400">
-            <Loader2 className="animate-spin text-[#00E5FF]" size={24} />
+            <Loader2
+              className="animate-spin text-[#00E5FF]"
+              size={24}
+            />
+
             Loading your orders...
           </div>
         </div>
@@ -129,7 +201,11 @@ function Orders() {
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Header */}
+
+        {/* ==========================================
+            HEADER
+        ========================================== */}
+
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium uppercase tracking-[0.25em] text-[#00E5FF]">
             Your Orders
@@ -144,7 +220,10 @@ function Orders() {
           </p>
         </div>
 
-        {/* Error */}
+        {/* ==========================================
+            ERROR
+        ========================================== */}
+
         {error && (
           <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
             {error}
@@ -160,7 +239,10 @@ function Orders() {
           </div>
         )}
 
-        {/* Empty */}
+        {/* ==========================================
+            EMPTY
+        ========================================== */}
+
         {!error && orders.length === 0 && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-16 text-center">
             <ShoppingBag
@@ -173,8 +255,8 @@ function Orders() {
             </h2>
 
             <p className="mx-auto mt-2 max-w-md text-gray-400">
-              You haven't placed any orders yet. Start shopping and your
-              orders will appear here.
+              You haven't placed any orders yet. Start shopping and
+              your orders will appear here.
             </p>
 
             <Link
@@ -186,7 +268,10 @@ function Orders() {
           </div>
         )}
 
-        {/* Orders */}
+        {/* ==========================================
+            ORDERS
+        ========================================== */}
+
         {!error && orders.length > 0 && (
           <div className="space-y-5">
             {orders.map((order) => (
@@ -194,8 +279,13 @@ function Orders() {
                 key={order._id}
                 className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
               >
-                {/* Order Header */}
+
+                {/* ==========================================
+                    ORDER HEADER
+                ========================================== */}
+
                 <div className="flex flex-col gap-4 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+
                   <div>
                     <p className="text-xs uppercase tracking-wider text-gray-500">
                       Order ID
@@ -210,23 +300,32 @@ function Orders() {
                     </p>
                   </div>
 
+                  {/* ORDER STATUS */}
+
                   <div
                     className={`flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${getStatusStyle(
                       order.status
                     )}`}
                   >
                     {getStatusIcon(order.status)}
+
                     {formatStatus(order.status)}
                   </div>
                 </div>
 
-                {/* Products */}
+                {/* ==========================================
+                    PRODUCTS
+                ========================================== */}
+
                 <div className="divide-y divide-white/5">
                   {order.items?.map((item, index) => (
                     <div
                       key={`${order._id}-${item.product || index}`}
                       className="flex gap-4 p-5"
                     >
+
+                      {/* IMAGE */}
+
                       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black">
                         {item.image ? (
                           <img
@@ -244,6 +343,8 @@ function Orders() {
                         )}
                       </div>
 
+                      {/* PRODUCT INFO */}
+
                       <div className="min-w-0 flex-1">
                         <h3 className="font-medium text-white">
                           {item.name}
@@ -258,6 +359,8 @@ function Orders() {
                         </p>
                       </div>
 
+                      {/* ITEM TOTAL */}
+
                       <div className="text-right">
                         <p className="font-semibold text-white">
                           $
@@ -271,33 +374,64 @@ function Orders() {
                   ))}
                 </div>
 
-                {/* Footer */}
+                {/* ==========================================
+                    FOOTER
+                ========================================== */}
+
                 <div className="border-t border-white/10 bg-black/20 p-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="space-y-1 text-sm">
-                      <div className="flex gap-8 text-gray-500">
+
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+
+                    {/* ORDER INFORMATION */}
+
+                    <div className="space-y-3 text-sm">
+
+                      {/* PAYMENT METHOD */}
+
+                      <div className="flex items-center gap-8 text-gray-500">
                         <span>Payment</span>
-                        <span className="capitalize text-gray-300">
+
+                        <span className="flex items-center gap-2 text-gray-300">
+                          <CreditCard size={15} />
+
                           {order.paymentMethod === "cod"
                             ? "Cash on Delivery"
                             : "Card"}
                         </span>
                       </div>
 
-                      <div className="flex gap-8 text-gray-500">
+                      {/* PAYMENT STATUS */}
+
+                      <div className="flex items-center gap-8 text-gray-500">
                         <span>Payment Status</span>
-                        <span className="capitalize text-gray-300">
-                          {order.paymentStatus}
+
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${getPaymentStatusStyle(
+                            order.paymentStatus
+                          )}`}
+                        >
+                          {getPaymentStatusIcon(
+                            order.paymentStatus
+                          )}
+
+                          {formatStatus(
+                            order.paymentStatus
+                          )}
                         </span>
                       </div>
 
+                      {/* SHIPPING */}
+
                       <div className="flex gap-8 text-gray-500">
                         <span>Shipping</span>
+
                         <span className="text-gray-300">
                           {order.shippingAddress?.city || "N/A"}
                         </span>
                       </div>
                     </div>
+
+                    {/* TOTAL */}
 
                     <div className="text-left sm:text-right">
                       <p className="text-sm text-gray-500">
@@ -315,7 +449,10 @@ function Orders() {
           </div>
         )}
 
-        {/* Continue Shopping */}
+        {/* ==========================================
+            CONTINUE SHOPPING
+        ========================================== */}
+
         {!error && orders.length > 0 && (
           <div className="mt-8 text-center">
             <Link
@@ -326,9 +463,11 @@ function Orders() {
             </Link>
           </div>
         )}
+
       </main>
     </div>
   );
 }
 
 export default Orders;
+

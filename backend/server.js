@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
+
 const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -18,7 +19,7 @@ const app = express();
 connectDB();
 
 // ==============================
-// Middleware
+// CORS
 // ==============================
 app.use(
   cors({
@@ -27,6 +28,22 @@ app.use(
   })
 );
 
+// ==========================================================
+// STRIPE WEBHOOK
+// IMPORTANT:
+// This route MUST receive the raw request body.
+// It must be registered BEFORE express.json().
+// ==========================================================
+app.use(
+  "/api/payments/webhook",
+  express.raw({
+    type: "application/json",
+  })
+);
+
+// ==============================
+// Body Parsers
+// ==============================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -44,11 +61,35 @@ app.get("/", (req, res) => {
 // Authentication Routes
 // ==============================
 app.use("/api/auth", authRoutes);
+
+// ==============================
+// Customer Order Routes
+// ==============================
 app.use("/api/orders", orderRoutes);
+
+// ==============================
+// Product Routes
+// ==============================
 app.use("/api/products", productRoutes);
+
+// ==============================
+// Admin Routes
+// ==============================
 app.use("/api/admin", adminRoutes);
+
+// ==============================
+// Review Routes
+// ==============================
 app.use("/api/reviews", reviewRoutes);
+
+// ==============================
+// Payment Routes
+// ==============================
+// Includes:
+// POST /api/payments/create-checkout-session
+// POST /api/payments/webhook
 app.use("/api/payments", paymentRoutes);
+
 // ==============================
 // 404 Route
 // ==============================
