@@ -359,4 +359,168 @@ router.post(
   }
 );
 
+
+/*
+==================================================
+VERIFY STRIPE CHECKOUT SESSION
+GET /api/payments/verify-session/:sessionId
+==================================================
+*/
+
+router.get(
+  "/verify-session/:sessionId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+
+      if (!sessionId) {
+        return res.status(400).json({
+          success: false,
+          message: "Stripe session ID is required.",
+        });
+      }
+
+      // Retrieve session directly from Stripe
+      const session =
+        await stripe.checkout.sessions.retrieve(
+          sessionId
+        );
+
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: "Stripe checkout session not found.",
+        });
+      }
+
+      const orderId =
+        session.metadata?.orderId;
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Order ID not found in Stripe session.",
+        });
+      }
+
+      // Make sure this order belongs to logged-in user
+      const order = await Order.findOne({
+        _id: orderId,
+        user: req.user._id,
+      });
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found.",
+        });
+      }
+
+      /*
+      ==========================================
+      VERIFY PAYMENT STATUS
+      ==========================================
+      */
+
+      if (
+        session.payment_status === "paid"
+      ) {
+        order.paymentStatus = "paid";
+
+        if (
+          order.status === "pending"
+        ) {
+          order.status = "processing";
+        }
+
+        order.stripeSessionId =
+          session.id;
+
+        await order.save();
+
+        console.log(
+          "=========================================="
+        );
+        console.log(
+          "STRIPE PAYMENT VERIFIED"
+        );
+        console.log(
+          `Order ID: ${order._id}`
+        );
+        console.log(
+          `Session ID: ${session.id}`
+        );
+        console.log(
+          "Payment Status: paid"
+        );
+        console.log(
+          `Order Status: ${order.status}`
+        );
+        console.log(
+          "=========================================="
+        );
+
+        return res.status(200).json({
+          success: true,
+          verified: true,
+          paymentStatus: "paid",
+          orderStatus: order.status,
+          order: {
+            _id: order._id,
+            total: order.total,
+            paymentMethod:
+              order.paymentMethod,
+            paymentStatus:
+              order.paymentStatus,
+            status: order.status,
+            stripeSessionId:
+              order.stripeSessionId,
+          },
+        });
+      }
+
+      /*
+      ==========================================
+      PAYMENT NOT COMPLETED
+      ==========================================
+      */
+
+      return res.status(200).json({
+        success: true,
+        verified: false,
+        paymentStatus:
+          session.payment_status ||
+          "unpaid",
+        orderStatus: order.status,
+        order: {
+          _id: order._id,
+          total: order.total,
+          paymentMethod:
+            order.paymentMethod,
+          paymentStatus:
+            order.paymentStatus,
+          status: order.status,
+          stripeSessionId:
+            order.stripeSessionId,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Stripe Session Verification Error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          "Unable to verify Stripe payment.",
+      });
+    }
+  }
+);
+
+
 module.exports = router;
