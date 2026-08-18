@@ -171,9 +171,16 @@ const loginUser = async (req, res) => {
 // ==============================
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-      .select("-password")
-      .populate("wishlist");
+    let user;
+
+    try {
+      user = await User.findById(req.user._id)
+        .select("-password")
+        .populate("wishlist");
+    } catch (popErr) {
+      console.warn("Populate wishlist failed, returning user without populated wishlist:", popErr.message);
+      user = await User.findById(req.user._id).select("-password");
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -252,21 +259,53 @@ const updateProfile = async (req, res) => {
       user.email = normalizedEmail;
     }
 
-    // Update phone
+    // Update phone (require exactly 10 digits when provided)
     if (phone !== undefined) {
-      user.phone = phone;
+      const phoneTrim = (phone || "").toString().trim();
+
+      if (phoneTrim) {
+        // Sri Lankan format: local 10-digit starting with 07 (07xxxxxxxx) or
+        // international +94 followed by 9 digits starting with 7 (+947xxxxxxxx)
+        const phoneRegex = /^(07\d{8}|\+947\d{8})$/;
+
+        if (!phoneRegex.test(phoneTrim)) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Phone number is invalid. Use Sri Lankan format: 07XXXXXXXX or +947XXXXXXXX.",
+          });
+        }
+      }
+
+      user.phone = phoneTrim;
     }
 
-    // Update address
+    // Update address (require at least 5 characters when provided)
     if (address !== undefined) {
-      user.address = address;
+      const addressTrim = (address || "").toString().trim();
+
+      if (addressTrim && addressTrim.length < 5) {
+        return res.status(400).json({
+          success: false,
+          message: "Address must be at least 5 characters",
+        });
+      }
+
+      user.address = addressTrim;
     }
 
     await user.save();
 
-    const updatedUser = await User.findById(user._id)
-      .select("-password")
-      .populate("wishlist");
+    let updatedUser;
+
+    try {
+      updatedUser = await User.findById(user._id)
+        .select("-password")
+        .populate("wishlist");
+    } catch (popErr) {
+      console.warn("Populate wishlist after update failed, returning user without populated wishlist:", popErr.message);
+      updatedUser = await User.findById(user._id).select("-password");
+    }
 
     return res.status(200).json({
       success: true,

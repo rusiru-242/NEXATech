@@ -4,6 +4,9 @@ require("dotenv").config();
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const productRoutes = require("./routes/productRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -15,9 +18,6 @@ connectDB();
 // ==============================
 // Middleware
 // ==============================
-// Allow CORS from the client during development. If `CLIENT_URL` is set in
-// the env, use that. Otherwise reflect the request origin (works across dev
-// ports) while keeping `credentials: true`.
 app.use(
   cors({
     origin: process.env.CLIENT_URL || true,
@@ -42,6 +42,9 @@ app.get("/", (req, res) => {
 // Authentication Routes
 // ==============================
 app.use("/api/auth", authRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ==============================
 // 404 Route

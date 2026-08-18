@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -10,6 +11,7 @@ import Compare from "./pages/Compare";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Account from "./pages/Account";
+import Orders from "./pages/Orders";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -23,9 +25,11 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+
       <Routes>
 
-        {/* Customer */}
+        {/* ================= CUSTOMER ================= */}
+
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetails />} />
@@ -35,15 +39,49 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/orders" element={<Orders />} />
 
-        {/* Admin */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/categories" element={<AdminCategories />} />
-        <Route path="/admin/reviews" element={<AdminReviews />} />
-        <Route path="/admin/analytics" element={<AdminAnalytics />} />
+
+        {/* ================= ADMIN ================= */}
+
+        <Route element={<AdminProtectedRoute />}>
+
+          <Route
+            path="/admin"
+            element={<AdminDashboard />}
+          />
+
+          <Route
+            path="/admin/products"
+            element={<AdminProducts />}
+          />
+
+          <Route
+            path="/admin/orders"
+            element={<AdminOrders />}
+          />
+
+          <Route
+            path="/admin/users"
+            element={<AdminUsers />}
+          />
+
+          <Route
+            path="/admin/categories"
+            element={<AdminCategories />}
+          />
+
+          <Route
+            path="/admin/reviews"
+            element={<AdminReviews />}
+          />
+
+          <Route
+            path="/admin/analytics"
+            element={<AdminAnalytics />}
+          />
+
+        </Route>
 
       </Routes>
     </BrowserRouter>
