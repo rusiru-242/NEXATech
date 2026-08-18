@@ -1,11 +1,107 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import ProductCard from "../components/ProductCard";
 
 function Home() {
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] =
+    useState(true);
+
+  // =====================================================
+  // LOAD PRODUCTS FROM MONGODB
+  // =====================================================
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/products"
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Failed to load products."
+          );
+        }
+
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error(
+          "Home products loading error:",
+          error
+        );
+
+        setProducts([]);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  // =====================================================
+  // FEATURED PRODUCTS
+  //
+  // Priority:
+  // 1. Available products
+  // 2. Highest rating
+  // 3. Highest reviews
+  // 4. Discounted products
+  // =====================================================
+
+  const featuredProducts = useMemo(() => {
+    const availableProducts = products.filter(
+      (product) =>
+        Number(product.stock || 0) > 0
+    );
+
+    const sortedProducts = [
+      ...availableProducts,
+    ].sort((a, b) => {
+      const ratingA =
+        Number(a.rating || 0);
+
+      const ratingB =
+        Number(b.rating || 0);
+
+      const reviewsA =
+        Number(a.reviews || 0);
+
+      const reviewsB =
+        Number(b.reviews || 0);
+
+      const discountA =
+        Number(a.discount || 0);
+
+      const discountB =
+        Number(b.discount || 0);
+
+      // Rating has highest priority
+      if (ratingB !== ratingA) {
+        return ratingB - ratingA;
+      }
+
+      // Then number of reviews
+      if (reviewsB !== reviewsA) {
+        return reviewsB - reviewsA;
+      }
+
+      // Then discount
+      return discountB - discountA;
+    });
+
+    return sortedProducts.slice(0, 4);
+  }, [products]);
+
   return (
     <div className="min-h-screen bg-[#050505] text-white">
 
@@ -31,33 +127,22 @@ function Home() {
 
             <div className="grid grid-cols-2 gap-y-7 text-lg font-bold tracking-[-0.04em] text-gray-500 sm:grid-cols-4 sm:text-xl lg:grid-cols-7">
 
-              <span className="transition hover:text-white">
-                APPLE
-              </span>
-
-              <span className="transition hover:text-white">
-                ASUS
-              </span>
-
-              <span className="transition hover:text-white">
-                SONY
-              </span>
-
-              <span className="transition hover:text-white">
-                NVIDIA
-              </span>
-
-              <span className="transition hover:text-white">
-                SAMSUNG
-              </span>
-
-              <span className="transition hover:text-white">
-                RAZER
-              </span>
-
-              <span className="transition hover:text-white">
-                LOGITECH
-              </span>
+              {[
+                "APPLE",
+                "ASUS",
+                "SONY",
+                "NVIDIA",
+                "SAMSUNG",
+                "RAZER",
+                "LOGITECH",
+              ].map((brand) => (
+                <span
+                  key={brand}
+                  className="transition hover:text-white"
+                >
+                  {brand}
+                </span>
+              ))}
 
             </div>
 
@@ -84,7 +169,6 @@ function Home() {
               <span className="block text-gray-600">
                 FUTURE.
               </span>
-
             </h2>
 
           </div>
@@ -101,33 +185,43 @@ function Home() {
               "Accessories",
             ].map((category, index) => (
 
-              <motion.a
-                href="/products"
+              <motion.div
                 key={category}
                 whileHover={{
                   x: 8,
                 }}
-                className="group flex items-center justify-between py-6 transition sm:py-8"
               >
 
-                <div className="flex items-center gap-5 sm:gap-6">
+                <Link
+                  to={`/products?category=${encodeURIComponent(
+                    category
+                  )}`}
+                  className="group flex items-center justify-between py-6 transition sm:py-8"
+                >
 
-                  <span className="text-xs text-gray-700">
-                    0{index + 1}
-                  </span>
+                  <div className="flex items-center gap-5 sm:gap-6">
 
-                  <h3 className="text-xl font-semibold tracking-[-0.04em] text-gray-300 transition group-hover:text-white sm:text-3xl lg:text-4xl">
-                    {category}
-                  </h3>
+                    <span className="text-xs text-gray-700">
+                      {String(index + 1).padStart(
+                        2,
+                        "0"
+                      )}
+                    </span>
 
-                </div>
+                    <h3 className="text-xl font-semibold tracking-[-0.04em] text-gray-300 transition group-hover:text-white sm:text-3xl lg:text-4xl">
+                      {category}
+                    </h3>
 
-                <ArrowUpRight
-                  size={22}
-                  className="text-gray-700 transition group-hover:text-[#00E5FF]"
-                />
+                  </div>
 
-              </motion.a>
+                  <ArrowUpRight
+                    size={22}
+                    className="text-gray-700 transition group-hover:text-[#00E5FF]"
+                  />
+
+                </Link>
+
+              </motion.div>
 
             ))}
 
@@ -189,7 +283,9 @@ function Home() {
 
         </section>
 
-        {/* ================= PRODUCTS ================= */}
+        {/* =====================================================
+            FEATURED PRODUCTS
+        ===================================================== */}
 
         <section
           id="products"
@@ -210,47 +306,133 @@ function Home() {
                 <span className="block text-gray-600">
                   PRODUCTS.
                 </span>
-
               </h2>
+
+              <p className="mt-5 max-w-lg text-sm leading-6 text-gray-500">
+                Discover some of our highest-rated
+                technology, selected from the
+                NexaTech collection.
+              </p>
 
             </div>
 
-            <a
-              href="/products"
+            <Link
+              to="/products"
               className="text-sm text-gray-500 transition hover:text-white"
             >
               View all products →
-            </a>
+            </Link>
 
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* =================================================
+              FEATURED PRODUCT GRID
+          ================================================= */}
 
-            <ProductCard
-              name="Nexa Pro Laptop"
-              category="Laptops"
-              price="Rs. 289,000"
-            />
+          {productsLoading ? (
 
-            <ProductCard
-              name="Ultra X Smartphone"
-              category="Smartphones"
-              price="Rs. 189,000"
-            />
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
-            <ProductCard
-              name="Pulse Gaming Headset"
-              category="Gaming"
-              price="Rs. 49,000"
-            />
+              {[1, 2, 3, 4].map(
+                (item) => (
+                  <div
+                    key={item}
+                    className="h-[420px] animate-pulse border border-white/10 bg-white/[0.02]"
+                  />
+                )
+              )}
 
-            <ProductCard
-              name="Vision 4K Monitor"
-              category="Monitors"
-              price="Rs. 159,000"
-            />
+            </div>
 
-          </div>
+          ) : featuredProducts.length > 0 ? (
+
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+
+              {featuredProducts.map(
+                (product) => (
+
+                  <motion.div
+                    key={product._id}
+                    initial={{
+                      opacity: 0,
+                      y: 20,
+                    }}
+                    whileInView={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    viewport={{
+                      once: true,
+                      amount: 0.15,
+                    }}
+                    transition={{
+                      duration: 0.5,
+                    }}
+                  >
+
+                    <Link
+                      to={`/products/${product._id}`}
+                      className="block"
+                    >
+
+                      <ProductCard
+                        id={product._id}
+                        name={
+                          product.name
+                        }
+                        category={
+                          product.category
+                        }
+                        price={Number(
+                          product.price || 0
+                        )}
+                        discount={Number(
+                          product.discount || 0
+                        )}
+                        image={
+                          product.image || ""
+                        }
+                        rating={Number(
+                          product.rating || 0
+                        )}
+                        reviews={Number(
+                          product.reviews || 0
+                        )}
+                        stock={Number(
+                          product.stock || 0
+                        )}
+                        brand={
+                          product.brand || ""
+                        }
+                      />
+
+                    </Link>
+
+                  </motion.div>
+
+                )
+              )}
+
+            </div>
+
+          ) : (
+
+            <div className="border border-dashed border-white/10 py-20 text-center">
+
+              <p className="text-sm text-gray-600">
+                Featured products will appear here.
+              </p>
+
+              <Link
+                to="/products"
+                className="mt-5 inline-block border border-white/10 px-5 py-2.5 text-xs text-gray-400 transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF]"
+              >
+                Browse Products
+              </Link>
+
+            </div>
+
+          )}
 
         </section>
 
@@ -277,7 +459,6 @@ function Home() {
                   <span className="block text-gray-600">
                     REIMAGINED.
                   </span>
-
                 </h2>
 
               </div>
@@ -285,17 +466,17 @@ function Home() {
               <div>
 
                 <p className="max-w-md text-base leading-7 text-gray-500">
-                  Our upcoming AI experience will help you
-                  discover technology that actually fits your
-                  needs.
+                  Our upcoming AI experience will help
+                  you discover technology that actually
+                  fits your needs.
                 </p>
 
-                <button
-                  type="button"
-                  className="mt-7 border border-white/20 px-6 py-3 text-sm font-semibold transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+                <Link
+                  to="/ai-chat"
+                  className="mt-7 inline-block border border-white/20 px-6 py-3 text-sm font-semibold transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
                 >
-                  AI FEATURES — COMING SOON
-                </button>
+                  AI SHOPPING →
+                </Link>
 
               </div>
 
@@ -305,7 +486,7 @@ function Home() {
 
         </section>
 
-        {/* ================= SETUP ================= */}
+        {/* ================= WHY NEXATECH ================= */}
 
         <section
           id="about"
@@ -317,31 +498,30 @@ function Home() {
             <div>
 
               <p className="text-xs uppercase tracking-[0.25em] text-[#00E5FF]">
-                Your Space
+                Why NexaTech
               </p>
 
               <h2 className="mt-3 text-5xl font-bold leading-[0.9] tracking-[-0.07em] sm:mt-4 sm:text-6xl lg:text-7xl">
-                BUILD YOUR
+                TECHNOLOGY
 
                 <span className="block text-gray-600">
-                  PERFECT SETUP.
+                  MADE SIMPLE.
                 </span>
-
               </h2>
 
               <p className="mt-7 max-w-md text-base leading-7 text-gray-500">
-                Combine powerful devices, gaming gear and
-                accessories to create a setup built around
-                the way you work and play.
+                Discover trusted technology, secure payments,
+                fast delivery and intelligent AI-powered
+                shopping — all in one place.
               </p>
 
-              <a
-                href="/products"
+              <Link
+                to="/products"
                 className="mt-7 inline-flex items-center gap-3 border border-white/20 px-6 py-3.5 text-sm font-semibold transition hover:border-white hover:bg-white hover:text-black"
               >
-                Start Building
+                Explore Products
                 <ArrowUpRight size={17} />
-              </a>
+              </Link>
 
             </div>
 
@@ -359,15 +539,47 @@ function Home() {
 
               <div className="relative flex min-h-[380px] items-center justify-center sm:min-h-[450px]">
 
-                <div className="text-center">
+                <div className="grid grid-cols-2 gap-8 text-center">
 
-                  <div className="text-6xl font-black tracking-[-0.08em] text-white sm:text-7xl">
-                    NEXA
+                  <div>
+                    <div className="text-4xl font-black tracking-[-0.06em] text-white sm:text-5xl">
+                      50+
+                    </div>
+
+                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-600">
+                      Products
+                    </p>
                   </div>
 
-                  <p className="mt-3 text-xs uppercase tracking-[0.35em] text-gray-600">
-                    Interactive 3D Setup
-                  </p>
+                  <div>
+                    <div className="text-4xl font-black tracking-[-0.06em] text-white sm:text-5xl">
+                      8+
+                    </div>
+
+                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-600">
+                      Categories
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="text-4xl font-black tracking-[-0.06em] text-[#00E5FF] sm:text-5xl">
+                      24/7
+                    </div>
+
+                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-600">
+                      AI Support
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="text-4xl font-black tracking-[-0.06em] text-white sm:text-5xl">
+                      4.9
+                    </div>
+
+                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-gray-600">
+                      Rating
+                    </p>
+                  </div>
 
                 </div>
 

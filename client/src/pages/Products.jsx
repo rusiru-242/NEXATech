@@ -39,35 +39,25 @@ function Products() {
   // DYNAMIC CATEGORIES
   // =====================================================
 
-  const [categories, setCategories] =
-    useState(["All"]);
+  const [categories, setCategories] = useState(["All"]);
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
-  const [category, setCategory] =
-    useState("All");
+  const [category, setCategory] = useState("All");
 
-  const [sort, setSort] =
-    useState("featured");
+  const [sort, setSort] = useState("featured");
 
-  const [minPrice, setMinPrice] =
-    useState("");
+  const [minPrice, setMinPrice] = useState("");
 
-  const [maxPrice, setMaxPrice] =
-    useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
-  const [minRating, setMinRating] =
-    useState(0);
+  const [minRating, setMinRating] = useState(0);
 
-  const [mobileFilter, setMobileFilter] =
-    useState(false);
+  const [mobileFilter, setMobileFilter] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
   // =====================================================
   // LOAD PRODUCTS
@@ -79,24 +69,19 @@ function Products() {
         setLoading(true);
         setError("");
 
-        const response =
-          await fetch(
-            "http://localhost:5000/api/products"
-          );
+        const response = await fetch(
+          "http://localhost:5000/api/products"
+        );
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
           throw new Error(
-            data.message ||
-              "Failed to load products."
+            data.message || "Failed to load products."
           );
         }
 
-        setProducts(
-          data.products || []
-        );
+        setProducts(data.products || []);
       } catch (err) {
         console.error(
           "Products loading error:",
@@ -120,72 +105,58 @@ function Products() {
   // =====================================================
 
   useEffect(() => {
-    const loadCategories =
-      async () => {
-        try {
-          const response =
-            await fetch(
-              "http://localhost:5000/api/products/categories"
-            );
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/products/categories"
+        );
 
-          const data =
-            await response.json();
+        const data = await response.json();
 
-          if (
-            !response.ok ||
-            !data.success
-          ) {
-            throw new Error(
-              data.message ||
-                "Failed to load categories."
-            );
-          }
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message ||
+              "Failed to load categories."
+          );
+        }
 
-          const fetchedCategories =
-            data.categories || [];
+        const fetchedCategories =
+          data.categories || [];
 
-          // Remove duplicates while
-          // keeping original category names
-          const uniqueCategories =
-            Array.from(
-              new Map(
-                fetchedCategories
-                  .filter(
-                    (item) =>
-                      item &&
-                      String(
-                        item
-                      ).trim()
-                  )
-                  .map((item) => {
-                    const cleanName =
-                      String(
-                        item
-                      ).trim();
+        const uniqueCategories =
+          Array.from(
+            new Map(
+              fetchedCategories
+                .filter(
+                  (item) =>
+                    item &&
+                    String(item).trim()
+                )
+                .map((item) => {
+                  const cleanName =
+                    String(item).trim();
 
-                    return [
-                      cleanName.toLowerCase(),
-                      cleanName,
-                    ];
-                  })
-              ).values()
-            );
-
-          setCategories([
-            "All",
-            ...uniqueCategories,
-          ]);
-        } catch (err) {
-          console.error(
-            "Categories loading error:",
-            err
+                  return [
+                    cleanName.toLowerCase(),
+                    cleanName,
+                  ];
+                })
+            ).values()
           );
 
-          // Keep All even if
-          // category API fails
-          setCategories(["All"]);
-        }
-      };
+        setCategories([
+          "All",
+          ...uniqueCategories,
+        ]);
+      } catch (err) {
+        console.error(
+          "Categories loading error:",
+          err
+        );
+
+        setCategories(["All"]);
+      }
+    };
 
     loadCategories();
   }, []);
@@ -194,177 +165,145 @@ function Products() {
   // FILTER + SORT
   // =====================================================
 
-  const filteredProducts =
-    useMemo(() => {
-      const normalizedSearch =
-        search
-          .trim()
-          .toLowerCase();
+  const filteredProducts = useMemo(() => {
+    const normalizedSearch =
+      search.trim().toLowerCase();
 
-      let result =
-        products.filter(
-          (product) => {
-            const productName =
-              String(
-                product.name || ""
-              );
+    let result = products.filter(
+      (product) => {
+        const productName =
+          String(product.name || "");
 
-            const productBrand =
-              String(
-                product.brand || ""
-              );
+        const productBrand =
+          String(product.brand || "");
 
-            const productCategory =
-              String(
-                product.category || ""
-              );
+        const productCategory =
+          String(product.category || "");
 
-            const productDescription =
-              String(
-                product.description ||
-                  ""
-              );
+        const productDescription =
+          String(product.description || "");
 
-            // -------------------------------------------------
-            // SEARCH
-            // -------------------------------------------------
+        // -------------------------------------------------
+        // SEARCH
+        // -------------------------------------------------
 
-            const searchableText = `
-              ${productName}
-              ${productBrand}
-              ${productCategory}
-              ${productDescription}
-            `.toLowerCase();
+        const searchableText = `
+          ${productName}
+          ${productBrand}
+          ${productCategory}
+          ${productDescription}
+        `.toLowerCase();
 
-            const matchesSearch =
-              !normalizedSearch ||
-              searchableText.includes(
-                normalizedSearch
-              );
+        const matchesSearch =
+          !normalizedSearch ||
+          searchableText.includes(
+            normalizedSearch
+          );
 
-            // -------------------------------------------------
-            // CATEGORY
-            // -------------------------------------------------
+        // -------------------------------------------------
+        // CATEGORY
+        // -------------------------------------------------
 
-            const matchesCategory =
-              category === "All" ||
-              productCategory
-                .trim()
-                .toLowerCase() ===
-                category
-                  .trim()
-                  .toLowerCase();
+        const matchesCategory =
+          category === "All" ||
+          productCategory
+            .trim()
+            .toLowerCase() ===
+            category
+              .trim()
+              .toLowerCase();
 
-            // -------------------------------------------------
-            // PRICE
-            // -------------------------------------------------
+        // -------------------------------------------------
+        // PRICE
+        // -------------------------------------------------
 
-            const price =
-              Number(
-                product.price || 0
-              );
-
-            const minimum =
-              Number(minPrice);
-
-            const maximum =
-              Number(maxPrice);
-
-            const matchesMinPrice =
-              !minPrice ||
-              Number.isNaN(minimum) ||
-              price >= minimum;
-
-            const matchesMaxPrice =
-              !maxPrice ||
-              Number.isNaN(maximum) ||
-              price <= maximum;
-
-            // -------------------------------------------------
-            // RATING
-            // -------------------------------------------------
-
-            const rating =
-              Number(
-                product.rating || 0
-              );
-
-            const matchesRating =
-              rating >=
-              Number(minRating);
-
-            return (
-              matchesSearch &&
-              matchesCategory &&
-              matchesMinPrice &&
-              matchesMaxPrice &&
-              matchesRating
-            );
-          }
+        const price = Number(
+          product.price || 0
         );
 
-      // ===================================================
-      // SORT
-      // ===================================================
+        const minimum =
+          Number(minPrice);
 
-      if (sort === "low") {
-        result.sort(
-          (a, b) =>
-            Number(
-              a.price || 0
-            ) -
-            Number(
-              b.price || 0
-            )
+        const maximum =
+          Number(maxPrice);
+
+        const matchesMinPrice =
+          !minPrice ||
+          Number.isNaN(minimum) ||
+          price >= minimum;
+
+        const matchesMaxPrice =
+          !maxPrice ||
+          Number.isNaN(maximum) ||
+          price <= maximum;
+
+        // -------------------------------------------------
+        // RATING
+        // -------------------------------------------------
+
+        const rating = Number(
+          product.rating || 0
+        );
+
+        const matchesRating =
+          rating >= Number(minRating);
+
+        return (
+          matchesSearch &&
+          matchesCategory &&
+          matchesMinPrice &&
+          matchesMaxPrice &&
+          matchesRating
         );
       }
+    );
 
-      if (sort === "high") {
-        result.sort(
-          (a, b) =>
-            Number(
-              b.price || 0
-            ) -
-            Number(
-              a.price || 0
-            )
-        );
-      }
+    // ===================================================
+    // SORT
+    // ===================================================
 
-      if (sort === "rating") {
-        result.sort(
-          (a, b) =>
-            Number(
-              b.rating || 0
-            ) -
-            Number(
-              a.rating || 0
-            )
-        );
-      }
+    if (sort === "low") {
+      result.sort(
+        (a, b) =>
+          Number(a.price || 0) -
+          Number(b.price || 0)
+      );
+    }
 
-      if (sort === "newest") {
-        result.sort(
-          (a, b) =>
-            new Date(
-              b.createdAt || 0
-            ) -
-            new Date(
-              a.createdAt || 0
-            )
-        );
-      }
+    if (sort === "high") {
+      result.sort(
+        (a, b) =>
+          Number(b.price || 0) -
+          Number(a.price || 0)
+      );
+    }
 
-      return result;
-    }, [
-      products,
-      search,
-      category,
-      sort,
-      minPrice,
-      maxPrice,
-      minRating,
-    ]);
+    if (sort === "rating") {
+      result.sort(
+        (a, b) =>
+          Number(b.rating || 0) -
+          Number(a.rating || 0)
+      );
+    }
+
+    if (sort === "newest") {
+      result.sort(
+        (a, b) =>
+          new Date(b.createdAt || 0) -
+          new Date(a.createdAt || 0)
+      );
+    }
+
+    return result;
+  }, [
+    products,
+    search,
+    category,
+    sort,
+    minPrice,
+    maxPrice,
+    minRating,
+  ]);
 
   // =====================================================
   // CLEAR FILTERS
@@ -569,6 +508,7 @@ function Products() {
 
         <section className="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-9">
           <div className="grid gap-7 lg:grid-cols-[240px_1fr] lg:gap-10">
+
             {/* =================================================
                 CATEGORY / FILTER SIDEBAR
             ================================================= */}
@@ -581,13 +521,25 @@ function Products() {
               } lg:block`}
             >
               {/* =================================================
-                  STABLE STICKY SIDEBAR
+                  SCROLLABLE STICKY SIDEBAR
 
-                  No internal scrolling.
-                  Page itself scrolls.
+                  Sidebar stays in position while page scrolls.
+                  Its content can scroll independently.
               ================================================= */}
 
-              <div className="lg:sticky lg:top-24">
+              <div
+                className="
+                  lg:sticky
+                  lg:top-24
+                  lg:max-h-[calc(100vh-7rem)]
+                  lg:overflow-y-auto
+                  lg:pr-2
+                  lg:scrollbar-thin
+                  lg:scrollbar-track-transparent
+                  lg:scrollbar-thumb-white/10
+                  hover:lg:scrollbar-thumb-[#00e5ff]/30
+                "
+              >
                 {/* SIDEBAR HEADER */}
 
                 <div className="flex items-center justify-between">
@@ -598,9 +550,7 @@ function Products() {
                   <button
                     type="button"
                     onClick={() =>
-                      setMobileFilter(
-                        false
-                      )
+                      setMobileFilter(false)
                     }
                     className="text-gray-600 hover:text-white lg:hidden"
                   >
@@ -766,7 +716,7 @@ function Products() {
                       onClick={
                         clearFilters
                       }
-                      className="flex w-full items-center justify-center gap-2 border border-white/10 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 transition hover:border-[#00e5ff]/40 hover:text-[#00e5ff]"
+                      className="mb-2 flex w-full items-center justify-center gap-2 border border-white/10 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 transition hover:border-[#00e5ff]/40 hover:text-[#00e5ff]"
                     >
                       <RotateCcw
                         size={13}
@@ -823,8 +773,7 @@ function Products() {
                   </p>
 
                   <h2 className="mt-0.5 text-lg font-semibold tracking-tight">
-                    {category ===
-                    "All"
+                    {category === "All"
                       ? "All Products"
                       : category}
                   </h2>
@@ -839,12 +788,9 @@ function Products() {
 
               {/* =================================================
                   PRODUCT GRID
-                  
-                  Active filter badges intentionally removed.
               ================================================= */}
 
-              {filteredProducts.length >
-              0 ? (
+              {filteredProducts.length > 0 ? (
                 <motion.div
                   layout
                   className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
@@ -852,9 +798,7 @@ function Products() {
                   {filteredProducts.map(
                     (product) => (
                       <motion.div
-                        key={
-                          product._id
-                        }
+                        key={product._id}
                         layout
                         initial={{
                           opacity: 0,
@@ -870,29 +814,40 @@ function Products() {
                           className="block"
                         >
                           <ProductCard
-                            id={
-                              product._id
+                            id={product._id}
+                            name={product.name}
+                            category={product.category}
+                            price={Number(
+                              product.price || 0
+                            )}
+                            discount={Number(
+                              product.discount || 0
+                            )}
+
+                            image={
+                              product.image || ""
                             }
-                            name={
-                              product.name
-                            }
-                            category={
-                              product.category
-                            }
-                            price={`Rs. ${Number(
-                              product.price ||
-                                0
-                            ).toLocaleString()}`}
-                            discount={
-                              product.discount
-                            }
+
                             rating={
-                              product.rating ||
-                              0
+                              Number(
+                                product.rating || 0
+                              )
                             }
+
                             reviews={
-                              product.reviews ||
-                              0
+                              Number(
+                                product.reviews || 0
+                              )
+                            }
+
+                            stock={
+                              Number(
+                                product.stock || 0
+                              )
+                            }
+
+                            brand={
+                              product.brand || ""
                             }
                           />
                         </Link>
@@ -903,9 +858,7 @@ function Products() {
               ) : (
                 <div className="flex min-h-[350px] flex-col items-center justify-center border border-dashed border-white/10">
                   <div className="mb-4 flex h-12 w-12 items-center justify-center border border-white/10 text-gray-600">
-                    <Search
-                      size={18}
-                    />
+                    <Search size={18} />
                   </div>
 
                   <h3 className="text-base font-semibold">

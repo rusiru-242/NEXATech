@@ -6,9 +6,12 @@ import {
   MapPin,
   ShieldCheck,
   Truck,
+  Tag,
 } from "lucide-react";
 
 import Navbar from "../components/Navbar";
+
+const API_BASE_URL = "http://localhost:5000/api";
 
 function Checkout() {
   const navigate = useNavigate();
@@ -30,39 +33,159 @@ function Checkout() {
   // LOAD CART
   // =====================================================
 
-  useEffect(() => {
+  const loadCart = () => {
     try {
-      const savedCart =
-        JSON.parse(
-          localStorage.getItem("nexatech_cart")
-        ) || [];
-
-      console.log("CART:", savedCart);
+      const savedCart = JSON.parse(
+        localStorage.getItem("nexatech_cart") || "[]"
+      );
 
       setCart(Array.isArray(savedCart) ? savedCart : []);
     } catch (err) {
       console.error("Cart loading error:", err);
       setCart([]);
     }
+  };
+
+  useEffect(() => {
+    loadCart();
+
+    const handleCartUpdated = () => {
+      loadCart();
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdated);
+    window.addEventListener("storage", handleCartUpdated);
+
+    return () => {
+      window.removeEventListener(
+        "cartUpdated",
+        handleCartUpdated
+      );
+
+      window.removeEventListener(
+        "storage",
+        handleCartUpdated
+      );
+    };
   }, []);
 
   // =====================================================
-  // TOTALS
+  // PRICE HELPERS
+  // =====================================================
+
+  const getCurrentPrice = (item) => {
+    const price = Number(item?.price || 0);
+
+    return Number.isFinite(price) && price >= 0
+      ? price
+      : 0;
+  };
+
+  const getDiscount = (item) => {
+    const discount = Number(item?.discount || 0);
+
+    if (!Number.isFinite(discount)) {
+      return 0;
+    }
+
+    return Math.min(Math.max(discount, 0), 100);
+  };
+
+  const getOriginalPrice = (item) => {
+    const storedOriginalPrice = Number(
+      item?.originalPrice || 0
+    );
+
+    if (
+      Number.isFinite(storedOriginalPrice) &&
+      storedOriginalPrice > 0
+    ) {
+      return storedOriginalPrice;
+    }
+
+    const currentPrice = getCurrentPrice(item);
+    const discount = getDiscount(item);
+
+    if (
+      discount > 0 &&
+      discount < 100 &&
+      currentPrice > 0
+    ) {
+      return currentPrice / (1 - discount / 100);
+    }
+
+    return currentPrice;
+  };
+
+  const getQuantity = (item) => {
+    const quantity = Number(item?.quantity || 0);
+
+    return Number.isInteger(quantity) && quantity > 0
+      ? quantity
+      : 0;
+  };
+
+  // =====================================================
+  // SUBTOTAL
+  //
+  // Uses current cart price.
+  // Backend recalculates the final amount from MongoDB
+  // before creating the actual order.
   // =====================================================
 
   const subtotal = useMemo(() => {
-    return cart.reduce(
-      (total, item) =>
-        total +
-        Number(item.price || 0) *
-          Number(item.quantity || 0),
-      0
-    );
+    const value = cart.reduce((total, item) => {
+      const price = getCurrentPrice(item);
+      const quantity = getQuantity(item);
+
+      return total + price * quantity;
+    }, 0);
+
+    return Number(value.toFixed(2));
   }, [cart]);
 
-  const shippingFee = subtotal >= 100 ? 0 : 10;
+  // =====================================================
+  // SHIPPING
+  // =====================================================
 
-  const total = subtotal + shippingFee;
+  const shippingFee =
+    subtotal === 0
+      ? 0
+      : subtotal >= 100
+      ? 0
+      : 10;
+
+  // =====================================================
+  // TOTAL
+  // =====================================================
+
+  const total = Number(
+    (subtotal + shippingFee).toFixed(2)
+  );
+
+  // =====================================================
+  // TOTAL SAVINGS
+  // =====================================================
+
+  const totalSavings = useMemo(() => {
+    const value = cart.reduce((total, item) => {
+      const currentPrice = getCurrentPrice(item);
+      const originalPrice = getOriginalPrice(item);
+      const quantity = getQuantity(item);
+
+      const savingPerItem = Math.max(
+        originalPrice - currentPrice,
+        0
+      );
+
+      return (
+        total +
+        savingPerItem * quantity
+      );
+    }, 0);
+
+    return Number(value.toFixed(2));
+  }, [cart]);
 
   // =====================================================
   // FORM CHANGE
@@ -90,16 +213,17 @@ function Checkout() {
     console.log("CHECKOUT STARTED");
     console.log("================================");
 
-    // -----------------------------------------------------
+    // ===================================================
     // TOKEN
-    // -----------------------------------------------------
+    // ===================================================
 
-    const token =
-      localStorage.getItem("nexatech_token");
+    const token = localStorage.getItem(
+      "nexatech_token"
+    );
 
     console.log(
       "Token exists:",
-      !!token
+      Boolean(token)
     );
 
     if (!token) {
@@ -114,25 +238,29 @@ function Checkout() {
       return;
     }
 
-    // -----------------------------------------------------
+    // ===================================================
     // CART
-    // -----------------------------------------------------
+    // ===================================================
 
     if (!cart.length) {
       setError("Your cart is empty.");
       return;
     }
 
-    // -----------------------------------------------------
-    // VALIDATE CART PRODUCTS
-    // -----------------------------------------------------
+    // ===================================================
+    // VALIDATE CART
+    // ===================================================
 
-    const invalidItem = cart.find(
-      (item) =>
-        !item._id ||
-        !item.quantity ||
-        Number(item.quantity) <= 0
-    );
+    const invalidItem = cart.find((item) => {
+      const quantity = getQuantity(item);
+      const price = getCurrentPrice(item);
+
+      return (
+        !item?._id ||
+        quantity <= 0 ||
+        price < 0
+      );
+    });
 
     if (invalidItem) {
       console.error(
@@ -147,9 +275,32 @@ function Checkout() {
       return;
     }
 
-    // -----------------------------------------------------
+    // ===================================================
+    // STOCK VALIDATION
+    // ===================================================
+
+    const outOfStockItem = cart.find((item) => {
+      const stock = Number(item?.stock);
+      const quantity = getQuantity(item);
+
+      if (!Number.isFinite(stock)) {
+        return false;
+      }
+
+      return quantity > stock;
+    });
+
+    if (outOfStockItem) {
+      setError(
+        `${outOfStockItem.name} does not have enough stock. Please update your cart.`
+      );
+
+      return;
+    }
+
+    // ===================================================
     // FORM VALIDATION
-    // -----------------------------------------------------
+    // ===================================================
 
     if (
       !form.name.trim() ||
@@ -167,14 +318,31 @@ function Checkout() {
     try {
       setLoading(true);
 
-      // ===================================================
+      // =================================================
       // ORDER PAYLOAD
-      // ===================================================
+      //
+      // IMPORTANT:
+      // Do NOT send price/subtotal/total as trusted
+      // values.
+      //
+      // Backend calculates:
+      // Product price
+      //       ↓
+      // Discount
+      //       ↓
+      // Final price
+      //       ↓
+      // Subtotal
+      //       ↓
+      // Shipping
+      //       ↓
+      // Total
+      // =================================================
 
       const orderPayload = {
         items: cart.map((item) => ({
           product: item._id,
-          quantity: Number(item.quantity),
+          quantity: getQuantity(item),
         })),
 
         shippingAddress: {
@@ -185,10 +353,6 @@ function Checkout() {
         },
 
         paymentMethod,
-
-        subtotal: Number(subtotal),
-        shippingFee: Number(shippingFee),
-        total: Number(total),
       };
 
       console.log(
@@ -196,21 +360,25 @@ function Checkout() {
         orderPayload
       );
 
-      // ===================================================
+      // =================================================
       // CREATE ORDER
-      // ===================================================
+      // =================================================
 
       const orderResponse = await fetch(
-        "http://localhost:5000/api/orders",
+        `${API_BASE_URL}/orders`,
         {
           method: "POST",
 
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+
+            Authorization:
+              `Bearer ${token}`,
           },
 
-          body: JSON.stringify(orderPayload),
+          body: JSON.stringify(
+            orderPayload
+          ),
         }
       );
 
@@ -219,9 +387,9 @@ function Checkout() {
         orderResponse.status
       );
 
-      // ---------------------------------------------------
-      // READ RESPONSE SAFELY
-      // ---------------------------------------------------
+      // =================================================
+      // READ RESPONSE
+      // =================================================
 
       const responseText =
         await orderResponse.text();
@@ -234,13 +402,12 @@ function Checkout() {
       let orderData = {};
 
       try {
-        orderData =
-          responseText
-            ? JSON.parse(responseText)
-            : {};
+        orderData = responseText
+          ? JSON.parse(responseText)
+          : {};
       } catch (jsonError) {
         console.error(
-          "JSON parse error:",
+          "Order JSON parse error:",
           jsonError
         );
 
@@ -254,9 +421,9 @@ function Checkout() {
         orderData
       );
 
-      // ---------------------------------------------------
+      // =================================================
       // ORDER ERROR
-      // ---------------------------------------------------
+      // =================================================
 
       if (!orderResponse.ok) {
         throw new Error(
@@ -265,9 +432,9 @@ function Checkout() {
         );
       }
 
-      // ---------------------------------------------------
+      // =================================================
       // CHECK ORDER
-      // ---------------------------------------------------
+      // =================================================
 
       const order = orderData.order;
 
@@ -287,9 +454,29 @@ function Checkout() {
         order
       );
 
-      // ===================================================
+      // =================================================
+      // IMPORTANT:
+      // Backend calculated final values.
+      // =================================================
+
+      console.log(
+        "SERVER CALCULATED SUBTOTAL:",
+        order.subtotal
+      );
+
+      console.log(
+        "SERVER CALCULATED SHIPPING:",
+        order.shippingFee
+      );
+
+      console.log(
+        "SERVER CALCULATED TOTAL:",
+        order.total
+      );
+
+      // =================================================
       // CASH ON DELIVERY
-      // ===================================================
+      // =================================================
 
       if (paymentMethod === "cod") {
         console.log(
@@ -314,38 +501,41 @@ function Checkout() {
         return;
       }
 
-      // ===================================================
+      // =================================================
       // STRIPE CARD PAYMENT
-      // ===================================================
+      // =================================================
 
       console.log(
         "Creating Stripe checkout session..."
       );
 
-      const paymentResponse =
-        await fetch(
-          "http://localhost:5000/api/payments/create-checkout-session",
-          {
-            method: "POST",
+      const paymentResponse = await fetch(
+        `${API_BASE_URL}/payments/create-checkout-session`,
+        {
+          method: "POST",
 
-            headers: {
-              "Content-Type":
-                "application/json",
+          headers: {
+            "Content-Type":
+              "application/json",
 
-              Authorization:
-                `Bearer ${token}`,
-            },
+            Authorization:
+              `Bearer ${token}`,
+          },
 
-            body: JSON.stringify({
-              orderId: order._id,
-            }),
-          }
-        );
+          body: JSON.stringify({
+            orderId: order._id,
+          }),
+        }
+      );
 
       console.log(
         "Payment HTTP Status:",
         paymentResponse.status
       );
+
+      // =================================================
+      // READ PAYMENT RESPONSE
+      // =================================================
 
       const paymentText =
         await paymentResponse.text();
@@ -358,10 +548,9 @@ function Checkout() {
       let paymentData = {};
 
       try {
-        paymentData =
-          paymentText
-            ? JSON.parse(paymentText)
-            : {};
+        paymentData = paymentText
+          ? JSON.parse(paymentText)
+          : {};
       } catch (jsonError) {
         console.error(
           "Payment JSON parse error:",
@@ -378,6 +567,10 @@ function Checkout() {
         paymentData
       );
 
+      // =================================================
+      // PAYMENT ERROR
+      // =================================================
+
       if (!paymentResponse.ok) {
         throw new Error(
           paymentData.message ||
@@ -385,14 +578,18 @@ function Checkout() {
         );
       }
 
+      // =================================================
+      // SAVE LAST ORDER
+      // =================================================
+
       localStorage.setItem(
         "nexatech_last_order",
         JSON.stringify(order)
       );
 
-      // ---------------------------------------------------
+      // =================================================
       // STRIPE REDIRECT
-      // ---------------------------------------------------
+      // =================================================
 
       if (paymentData.url) {
         console.log(
@@ -408,7 +605,6 @@ function Checkout() {
       throw new Error(
         "Stripe checkout URL was not returned."
       );
-
     } catch (err) {
       console.error(
         "================================"
@@ -443,7 +639,6 @@ function Checkout() {
 
         <main className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center px-5">
           <div className="text-center">
-
             <p className="text-[10px] uppercase tracking-[0.3em] text-gray-600">
               Checkout
             </p>
@@ -458,7 +653,6 @@ function Checkout() {
             >
               Continue Shopping
             </Link>
-
           </div>
         </main>
       </div>
@@ -475,6 +669,8 @@ function Checkout() {
 
       <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
 
+        {/* BACK */}
+
         <Link
           to="/cart"
           className="mb-8 inline-flex items-center gap-2 text-xs text-gray-500 transition hover:text-white"
@@ -483,8 +679,9 @@ function Checkout() {
           Back to Cart
         </Link>
 
-        <div className="mb-8">
+        {/* HEADER */}
 
+        <div className="mb-8">
           <p className="text-[9px] font-semibold uppercase tracking-[0.35em] text-[#00e5ff]">
             Secure Checkout
           </p>
@@ -492,8 +689,9 @@ function Checkout() {
           <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
             Complete your order.
           </h1>
-
         </div>
+
+        {/* ERROR */}
 
         {error && (
           <div className="mb-6 border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-400">
@@ -536,6 +734,8 @@ function Checkout() {
 
               <div className="grid gap-4 sm:grid-cols-2">
 
+                {/* NAME */}
+
                 <div className="sm:col-span-2">
 
                   <label className="mb-2 block text-[10px] uppercase tracking-wider text-gray-600">
@@ -552,6 +752,8 @@ function Checkout() {
                   />
 
                 </div>
+
+                {/* PHONE */}
 
                 <div>
 
@@ -570,6 +772,8 @@ function Checkout() {
 
                 </div>
 
+                {/* CITY */}
+
                 <div>
 
                   <label className="mb-2 block text-[10px] uppercase tracking-wider text-gray-600">
@@ -586,6 +790,8 @@ function Checkout() {
                   />
 
                 </div>
+
+                {/* ADDRESS */}
 
                 <div className="sm:col-span-2">
 
@@ -605,7 +811,6 @@ function Checkout() {
                 </div>
 
               </div>
-
             </section>
 
             {/* PAYMENT */}
@@ -724,6 +929,8 @@ function Checkout() {
 
               </div>
 
+              {/* STRIPE NOTICE */}
+
               {paymentMethod === "card" && (
                 <div className="mt-4 flex gap-3 border border-[#00e5ff]/10 bg-[#00e5ff]/[0.03] p-4">
 
@@ -733,16 +940,15 @@ function Checkout() {
                   />
 
                   <p className="text-[10px] leading-5 text-gray-500">
-                    You will be redirected to Stripe's
-                    secure checkout page to complete
-                    your card payment.
+                    You will be redirected to
+                    Stripe's secure checkout page
+                    to complete your card payment.
                   </p>
 
                 </div>
               )}
 
             </section>
-
           </div>
 
           {/* =================================================
@@ -761,69 +967,147 @@ function Checkout() {
                 Your Order
               </h2>
 
+              {/* =================================================
+                  PRODUCTS
+              ================================================= */}
+
               <div className="mt-6 space-y-4">
 
-                {cart.map((item) => (
+                {cart.map((item) => {
+                  const currentPrice =
+                    getCurrentPrice(item);
 
-                  <div
-                    key={item._id}
-                    className="flex gap-3"
-                  >
+                  const originalPrice =
+                    getOriginalPrice(item);
 
-                    <div className="h-14 w-14 shrink-0 overflow-hidden border border-white/10 bg-black">
+                  const discount =
+                    getDiscount(item);
 
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-[8px] text-gray-700">
-                          NEXA
+                  const quantity =
+                    getQuantity(item);
+
+                  const itemTotal =
+                    currentPrice * quantity;
+
+                  return (
+                    <div
+                      key={item._id}
+                      className="flex gap-3"
+                    >
+
+                      {/* IMAGE */}
+
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden border border-white/10 bg-black">
+
+                        {discount > 0 && (
+                          <span className="absolute left-0 top-0 z-10 bg-[#00e5ff] px-1 text-[7px] font-bold text-black">
+                            -{discount}%
+                          </span>
+                        )}
+
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-[8px] text-gray-700">
+                            NEXA
+                          </div>
+                        )}
+
+                      </div>
+
+                      {/* DETAILS */}
+
+                      <div className="min-w-0 flex-1">
+
+                        <p className="truncate text-xs font-medium">
+                          {item.name}
+                        </p>
+
+                        {item.brand && (
+                          <p className="mt-1 truncate text-[9px] text-gray-700">
+                            {item.brand}
+                          </p>
+                        )}
+
+                        <p className="mt-1 text-[10px] text-gray-600">
+                          Qty: {quantity}
+                        </p>
+
+                        <div className="mt-1 flex items-center gap-2">
+
+                          <span className="text-[10px] font-semibold text-[#00e5ff]">
+                            ${currentPrice.toFixed(2)}
+                          </span>
+
+                          {discount > 0 && (
+                            <span className="text-[9px] text-gray-700 line-through">
+                              ${originalPrice.toFixed(2)}
+                            </span>
+                          )}
+
                         </div>
-                      )}
+
+                      </div>
+
+                      {/* ITEM TOTAL */}
+
+                      <div className="text-right">
+
+                        <p className="text-xs font-semibold">
+                          ${itemTotal.toFixed(2)}
+                        </p>
+
+                      </div>
 
                     </div>
-
-                    <div className="min-w-0 flex-1">
-
-                      <p className="truncate text-xs font-medium">
-                        {item.name}
-                      </p>
-
-                      <p className="mt-1 text-[10px] text-gray-600">
-                        Qty: {item.quantity}
-                      </p>
-
-                    </div>
-
-                    <p className="text-xs font-semibold">
-                      Rs.{" "}
-                      {(
-                        Number(item.price || 0) *
-                        Number(item.quantity || 0)
-                      ).toLocaleString()}
-                    </p>
-
-                  </div>
-
-                ))}
+                  );
+                })}
 
               </div>
 
+              {/* =================================================
+                  PRICE SUMMARY
+              ================================================= */}
+
               <div className="mt-6 space-y-3 border-t border-white/10 pt-5">
 
+                {/* SUBTOTAL */}
+
                 <div className="flex justify-between text-xs">
+
                   <span className="text-gray-600">
                     Subtotal
                   </span>
 
                   <span>
-                    Rs.{" "}
-                    {subtotal.toLocaleString()}
+                    ${subtotal.toFixed(2)}
                   </span>
+
                 </div>
+
+                {/* SAVINGS */}
+
+                {totalSavings > 0 && (
+                  <div className="flex justify-between text-xs">
+
+                    <span className="flex items-center gap-1 text-gray-600">
+                      <Tag size={11} />
+                      Discount Savings
+                    </span>
+
+                    <span className="font-medium text-green-400">
+                      -$
+                      {totalSavings.toFixed(2)}
+                    </span>
+
+                  </div>
+                )}
+
+                {/* SHIPPING */}
 
                 <div className="flex justify-between text-xs">
 
@@ -834,10 +1118,30 @@ function Checkout() {
                   <span>
                     {shippingFee === 0
                       ? "FREE"
-                      : `Rs. ${shippingFee.toLocaleString()}`}
+                      : `$${shippingFee.toFixed(2)}`}
                   </span>
 
                 </div>
+
+                {/* FREE SHIPPING MESSAGE */}
+
+                {subtotal > 0 &&
+                  subtotal < 100 && (
+                    <p className="border border-[#00e5ff]/10 bg-[#00e5ff]/[0.03] px-3 py-2 text-[9px] leading-4 text-[#00e5ff]">
+                      Add $
+                      {(100 - subtotal).toFixed(2)}{" "}
+                      more to get free shipping.
+                    </p>
+                  )}
+
+                {shippingFee === 0 &&
+                  subtotal >= 100 && (
+                    <p className="border border-green-500/10 bg-green-500/[0.03] px-3 py-2 text-[9px] text-green-400">
+                      ✓ You qualify for free shipping.
+                    </p>
+                  )}
+
+                {/* TOTAL */}
 
                 <div className="flex justify-between border-t border-white/10 pt-4">
 
@@ -846,13 +1150,16 @@ function Checkout() {
                   </span>
 
                   <span className="text-lg font-bold text-[#00e5ff]">
-                    Rs.{" "}
-                    {total.toLocaleString()}
+                    ${total.toFixed(2)}
                   </span>
 
                 </div>
 
               </div>
+
+              {/* =================================================
+                  CHECKOUT BUTTON
+              ================================================= */}
 
               <button
                 type="submit"
@@ -872,11 +1179,9 @@ function Checkout() {
               </p>
 
             </div>
-
           </aside>
 
         </form>
-
       </main>
     </div>
   );

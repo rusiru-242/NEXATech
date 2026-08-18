@@ -1,12 +1,28 @@
+
 const mongoose = require("mongoose");
+
+// ==========================================================
+// ORDER ITEM SCHEMA
+// ==========================================================
 
 const orderItemSchema = new mongoose.Schema(
   {
+    // --------------------------------------------------------
+    // PRODUCT REFERENCE
+    // --------------------------------------------------------
+
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
       required: true,
     },
+
+    // --------------------------------------------------------
+    // PRODUCT SNAPSHOT
+    // --------------------------------------------------------
+    // These values are copied when the order is created.
+    // This prevents old orders from changing when the
+    // product is edited later.
 
     name: {
       type: String,
@@ -19,11 +35,47 @@ const orderItemSchema = new mongoose.Schema(
       default: "",
     },
 
+    brand: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    category: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // --------------------------------------------------------
+    // PRICE SNAPSHOT
+    // --------------------------------------------------------
+
+    // Final price paid by customer
     price: {
       type: Number,
       required: true,
       min: 0,
     },
+
+    // Original price before discount
+    originalPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // Discount percentage at the time of purchase
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+
+    // --------------------------------------------------------
+    // QUANTITY
+    // --------------------------------------------------------
 
     quantity: {
       type: Number,
@@ -37,32 +89,45 @@ const orderItemSchema = new mongoose.Schema(
   }
 );
 
+// ==========================================================
+// ORDER SCHEMA
+// ==========================================================
+
 const orderSchema = new mongoose.Schema(
   {
-    // ==============================
+    // ========================================================
     // CUSTOMER
-    // ==============================
+    // ========================================================
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    // ==============================
+    // ========================================================
     // ORDER ITEMS
-    // ==============================
+    // ========================================================
+
     items: {
       type: [orderItemSchema],
+
       required: true,
+
       validate: {
-        validator: (items) => items.length > 0,
-        message: "Order must contain at least one item",
+        validator: (items) =>
+          Array.isArray(items) &&
+          items.length > 0,
+
+        message:
+          "Order must contain at least one item",
       },
     },
 
-    // ==============================
+    // ========================================================
     // SHIPPING DETAILS
-    // ==============================
+    // ========================================================
+
     shippingAddress: {
       name: {
         type: String,
@@ -88,26 +153,40 @@ const orderSchema = new mongoose.Schema(
       },
     },
 
-    // ==============================
+    // ========================================================
     // PAYMENT
-    // ==============================
+    // ========================================================
+
     paymentMethod: {
       type: String,
-      enum: ["cod", "card"],
+
+      enum: [
+        "cod",
+        "card",
+      ],
+
       default: "cod",
     },
 
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed"],
+
+      enum: [
+        "pending",
+        "paid",
+        "failed",
+      ],
+
       default: "pending",
     },
 
-    // ==============================
+    // ========================================================
     // ORDER STATUS
-    // ==============================
+    // ========================================================
+
     status: {
       type: String,
+
       enum: [
         "pending",
         "processing",
@@ -115,16 +194,23 @@ const orderSchema = new mongoose.Schema(
         "delivered",
         "cancelled",
       ],
+
       default: "pending",
     },
-    stripeSessionId: {
-    type: String,
-     default: null,
-        },
 
-    // ==============================
+    // ========================================================
+    // STRIPE
+    // ========================================================
+
+    stripeSessionId: {
+      type: String,
+      default: null,
+    },
+
+    // ========================================================
     // PRICE
-    // ==============================
+    // ========================================================
+
     subtotal: {
       type: Number,
       required: true,
@@ -145,11 +231,20 @@ const orderSchema = new mongoose.Schema(
       default: 0,
     },
   },
+
   {
     timestamps: true,
   }
 );
 
-const Order = mongoose.model("Order", orderSchema);
+// ==========================================================
+// MODEL
+// ==========================================================
+
+const Order = mongoose.model(
+  "Order",
+  orderSchema
+);
 
 module.exports = Order;
+

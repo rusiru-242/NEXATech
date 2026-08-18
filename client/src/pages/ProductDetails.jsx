@@ -1,3 +1,4 @@
+
 import {
   ArrowLeft,
   Heart,
@@ -5,13 +6,15 @@ import {
   Star,
   Plus,
   Minus,
+  Zap,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 function ProductDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -136,6 +139,23 @@ function ProductDetails() {
   };
 
   // =========================================================
+  // PRICE
+  // =========================================================
+
+  const originalPrice = Number(product?.price || 0);
+
+  const discountPercentage = Math.min(
+    Math.max(Number(product?.discount || 0), 0),
+    100
+  );
+
+  const discountedPrice =
+    discountPercentage > 0
+      ? originalPrice -
+        (originalPrice * discountPercentage) / 100
+      : originalPrice;
+
+  // =========================================================
   // QUANTITY
   // =========================================================
 
@@ -152,6 +172,30 @@ function ProductDetails() {
       if (prev <= 1) return 1;
       return prev - 1;
     });
+  };
+
+  // =========================================================
+  // CREATE CART ITEM
+  // =========================================================
+
+  const createCartItem = () => {
+    return {
+      _id: product._id,
+      name: product.name,
+
+      // Store the actual selling price
+      price: discountedPrice,
+
+      // Keep original price + discount for UI
+      originalPrice,
+      discount: discountPercentage,
+
+      image: product.image || "",
+      brand: product.brand || "",
+      category: product.category || "",
+      stock: product.stock || 0,
+      quantity,
+    };
   };
 
   // =========================================================
@@ -184,17 +228,13 @@ function ProductDetails() {
       );
 
       cart[existingItemIndex].quantity = newQuantity;
+
+      // Update price information
+      cart[existingItemIndex].price = discountedPrice;
+      cart[existingItemIndex].originalPrice = originalPrice;
+      cart[existingItemIndex].discount = discountPercentage;
     } else {
-      cart.push({
-        _id: product._id,
-        name: product.name,
-        price: product.price,
-        image: product.image || "",
-        brand: product.brand || "",
-        category: product.category || "",
-        stock: product.stock || 0,
-        quantity,
-      });
+      cart.push(createCartItem());
     }
 
     localStorage.setItem(
@@ -202,7 +242,6 @@ function ProductDetails() {
       JSON.stringify(cart)
     );
 
-    // Tell Navbar/cart components that cart changed
     window.dispatchEvent(new Event("cartUpdated"));
 
     setCartMessage(
@@ -212,6 +251,49 @@ function ProductDetails() {
     setTimeout(() => {
       setCartMessage("");
     }, 3000);
+  };
+
+  // =========================================================
+  // BUY NOW
+  // =========================================================
+
+  const handleBuyNow = () => {
+    if (!product) return;
+
+    if (product.stock <= 0) {
+      setCartMessage("This product is currently out of stock.");
+      return;
+    }
+
+    const cart = JSON.parse(
+      localStorage.getItem("nexatech_cart") || "[]"
+    );
+
+    const existingItemIndex = cart.findIndex(
+      (item) => String(item._id) === String(product._id)
+    );
+
+    if (existingItemIndex !== -1) {
+      cart[existingItemIndex].quantity = Math.min(
+        cart[existingItemIndex].quantity + quantity,
+        product.stock
+      );
+
+      cart[existingItemIndex].price = discountedPrice;
+      cart[existingItemIndex].originalPrice = originalPrice;
+      cart[existingItemIndex].discount = discountPercentage;
+    } else {
+      cart.push(createCartItem());
+    }
+
+    localStorage.setItem(
+      "nexatech_cart",
+      JSON.stringify(cart)
+    );
+
+    window.dispatchEvent(new Event("cartUpdated"));
+
+    navigate("/checkout");
   };
 
   // =========================================================
@@ -306,7 +388,6 @@ function ProductDetails() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
         <div className="text-center">
-
           <h1 className="text-3xl font-bold">
             Product Not Found
           </h1>
@@ -322,7 +403,6 @@ function ProductDetails() {
             <ArrowLeft size={18} />
             Back to Products
           </Link>
-
         </div>
       </div>
     );
@@ -340,6 +420,11 @@ function ProductDetails() {
         ) / reviews.length
       : Number(product.rating || 0);
 
+  const reviewCount =
+    reviews.length > 0
+      ? reviews.length
+      : Number(product.reviews || 0);
+
   // =========================================================
   // UI
   // =========================================================
@@ -350,6 +435,7 @@ function ProductDetails() {
       <main className="mx-auto max-w-7xl px-6 py-10">
 
         {/* BACK */}
+
         <Link
           to="/products"
           className="mb-8 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-[#00E5FF]"
@@ -366,7 +452,13 @@ function ProductDetails() {
 
           {/* IMAGE */}
 
-          <div className="flex min-h-[450px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+          <div className="relative flex min-h-[450px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+
+            {discountPercentage > 0 && (
+              <div className="absolute left-5 top-5 rounded-full bg-red-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                -{discountPercentage}%
+              </div>
+            )}
 
             {product.image ? (
               <img
@@ -386,11 +478,15 @@ function ProductDetails() {
 
           <div>
 
-            <div className="mb-3 flex items-center gap-3">
+            {/* CATEGORY + BRAND */}
 
-              <span className="rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 px-3 py-1 text-xs font-medium text-[#00E5FF]">
-                {product.category}
-              </span>
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+
+              {product.category && (
+                <span className="rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 px-3 py-1 text-xs font-medium text-[#00E5FF]">
+                  {product.category}
+                </span>
+              )}
 
               {product.brand && (
                 <span className="text-sm text-gray-500">
@@ -400,13 +496,15 @@ function ProductDetails() {
 
             </div>
 
+            {/* NAME */}
+
             <h1 className="text-3xl font-bold md:text-4xl">
               {product.name}
             </h1>
 
-            {/* Rating */}
+            {/* RATING */}
 
-            <div className="mt-4 flex items-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
 
               <div className="flex items-center gap-1">
 
@@ -416,7 +514,7 @@ function ProductDetails() {
                     size={18}
                     fill={
                       star <= Math.round(averageRating)
-                        ? "#00E5FF"
+                        ? "currentColor"
                         : "transparent"
                     }
                     className={
@@ -429,25 +527,37 @@ function ProductDetails() {
 
               </div>
 
-              <span className="text-sm text-gray-400">
-                {averageRating
+              <span className="text-sm font-medium text-gray-300">
+                {averageRating > 0
                   ? averageRating.toFixed(1)
                   : "No rating"}
               </span>
 
               <span className="text-sm text-gray-600">
-                ({reviews.length} reviews)
+                ({reviewCount} reviews)
               </span>
 
             </div>
 
             {/* PRICE */}
 
-            <div className="mt-7">
+            <div className="mt-7 flex flex-wrap items-end gap-3">
 
               <span className="text-3xl font-bold text-[#00E5FF]">
-                ${Number(product.price).toFixed(2)}
+                ${discountedPrice.toFixed(2)}
               </span>
+
+              {discountPercentage > 0 && (
+                <>
+                  <span className="mb-1 text-lg text-gray-500 line-through">
+                    ${originalPrice.toFixed(2)}
+                  </span>
+
+                  <span className="mb-1 rounded-md bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-400">
+                    Save {discountPercentage}%
+                  </span>
+                </>
+              )}
 
             </div>
 
@@ -457,6 +567,34 @@ function ProductDetails() {
               {product.description ||
                 "No description available for this product."}
             </p>
+
+            {/* EXTRA PRODUCT INFORMATION */}
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+
+              {product.brand && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs text-gray-600">
+                    Brand
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-gray-300">
+                    {product.brand}
+                  </p>
+                </div>
+              )}
+
+              {product.category && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs text-gray-600">
+                    Category
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-gray-300">
+                    {product.category}
+                  </p>
+                </div>
+              )}
+
+            </div>
 
             {/* STOCK */}
 
@@ -514,22 +652,38 @@ function ProductDetails() {
 
             {/* ACTIONS */}
 
-            <div className="mt-7 flex gap-3">
+            <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+
+              {/* ADD TO CART */}
 
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={product.stock <= 0}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#00E5FF] px-6 py-4 font-semibold text-black transition hover:bg-[#00cce6] disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center justify-center gap-2 rounded-xl border border-[#00E5FF]/30 bg-[#00E5FF]/10 px-5 py-4 font-semibold text-[#00E5FF] transition hover:bg-[#00E5FF]/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ShoppingCart size={19} />
                 Add to Cart
               </button>
 
+              {/* BUY NOW */}
+
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                disabled={product.stock <= 0}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#00E5FF] px-5 py-4 font-semibold text-black transition hover:bg-[#00cce6] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Zap size={19} />
+                Buy Now
+              </button>
+
+              {/* WISHLIST */}
+
               <button
                 type="button"
                 onClick={handleWishlist}
-                className={`flex h-[56px] w-[56px] items-center justify-center rounded-xl border transition ${
+                className={`flex h-[56px] items-center justify-center rounded-xl border px-5 transition ${
                   isWishlisted
                     ? "border-red-500/40 bg-red-500/10 text-red-400"
                     : "border-white/10 bg-white/[0.03] text-gray-400 hover:border-white/20 hover:text-white"
@@ -590,7 +744,7 @@ function ProductDetails() {
               className="mt-6"
             >
 
-              {/* Rating */}
+              {/* RATING */}
 
               <div>
 
@@ -601,7 +755,6 @@ function ProductDetails() {
                 <div className="flex gap-1">
 
                   {[1, 2, 3, 4, 5].map((star) => (
-
                     <button
                       key={star}
                       type="button"
@@ -613,7 +766,7 @@ function ProductDetails() {
                         size={25}
                         fill={
                           star <= reviewRating
-                            ? "#00E5FF"
+                            ? "currentColor"
                             : "transparent"
                         }
                         className={
@@ -623,14 +776,13 @@ function ProductDetails() {
                         }
                       />
                     </button>
-
                   ))}
 
                 </div>
 
               </div>
 
-              {/* Comment */}
+              {/* COMMENT */}
 
               <textarea
                 value={reviewComment}
@@ -699,22 +851,20 @@ function ProductDetails() {
                       <div className="mt-2 flex gap-1">
 
                         {[1, 2, 3, 4, 5].map((star) => (
-
                           <Star
                             key={star}
                             size={15}
                             fill={
-                              star <= review.rating
-                                ? "#00E5FF"
+                              star <= Number(review.rating)
+                                ? "currentColor"
                                 : "transparent"
                             }
                             className={
-                              star <= review.rating
+                              star <= Number(review.rating)
                                 ? "text-[#00E5FF]"
                                 : "text-gray-600"
                             }
                           />
-
                         ))}
 
                       </div>
@@ -751,3 +901,4 @@ function ProductDetails() {
 }
 
 export default ProductDetails;
+

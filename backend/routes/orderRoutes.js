@@ -17,9 +17,6 @@ router.post("/", authMiddleware, async (req, res) => {
       items,
       shippingAddress,
       paymentMethod,
-      subtotal,
-      shippingFee,
-      total,
     } = req.body;
 
     // ------------------------------------------------------
@@ -62,21 +59,33 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 
     // ------------------------------------------------------
-    // Check products and stock
+    // Prepare order items
     // ------------------------------------------------------
 
     const orderItems = [];
 
+    let calculatedSubtotal = 0;
+
+    // ------------------------------------------------------
+    // Check products, stock and calculate prices
+    // ------------------------------------------------------
+
     for (const item of items) {
-      // Support payloads that pass product id as `item._id` or `item.product`
-      const productId = item._id || item.product;
+      // Support:
+      // item.product
+      // item._id
+      const productId = item.product || item._id;
 
       if (!productId) {
         return res.status(400).json({
           success: false,
-          message: "Invalid order item: missing product id",
+          message: "Invalid order item: missing product id.",
         });
       }
+
+      // ----------------------------------------------------
+      // Find product from database
+      // ----------------------------------------------------
 
       const product = await Product.findById(productId);
 
@@ -87,14 +96,25 @@ router.post("/", authMiddleware, async (req, res) => {
         });
       }
 
+      // ----------------------------------------------------
+      // Validate quantity
+      // ----------------------------------------------------
+
       const quantity = Number(item.quantity);
 
-      if (!quantity || quantity < 1) {
+      if (
+        !Number.isInteger(quantity) ||
+        quantity < 1
+      ) {
         return res.status(400).json({
           success: false,
           message: `Invalid quantity for ${product.name}.`,
         });
       }
+
+      // ----------------------------------------------------
+      // Check stock
+      // ----------------------------------------------------
 
       if (product.stock < quantity) {
         return res.status(400).json({
@@ -104,17 +124,94 @@ router.post("/", authMiddleware, async (req, res) => {
       }
 
       // ----------------------------------------------------
-      // Save current product information into order
+      // Product pricing
+      //
+      // Product.price = original/base price
+      // Product.discount = percentage discount
+      //
+      // Example:
+      // price = 100
+      // discount = 20%
+      // final price = 80
+      // ----------------------------------------------------
+
+      const originalPrice = Number(product.price) || 0;
+
+      const discount = Math.min(
+        Math.max(Number(product.discount) || 0, 0),
+        100
+      );
+
+      const discountedPrice =
+        originalPrice * (1 - discount / 100);
+
+      const finalPrice = Number(
+        discountedPrice.toFixed(2)
+      );
+
+      // ----------------------------------------------------
+      // Calculate subtotal using SERVER price
+      // ----------------------------------------------------
+
+      calculatedSubtotal += finalPrice * quantity;
+
+      // ----------------------------------------------------
+      // Save product snapshot into order
+      //
+      // This protects old orders when admin later changes
+      // the product price/discount.
       // ----------------------------------------------------
 
       orderItems.push({
         product: product._id,
+
         name: product.name,
-        image: product.image,
-        price: product.price,
+
+        image: product.image || "",
+
+        brand: product.brand || "",
+
+        category: product.category || "",
+
+        price: finalPrice,
+
+        originalPrice,
+
+        discount,
+
         quantity,
       });
     }
+
+    // ------------------------------------------------------
+    // Round subtotal
+    // ------------------------------------------------------
+
+    calculatedSubtotal = Number(
+      calculatedSubtotal.toFixed(2)
+    );
+
+    // ------------------------------------------------------
+    // Calculate shipping
+    //
+    // Current project rule:
+    // subtotal >= 100 => FREE
+    // subtotal < 100  => 10
+    // ------------------------------------------------------
+
+    const calculatedShippingFee =
+      calculatedSubtotal >= 100 ? 0 : 10;
+
+    // ------------------------------------------------------
+    // Calculate final total
+    // ------------------------------------------------------
+
+    const calculatedTotal = Number(
+      (
+        calculatedSubtotal +
+        calculatedShippingFee
+      ).toFixed(2)
+    );
 
     // ------------------------------------------------------
     // Create order
@@ -134,16 +231,15 @@ router.post("/", authMiddleware, async (req, res) => {
 
       paymentMethod,
 
-      paymentStatus:
-        paymentMethod === "cod"
-          ? "pending"
-          : "pending",
+      paymentStatus: "pending",
 
       status: "pending",
 
-      subtotal: Number(subtotal),
-      shippingFee: Number(shippingFee),
-      total: Number(total),
+      subtotal: calculatedSubtotal,
+
+      shippingFee: calculatedShippingFee,
+
+      total: calculatedTotal,
     });
 
     // ------------------------------------------------------
@@ -151,11 +247,37 @@ router.post("/", authMiddleware, async (req, res) => {
     // ------------------------------------------------------
 
     for (const item of orderItems) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: {
-          stock: -item.quantity,
-        },
-      });
+      const updatedProduct =
+        await Product.findOneAndUpdate(
+          {
+            _id: item.product,
+            stock: { $gte: item.quantity },
+          },
+          {
+            $inc: {
+              stock: -item.quantity,
+            },
+          },
+          {
+            new: true,
+          }
+        );
+
+      // ----------------------------------------------------
+      // Safety check
+      // ----------------------------------------------------
+
+      if (!updatedProduct) {
+        console.error(
+          `Stock update failed for product ${item.product}`
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "Stock changed while placing the order. Please try again.",
+        });
+      }
     }
 
     // ------------------------------------------------------
@@ -164,18 +286,30 @@ router.post("/", authMiddleware, async (req, res) => {
 
     res.status(201).json({
       success: true,
+
       message: "Order placed successfully.",
+
       order: {
         _id: order._id,
+
         user: order.user,
+
         items: order.items,
+
         shippingAddress: order.shippingAddress,
+
         paymentMethod: order.paymentMethod,
+
         paymentStatus: order.paymentStatus,
+
         status: order.status,
+
         subtotal: order.subtotal,
+
         shippingFee: order.shippingFee,
+
         total: order.total,
+
         createdAt: order.createdAt,
       },
     });
