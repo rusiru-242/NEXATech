@@ -3,14 +3,22 @@ const express = require("express");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const Review = require("../models/Review");
+const Category = require("../models/Category");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
-const Review = require("../models/Review");
-
 
 const router = express.Router();
 
+// ==========================================================
+// HELPER
+// Escape special regex characters
+// ==========================================================
+
+const escapeRegex = (value) => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
 
 // ==========================================================
 // ADMIN HOME
@@ -34,7 +42,6 @@ router.get(
   }
 );
 
-
 // ==========================================================
 // ADMIN DASHBOARD
 // ==========================================================
@@ -56,7 +63,9 @@ router.get(
       const revenueResult = await Order.aggregate([
         {
           $match: {
-            status: { $ne: "cancelled" },
+            status: {
+              $ne: "cancelled",
+            },
           },
         },
         {
@@ -93,8 +102,10 @@ router.get(
     }
   }
 );
+
 // ==========================================================
 // GET ALL CATEGORIES
+// GET /api/admin/categories
 // ==========================================================
 
 router.get(
@@ -103,35 +114,120 @@ router.get(
   adminMiddleware,
   async (req, res) => {
     try {
-      const categories = await Product.aggregate([
-        {
-          $group: {
-            _id: "$category",
-            productCount: {
-              $sum: 1,
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            name: "$_id",
-            productCount: 1,
-          },
-        },
-        {
-          $sort: {
-            name: 1,
-          },
-        },
-      ]);
+      // ----------------------------------------------------
+      // Categories saved through Admin panel
+      // ----------------------------------------------------
+
+      const savedCategories = await Category.find()
+        .sort({
+          name: 1,
+        })
+        .lean();
+
+      // ----------------------------------------------------
+      // Categories already used by products
+      // ----------------------------------------------------
+
+      const productCategories =
+        await Product.distinct("category");
+
+      // ----------------------------------------------------
+      // Map categories
+      // ----------------------------------------------------
+
+      const categoryMap = new Map();
+
+      // Add saved categories first
+      savedCategories.forEach((category) => {
+        if (
+          category.name &&
+          category.name.trim()
+        ) {
+          const cleanName =
+            category.name.trim();
+
+          categoryMap.set(
+            cleanName.toLowerCase(),
+            {
+              _id: category._id,
+              name: cleanName,
+              productCount: 0,
+              saved: true,
+            }
+          );
+        }
+      });
+
+      // Add old/existing product categories
+      productCategories.forEach(
+        (categoryName) => {
+          if (
+            !categoryName ||
+            !categoryName.trim()
+          ) {
+            return;
+          }
+
+          const cleanName =
+            categoryName.trim();
+
+          const key =
+            cleanName.toLowerCase();
+
+          if (!categoryMap.has(key)) {
+            categoryMap.set(key, {
+              _id: null,
+              name: cleanName,
+              productCount: 0,
+              saved: false,
+            });
+          }
+        }
+      );
+
+      // ----------------------------------------------------
+      // Calculate product count
+      // ----------------------------------------------------
+
+      const categories =
+        await Promise.all(
+          Array.from(
+            categoryMap.values()
+          ).map(async (category) => {
+            const productCount =
+              await Product.countDocuments({
+                category: {
+                  $regex: `^${escapeRegex(
+                    category.name
+                  )}$`,
+                  $options: "i",
+                },
+              });
+
+            return {
+              ...category,
+              productCount,
+            };
+          })
+        );
+
+      // ----------------------------------------------------
+      // Sort alphabetically
+      // ----------------------------------------------------
+
+      categories.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
 
       return res.status(200).json({
         success: true,
         categories,
       });
     } catch (error) {
-      console.error("Get categories error:", error);
+      console.error(
+        "Get categories error:",
+        error
+      );
 
       return res.status(500).json({
         success: false,
@@ -141,9 +237,9 @@ router.get(
   }
 );
 
-
 // ==========================================================
 // CREATE CATEGORY
+// POST /api/admin/categories
 // ==========================================================
 
 router.post(
@@ -154,56 +250,114 @@ router.post(
     try {
       const { name } = req.body;
 
-      if (!name || !name.trim()) {
+      // ----------------------------------------------------
+      // Validation
+      // ----------------------------------------------------
+
+      if (
+        !name ||
+        !name.trim()
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Category name is required.",
+          message:
+            "Category name is required.",
         });
       }
 
-      const categoryName = name.trim();
+      const categoryName =
+        name.trim();
 
-      const existingCategory = await Product.findOne({
-        category: {
-          $regex: `^${categoryName}$`,
-          $options: "i",
-        },
-      });
+      const normalizedName =
+        categoryName.toLowerCase();
+
+      // ----------------------------------------------------
+      // Check Category collection
+      // ----------------------------------------------------
+
+      const existingCategory =
+        await Category.findOne({
+          normalizedName,
+        });
 
       if (existingCategory) {
         return res.status(409).json({
           success: false,
-          message: "Category already exists.",
+          message:
+            "Category already exists.",
         });
       }
 
-      // Category is represented by products.
-      // Create a placeholder product is NOT recommended.
-      // Therefore this endpoint validates the category name
-      // and returns it for frontend use.
+      // ----------------------------------------------------
+      // Check existing Product categories
+      // ----------------------------------------------------
+
+      const existingProduct =
+        await Product.findOne({
+          category: {
+            $regex: `^${escapeRegex(
+              categoryName
+            )}$`,
+            $options: "i",
+          },
+        });
+
+      if (existingProduct) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "Category already exists.",
+        });
+      }
+
+      // ----------------------------------------------------
+      // SAVE CATEGORY
+      // ----------------------------------------------------
+
+      const category =
+        await Category.create({
+          name: categoryName,
+          normalizedName,
+        });
 
       return res.status(201).json({
         success: true,
-        message: "Category name is valid.",
+        message:
+          "Category created successfully.",
         category: {
-          name: categoryName,
+          _id: category._id,
+          name: category.name,
           productCount: 0,
+          saved: true,
         },
       });
     } catch (error) {
-      console.error("Create category error:", error);
+      console.error(
+        "Create category error:",
+        error
+      );
+
+      // MongoDB duplicate key
+      if (error.code === 11000) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "Category already exists.",
+        });
+      }
 
       return res.status(500).json({
         success: false,
-        message: "Failed to create category.",
+        message:
+          "Failed to create category.",
       });
     }
   }
 );
 
-
 // ==========================================================
 // DELETE CATEGORY
+// DELETE /api/admin/categories/:name
 // ==========================================================
 
 router.delete(
@@ -212,14 +366,32 @@ router.delete(
   adminMiddleware,
   async (req, res) => {
     try {
-      const categoryName = decodeURIComponent(req.params.name);
+      const categoryName =
+        decodeURIComponent(
+          req.params.name
+        ).trim();
 
-      const productCount = await Product.countDocuments({
-        category: {
-          $regex: `^${categoryName}$`,
-          $options: "i",
-        },
-      });
+      if (!categoryName) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Category name is required.",
+        });
+      }
+
+      // ----------------------------------------------------
+      // Check products using category
+      // ----------------------------------------------------
+
+      const productCount =
+        await Product.countDocuments({
+          category: {
+            $regex: `^${escapeRegex(
+              categoryName
+            )}$`,
+            $options: "i",
+          },
+        });
 
       if (productCount > 0) {
         return res.status(400).json({
@@ -229,22 +401,43 @@ router.delete(
         });
       }
 
+      // ----------------------------------------------------
+      // Delete from Category collection
+      // ----------------------------------------------------
+
+      const category =
+        await Category.findOneAndDelete({
+          normalizedName:
+            categoryName.toLowerCase(),
+        });
+
+      if (!category) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Category not found.",
+        });
+      }
+
       return res.status(200).json({
         success: true,
-        message: "Category deleted successfully.",
+        message:
+          "Category deleted successfully.",
       });
     } catch (error) {
-      console.error("Delete category error:", error);
+      console.error(
+        "Delete category error:",
+        error
+      );
 
       return res.status(500).json({
         success: false,
-        message: "Failed to delete category.",
+        message:
+          "Failed to delete category.",
       });
     }
   }
 );
-
-
 
 // ==========================================================
 // GET ALL CUSTOMERS
@@ -260,36 +453,43 @@ router.get(
         role: "customer",
       })
         .select("-password")
-        .sort({ createdAt: -1 });
+        .sort({
+          createdAt: -1,
+        });
 
-      const customers = await Promise.all(
-        users.map(async (user) => {
-          const orderCount = await Order.countDocuments({
-            user: user._id,
-          });
+      const customers =
+        await Promise.all(
+          users.map(async (user) => {
+            const orderCount =
+              await Order.countDocuments({
+                user: user._id,
+              });
 
-          return {
-            ...user.toObject(),
-            orderCount,
-          };
-        })
-      );
+            return {
+              ...user.toObject(),
+              orderCount,
+            };
+          })
+        );
 
       return res.status(200).json({
         success: true,
         customers,
       });
     } catch (error) {
-      console.error("Get customers error:", error);
+      console.error(
+        "Get customers error:",
+        error
+      );
 
       return res.status(500).json({
         success: false,
-        message: "Failed to fetch customers.",
+        message:
+          "Failed to fetch customers.",
       });
     }
   }
 );
-
 
 // ==========================================================
 // DELETE CUSTOMER
@@ -301,34 +501,46 @@ router.delete(
   adminMiddleware,
   async (req, res) => {
     try {
-      const user = await User.findById(req.params.id);
+      const user =
+        await User.findById(
+          req.params.id
+        );
 
       if (!user) {
         return res.status(404).json({
           success: false,
-          message: "Customer not found.",
+          message:
+            "Customer not found.",
         });
       }
 
       if (user.role === "admin") {
         return res.status(403).json({
           success: false,
-          message: "Admin account cannot be deleted.",
+          message:
+            "Admin account cannot be deleted.",
         });
       }
 
-      await User.findByIdAndDelete(req.params.id);
+      await User.findByIdAndDelete(
+        req.params.id
+      );
 
       return res.status(200).json({
         success: true,
-        message: "Customer deleted successfully.",
+        message:
+          "Customer deleted successfully.",
       });
     } catch (error) {
-      console.error("Delete customer error:", error);
+      console.error(
+        "Delete customer error:",
+        error
+      );
 
       return res.status(500).json({
         success: false,
-        message: "Failed to delete customer.",
+        message:
+          "Failed to delete customer.",
       });
     }
   }
@@ -344,26 +556,38 @@ router.get(
   adminMiddleware,
   async (req, res) => {
     try {
-      const reviews = await Review.find()
-        .populate("user", "name email")
-        .populate("product", "name image")
-        .sort({ createdAt: -1 });
+      const reviews =
+        await Review.find()
+          .populate(
+            "user",
+            "name email"
+          )
+          .populate(
+            "product",
+            "name image"
+          )
+          .sort({
+            createdAt: -1,
+          });
 
       return res.status(200).json({
         success: true,
         reviews,
       });
     } catch (error) {
-      console.error("Get reviews error:", error);
+      console.error(
+        "Get reviews error:",
+        error
+      );
 
       return res.status(500).json({
         success: false,
-        message: "Failed to fetch reviews.",
+        message:
+          "Failed to fetch reviews.",
       });
     }
   }
 );
-
 
 // ==========================================================
 // UPDATE REVIEW STATUS
@@ -375,7 +599,8 @@ router.put(
   adminMiddleware,
   async (req, res) => {
     try {
-      const { status } = req.body;
+      const { status } =
+        req.body;
 
       const allowedStatuses = [
         "pending",
@@ -383,34 +608,50 @@ router.put(
         "hidden",
       ];
 
-      if (!allowedStatuses.includes(status)) {
+      if (
+        !allowedStatuses.includes(
+          status
+        )
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Invalid review status.",
+          message:
+            "Invalid review status.",
         });
       }
 
-      const review = await Review.findByIdAndUpdate(
-        req.params.id,
-        { status },
-        {
-          new: true,
-          runValidators: true,
-        }
-      )
-        .populate("user", "name email")
-        .populate("product", "name image");
+      const review =
+        await Review.findByIdAndUpdate(
+          req.params.id,
+          {
+            status,
+          },
+          {
+            new: true,
+            runValidators: true,
+          }
+        )
+          .populate(
+            "user",
+            "name email"
+          )
+          .populate(
+            "product",
+            "name image"
+          );
 
       if (!review) {
         return res.status(404).json({
           success: false,
-          message: "Review not found.",
+          message:
+            "Review not found.",
         });
       }
 
       return res.status(200).json({
         success: true,
-        message: "Review status updated successfully.",
+        message:
+          "Review status updated successfully.",
         review,
       });
     } catch (error) {
@@ -421,12 +662,12 @@ router.put(
 
       return res.status(500).json({
         success: false,
-        message: "Failed to update review status.",
+        message:
+          "Failed to update review status.",
       });
     }
   }
 );
-
 
 // ==========================================================
 // DELETE REVIEW
@@ -438,67 +679,92 @@ router.delete(
   adminMiddleware,
   async (req, res) => {
     try {
-      const review = await Review.findByIdAndDelete(
-        req.params.id
-      );
+      const review =
+        await Review.findByIdAndDelete(
+          req.params.id
+        );
 
       if (!review) {
         return res.status(404).json({
           success: false,
-          message: "Review not found.",
+          message:
+            "Review not found.",
         });
       }
 
       return res.status(200).json({
         success: true,
-        message: "Review deleted successfully.",
+        message:
+          "Review deleted successfully.",
       });
     } catch (error) {
-      console.error("Delete review error:", error);
+      console.error(
+        "Delete review error:",
+        error
+      );
 
       return res.status(500).json({
         success: false,
-        message: "Failed to delete review.",
+        message:
+          "Failed to delete review.",
       });
     }
   }
 );
-
 
 // ==========================================================
 // ADMIN ORDERS
 // ==========================================================
 
 // GET ALL ORDERS
-router.get("/orders", authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const orders = await Order.find()
-      .populate("user", "name email phone")
-      .sort({ createdAt: -1 });
 
-    res.json({
-      success: true,
-      orders,
-    });
-  } catch (error) {
-    console.error("Get admin orders error:", error);
+router.get(
+  "/orders",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const orders =
+        await Order.find()
+          .populate(
+            "user",
+            "name email phone"
+          )
+          .sort({
+            createdAt: -1,
+          });
 
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch orders.",
-    });
+      res.json({
+        success: true,
+        orders,
+      });
+    } catch (error) {
+      console.error(
+        "Get admin orders error:",
+        error
+      );
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Failed to fetch orders.",
+      });
+    }
   }
-});
+);
 
-
+// ==========================================================
 // UPDATE ORDER STATUS
+// ==========================================================
+
 router.put(
   "/orders/:id/status",
   authMiddleware,
   adminMiddleware,
   async (req, res) => {
     try {
-      const { status } = req.body;
+      const { status } =
+        req.body;
 
       const allowedStatuses = [
         "pending",
@@ -508,98 +774,142 @@ router.put(
         "cancelled",
       ];
 
-      if (!allowedStatuses.includes(status)) {
+      if (
+        !allowedStatuses.includes(
+          status
+        )
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Invalid order status.",
+          message:
+            "Invalid order status.",
         });
       }
 
-      const order = await Order.findById(req.params.id);
+      const order =
+        await Order.findById(
+          req.params.id
+        );
 
       if (!order) {
         return res.status(404).json({
           success: false,
-          message: "Order not found.",
+          message:
+            "Order not found.",
         });
       }
 
       order.status = status;
 
-      // Automatically mark payment as paid for delivered card orders
-      if (status === "delivered" && order.paymentMethod === "card") {
+      // Automatically mark payment as paid
+      // for delivered card orders
+      if (
+        status === "delivered" &&
+        order.paymentMethod === "card"
+      ) {
         order.paymentStatus = "paid";
       }
 
       await order.save();
 
-      const updatedOrder = await Order.findById(order._id)
-        .populate("user", "name email phone");
+      const updatedOrder =
+        await Order.findById(
+          order._id
+        ).populate(
+          "user",
+          "name email phone"
+        );
 
       res.json({
         success: true,
-        message: "Order status updated successfully.",
+        message:
+          "Order status updated successfully.",
         order: updatedOrder,
       });
     } catch (error) {
-      console.error("Update order status error:", error);
+      console.error(
+        "Update order status error:",
+        error
+      );
 
       res.status(500).json({
         success: false,
-        message: "Failed to update order status.",
+        message:
+          "Failed to update order status.",
       });
     }
   }
 );
 
-
+// ==========================================================
 // UPDATE PAYMENT STATUS
+// ==========================================================
+
 router.put(
   "/orders/:id/payment-status",
   authMiddleware,
   adminMiddleware,
   async (req, res) => {
     try {
-      const { paymentStatus } = req.body;
+      const { paymentStatus } =
+        req.body;
 
-      const allowedStatuses = ["pending", "paid", "failed"];
+      const allowedStatuses = [
+        "pending",
+        "paid",
+        "failed",
+      ];
 
-      if (!allowedStatuses.includes(paymentStatus)) {
+      if (
+        !allowedStatuses.includes(
+          paymentStatus
+        )
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Invalid payment status.",
+          message:
+            "Invalid payment status.",
         });
       }
 
-      const order = await Order.findById(req.params.id);
+      const order =
+        await Order.findById(
+          req.params.id
+        );
 
       if (!order) {
         return res.status(404).json({
           success: false,
-          message: "Order not found.",
+          message:
+            "Order not found.",
         });
       }
 
-      order.paymentStatus = paymentStatus;
+      order.paymentStatus =
+        paymentStatus;
 
       await order.save();
 
       res.json({
         success: true,
-        message: "Payment status updated successfully.",
+        message:
+          "Payment status updated successfully.",
         order,
       });
     } catch (error) {
-      console.error("Update payment status error:", error);
+      console.error(
+        "Update payment status error:",
+        error
+      );
 
       res.status(500).json({
         success: false,
-        message: "Failed to update payment status.",
+        message:
+          "Failed to update payment status.",
       });
     }
   }
 );
-
 
 // ==========================================================
 // ADMIN ANALYTICS
@@ -633,7 +943,9 @@ router.get(
         Order.aggregate([
           {
             $match: {
-              status: { $ne: "cancelled" },
+              status: {
+                $ne: "cancelled",
+              },
             },
           },
           {
@@ -669,116 +981,128 @@ router.get(
 
       const totalRevenue =
         revenueResult.length > 0
-          ? revenueResult[0].totalRevenue
+          ? revenueResult[0]
+              .totalRevenue
           : 0;
 
       // ======================================================
       // BEST SELLING PRODUCTS
       // ======================================================
 
-      const bestSellingProducts = await Order.aggregate([
-        {
-          $match: {
-            status: { $ne: "cancelled" },
-          },
-        },
-        {
-          $unwind: "$items",
-        },
-        {
-          $group: {
-            _id: "$items.name",
-            totalSold: {
-              $sum: "$items.quantity",
-            },
-            revenue: {
-              $sum: {
-                $multiply: [
-                  "$items.price",
-                  "$items.quantity",
-                ],
+      const bestSellingProducts =
+        await Order.aggregate([
+          {
+            $match: {
+              status: {
+                $ne: "cancelled",
               },
             },
           },
-        },
-        {
-          $sort: {
-            totalSold: -1,
+          {
+            $unwind: "$items",
           },
-        },
-        {
-          $limit: 5,
-        },
-      ]);
+          {
+            $group: {
+              _id: "$items.name",
+              totalSold: {
+                $sum: "$items.quantity",
+              },
+              revenue: {
+                $sum: {
+                  $multiply: [
+                    "$items.price",
+                    "$items.quantity",
+                  ],
+                },
+              },
+            },
+          },
+          {
+            $sort: {
+              totalSold: -1,
+            },
+          },
+          {
+            $limit: 5,
+          },
+        ]);
 
       // ======================================================
       // CATEGORY SALES
       // ======================================================
 
-      const categorySales = await Order.aggregate([
-        {
-          $match: {
-            status: { $ne: "cancelled" },
-          },
-        },
-        {
-          $unwind: "$items",
-        },
-        {
-          $lookup: {
-            from: "products",
-            localField: "items.product",
-            foreignField: "_id",
-            as: "productInfo",
-          },
-        },
-        {
-          $unwind: {
-            path: "$productInfo",
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
-          $group: {
-            _id: {
-              $ifNull: [
-                "$productInfo.category",
-                "Other",
-              ],
-            },
-            sales: {
-              $sum: "$items.quantity",
-            },
-            revenue: {
-              $sum: {
-                $multiply: [
-                  "$items.price",
-                  "$items.quantity",
-                ],
+      const categorySales =
+        await Order.aggregate([
+          {
+            $match: {
+              status: {
+                $ne: "cancelled",
               },
             },
           },
-        },
-        {
-          $sort: {
-            revenue: -1,
+          {
+            $unwind: "$items",
           },
-        },
-      ]);
+          {
+            $lookup: {
+              from: "products",
+              localField:
+                "items.product",
+              foreignField: "_id",
+              as: "productInfo",
+            },
+          },
+          {
+            $unwind: {
+              path: "$productInfo",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $group: {
+              _id: {
+                $ifNull: [
+                  "$productInfo.category",
+                  "Other",
+                ],
+              },
+              sales: {
+                $sum: "$items.quantity",
+              },
+              revenue: {
+                $sum: {
+                  $multiply: [
+                    "$items.price",
+                    "$items.quantity",
+                  ],
+                },
+              },
+            },
+          },
+          {
+            $sort: {
+              revenue: -1,
+            },
+          },
+        ]);
 
       // ======================================================
       // RECENT ORDERS
       // ======================================================
 
-      const recentOrders = await Order.find()
-        .populate("user", "name email")
-        .sort({
-          createdAt: -1,
-        })
-        .limit(5)
-        .select(
-          "_id user total status paymentStatus createdAt"
-        );
+      const recentOrders =
+        await Order.find()
+          .populate(
+            "user",
+            "name email"
+          )
+          .sort({
+            createdAt: -1,
+          })
+          .limit(5)
+          .select(
+            "_id user total status paymentStatus createdAt"
+          );
 
       res.json({
         success: true,
@@ -812,7 +1136,8 @@ router.get(
 
       res.status(500).json({
         success: false,
-        message: "Failed to load analytics.",
+        message:
+          "Failed to load analytics.",
       });
     }
   }

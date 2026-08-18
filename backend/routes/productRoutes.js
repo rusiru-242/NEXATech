@@ -1,5 +1,6 @@
 const express = require("express");
 const Product = require("../models/Product");
+const Category = require("../models/Category");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
@@ -27,6 +28,65 @@ router.get("/", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch products.",
+    });
+  }
+});
+
+// =====================================================
+// GET ALL CATEGORIES
+// GET /api/products/categories
+// Public
+// =====================================================
+router.get("/categories", async (req, res) => {
+  try {
+    // Categories created from Admin panel
+    const savedCategories = await Category.find()
+      .sort({ name: 1 })
+      .lean();
+
+    // Categories already used by existing products
+    const productCategories = await Product.distinct("category");
+
+    const categoryMap = new Map();
+
+    // Add saved categories
+    savedCategories.forEach((category) => {
+      if (category.name && category.name.trim()) {
+        const cleanName = category.name.trim();
+
+        categoryMap.set(
+          cleanName.toLowerCase(),
+          cleanName
+        );
+      }
+    });
+
+    // Add existing product categories
+    productCategories.forEach((category) => {
+      if (category && category.trim()) {
+        const cleanName = category.trim();
+        const key = cleanName.toLowerCase();
+
+        if (!categoryMap.has(key)) {
+          categoryMap.set(key, cleanName);
+        }
+      }
+    });
+
+    const categories = Array.from(
+      categoryMap.values()
+    ).sort((a, b) => a.localeCompare(b));
+
+    res.status(200).json({
+      success: true,
+      categories,
+    });
+  } catch (error) {
+    console.error("Get categories error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch categories.",
     });
   }
 });
@@ -92,7 +152,12 @@ router.post(
       // Validation
       // -----------------------------------------------
 
-      if (!name || price === undefined || !category || !brand) {
+      if (
+        !name ||
+        price === undefined ||
+        !category ||
+        !brand
+      ) {
         return res.status(400).json({
           success: false,
           message:
@@ -147,14 +212,15 @@ router.put(
     try {
       const { id } = req.params;
 
-      const product = await Product.findByIdAndUpdate(
-        id,
-        req.body,
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
+      const product =
+        await Product.findByIdAndUpdate(
+          id,
+          req.body,
+          {
+            new: true,
+            runValidators: true,
+          }
+        );
 
       if (!product) {
         return res.status(404).json({

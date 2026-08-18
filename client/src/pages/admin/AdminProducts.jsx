@@ -1,3 +1,4 @@
+
 import {
   Edit3,
   Image as ImageIcon,
@@ -13,6 +14,7 @@ import { useEffect, useState } from "react";
 import AdminNavbar from "../../components/AdminNavbar";
 
 const API_URL = "http://localhost:5000/api/products";
+const CATEGORY_API_URL = "http://localhost:5000/api/products/categories";
 
 const emptyForm = {
   name: "",
@@ -29,8 +31,10 @@ const emptyForm = {
 
 function AdminProducts() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState("");
@@ -40,7 +44,6 @@ function AdminProducts() {
   const [categoryFilter, setCategoryFilter] = useState("All");
 
   const [showModal, setShowModal] = useState(false);
-
   const [editingProduct, setEditingProduct] = useState(null);
 
   const [form, setForm] = useState(emptyForm);
@@ -55,7 +58,6 @@ function AdminProducts() {
       setError("");
 
       const response = await fetch(API_URL);
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -82,8 +84,69 @@ function AdminProducts() {
     }
   };
 
+  // ==========================================
+  // LOAD CATEGORIES
+  // ==========================================
+
+  const loadCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+
+      const response = await fetch(CATEGORY_API_URL);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to load categories."
+        );
+      }
+
+      const categoryData = Array.isArray(data.categories)
+        ? data.categories
+        : [];
+
+      const categoryNames = categoryData
+        .map((category) =>
+          typeof category === "string"
+            ? category
+            : category?.name
+        )
+        .filter(Boolean)
+        .map((name) => name.trim());
+
+      const uniqueCategories = categoryNames.filter(
+        (name, index, array) =>
+          array.findIndex(
+            (item) =>
+              item.toLowerCase() === name.toLowerCase()
+          ) === index
+      );
+
+      setCategories(uniqueCategories);
+    } catch (err) {
+      console.error("Load categories error:", err);
+
+      // Categories API fail unoth existing products walin
+      // fallback categories generate karanawa.
+      setCategories((currentCategories) => {
+        if (currentCategories.length > 0) {
+          return currentCategories;
+        }
+
+        return [];
+      });
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  // ==========================================
+  // INITIAL LOAD
+  // ==========================================
+
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
 
   // ==========================================
@@ -105,10 +168,18 @@ function AdminProducts() {
 
   const openAddModal = () => {
     setEditingProduct(null);
-    setForm(emptyForm);
+
+    setForm({
+      ...emptyForm,
+      category: categories.length > 0 ? categories[0] : "",
+    });
+
     setError("");
     setSuccess("");
     setShowModal(true);
+
+    // latest categories load karanna
+    loadCategories();
   };
 
   // ==========================================
@@ -134,6 +205,9 @@ function AdminProducts() {
     setError("");
     setSuccess("");
     setShowModal(true);
+
+    // latest categories load karanna
+    loadCategories();
   };
 
   // ==========================================
@@ -243,6 +317,7 @@ function AdminProducts() {
       setForm(emptyForm);
 
       await loadProducts();
+      await loadCategories();
     } catch (err) {
       console.error("Save product error:", err);
 
@@ -300,6 +375,7 @@ function AdminProducts() {
       setSuccess("Product deleted successfully.");
 
       await loadProducts();
+      await loadCategories();
     } catch (err) {
       console.error("Delete product error:", err);
 
@@ -310,17 +386,45 @@ function AdminProducts() {
   };
 
   // ==========================================
-  // CATEGORIES
+  // CATEGORY FILTER
   // ==========================================
 
-  const categories = [
+  const filterCategories = [
     "All",
-    ...new Set(
-      products
-        .map((product) => product.category)
-        .filter(Boolean)
-    ),
+    ...products
+      .map((product) => product.category)
+      .filter(Boolean)
+      .filter(
+        (category, index, array) =>
+          array.findIndex(
+            (item) =>
+              item.toLowerCase() ===
+              category.toLowerCase()
+          ) === index
+      ),
   ];
+
+  // ==========================================
+  // MERGE CATEGORY OPTIONS
+  // ==========================================
+
+  const categoryOptions = [
+    ...categories,
+    ...products
+      .map((product) => product.category)
+      .filter(Boolean),
+  ]
+    .map((category) => category.trim())
+    .filter(Boolean)
+    .filter(
+      (category, index, array) =>
+        array.findIndex(
+          (item) =>
+            item.toLowerCase() ===
+            category.toLowerCase()
+        ) === index
+    )
+    .sort((a, b) => a.localeCompare(b));
 
   // ==========================================
   // FILTER PRODUCTS
@@ -328,13 +432,15 @@ function AdminProducts() {
 
   const filteredProducts = products.filter(
     (product) => {
+      const searchValue = search.toLowerCase();
+
       const matchesSearch =
         product.name
           ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
+          .includes(searchValue) ||
         product.brand
           ?.toLowerCase()
-          .includes(search.toLowerCase());
+          .includes(searchValue);
 
       const matchesCategory =
         categoryFilter === "All" ||
@@ -429,7 +535,7 @@ function AdminProducts() {
               }
               className="border border-white/10 bg-[#050505] px-4 py-3 text-xs text-gray-400 outline-none focus:border-[#00e5ff]/30"
             >
-              {categories.map((category) => (
+              {filterCategories.map((category) => (
                 <option
                   key={category}
                   value={category}
@@ -472,10 +578,6 @@ function AdminProducts() {
             </div>
           ) : filteredProducts.length === 0 ? (
 
-            /* ========================================
-               EMPTY
-            ======================================== */
-
             <div className="flex min-h-[300px] flex-col items-center justify-center border border-white/10 bg-[#090909] text-center">
 
               <Package
@@ -494,10 +596,6 @@ function AdminProducts() {
             </div>
 
           ) : (
-
-            /* ========================================
-               PRODUCT TABLE
-            ======================================== */
 
             <div className="overflow-x-auto border border-white/10 bg-[#090909]">
 
@@ -542,8 +640,6 @@ function AdminProducts() {
                       className="border-b border-white/[0.05] transition hover:bg-white/[0.02]"
                     >
 
-                      {/* PRODUCT */}
-
                       <td className="px-5 py-4">
 
                         <div className="flex items-center gap-4">
@@ -585,8 +681,6 @@ function AdminProducts() {
 
                       </td>
 
-                      {/* CATEGORY */}
-
                       <td className="px-5 py-4">
 
                         <span className="border border-white/10 px-2 py-1 text-[8px] uppercase tracking-wider text-gray-500">
@@ -594,8 +688,6 @@ function AdminProducts() {
                         </span>
 
                       </td>
-
-                      {/* PRICE */}
 
                       <td className="px-5 py-4">
 
@@ -607,8 +699,6 @@ function AdminProducts() {
                         </p>
 
                       </td>
-
-                      {/* STOCK */}
 
                       <td className="px-5 py-4">
 
@@ -624,8 +714,6 @@ function AdminProducts() {
 
                       </td>
 
-                      {/* RATING */}
-
                       <td className="px-5 py-4">
 
                         <span className="text-xs text-gray-400">
@@ -633,8 +721,6 @@ function AdminProducts() {
                         </span>
 
                       </td>
-
-                      {/* ACTIONS */}
 
                       <td className="px-5 py-4">
 
@@ -776,13 +862,57 @@ function AdminProducts() {
                     Category *
                   </label>
 
-                  <input
+                  <select
                     name="category"
                     value={form.category}
                     onChange={handleChange}
-                    placeholder="Gaming"
-                    className="w-full border border-white/10 bg-[#050505] px-4 py-3 text-xs text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/30"
-                  />
+                    disabled={categoriesLoading}
+                    className="w-full border border-white/10 bg-[#050505] px-4 py-3 text-xs text-white outline-none focus:border-[#00e5ff]/30 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+
+                    <option
+                      value=""
+                      className="bg-[#050505]"
+                    >
+                      {categoriesLoading
+                        ? "Loading categories..."
+                        : "Select a category"}
+                    </option>
+
+                    {categoryOptions.map(
+                      (category) => (
+                        <option
+                          key={category}
+                          value={category}
+                          className="bg-[#050505]"
+                        >
+                          {category}
+                        </option>
+                      )
+                    )}
+
+                    {/* Existing product category
+                        eka admin category list eke nathnam
+                        edit mode eke preserve karanawa */}
+                    {form.category &&
+                      !categoryOptions.some(
+                        (category) =>
+                          category.toLowerCase() ===
+                          form.category.toLowerCase()
+                      ) && (
+                        <option
+                          value={form.category}
+                          className="bg-[#050505]"
+                        >
+                          {form.category}
+                        </option>
+                      )}
+
+                  </select>
+
+                  <p className="mt-2 text-[8px] uppercase tracking-wider text-gray-700">
+                    Categories are managed from Admin → Categories
+                  </p>
 
                 </div>
 
@@ -975,3 +1105,4 @@ function AdminProducts() {
 }
 
 export default AdminProducts;
+

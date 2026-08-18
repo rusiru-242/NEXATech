@@ -4,6 +4,8 @@ import {
   SlidersHorizontal,
   X,
   ChevronDown,
+  Star,
+  RotateCcw,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -11,29 +13,61 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 
-const categories = [
-  "All",
-  "Laptops",
-  "Smartphones",
-  "Gaming",
-  "Audio",
-  "Monitors",
-  "Cameras",
-  "Accessories",
-  "Smart Devices",
+const ratingOptions = [
+  {
+    label: "All Ratings",
+    value: 0,
+  },
+  {
+    label: "4★ & above",
+    value: 4,
+  },
+  {
+    label: "3★ & above",
+    value: 3,
+  },
+  {
+    label: "2★ & above",
+    value: 2,
+  },
 ];
 
 function Products() {
   const [products, setProducts] = useState([]);
 
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [sort, setSort] = useState("featured");
+  // =====================================================
+  // DYNAMIC CATEGORIES
+  // =====================================================
 
-  const [mobileFilter, setMobileFilter] = useState(false);
+  const [categories, setCategories] =
+    useState(["All"]);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [search, setSearch] =
+    useState("");
+
+  const [category, setCategory] =
+    useState("All");
+
+  const [sort, setSort] =
+    useState("featured");
+
+  const [minPrice, setMinPrice] =
+    useState("");
+
+  const [maxPrice, setMaxPrice] =
+    useState("");
+
+  const [minRating, setMinRating] =
+    useState(0);
+
+  const [mobileFilter, setMobileFilter] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   // =====================================================
   // LOAD PRODUCTS
@@ -45,24 +79,33 @@ function Products() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          "http://localhost:5000/api/products"
-        );
+        const response =
+          await fetch(
+            "http://localhost:5000/api/products"
+          );
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
-            data.message || "Failed to load products."
+            data.message ||
+              "Failed to load products."
           );
         }
 
-        setProducts(data.products || []);
+        setProducts(
+          data.products || []
+        );
       } catch (err) {
-        console.error("Products loading error:", err);
+        console.error(
+          "Products loading error:",
+          err
+        );
 
         setError(
-          err.message || "Unable to load products."
+          err.message ||
+            "Unable to load products."
         );
       } finally {
         setLoading(false);
@@ -73,51 +116,280 @@ function Products() {
   }, []);
 
   // =====================================================
+  // LOAD CATEGORIES
+  // =====================================================
+
+  useEffect(() => {
+    const loadCategories =
+      async () => {
+        try {
+          const response =
+            await fetch(
+              "http://localhost:5000/api/products/categories"
+            );
+
+          const data =
+            await response.json();
+
+          if (
+            !response.ok ||
+            !data.success
+          ) {
+            throw new Error(
+              data.message ||
+                "Failed to load categories."
+            );
+          }
+
+          const fetchedCategories =
+            data.categories || [];
+
+          // Remove duplicates while
+          // keeping original category names
+          const uniqueCategories =
+            Array.from(
+              new Map(
+                fetchedCategories
+                  .filter(
+                    (item) =>
+                      item &&
+                      String(
+                        item
+                      ).trim()
+                  )
+                  .map((item) => {
+                    const cleanName =
+                      String(
+                        item
+                      ).trim();
+
+                    return [
+                      cleanName.toLowerCase(),
+                      cleanName,
+                    ];
+                  })
+              ).values()
+            );
+
+          setCategories([
+            "All",
+            ...uniqueCategories,
+          ]);
+        } catch (err) {
+          console.error(
+            "Categories loading error:",
+            err
+          );
+
+          // Keep All even if
+          // category API fails
+          setCategories(["All"]);
+        }
+      };
+
+    loadCategories();
+  }, []);
+
+  // =====================================================
   // FILTER + SORT
   // =====================================================
 
-  const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
-      const productName = product.name || "";
-      const productCategory = product.category || "";
+  const filteredProducts =
+    useMemo(() => {
+      const normalizedSearch =
+        search
+          .trim()
+          .toLowerCase();
 
-      const matchesSearch = productName
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      let result =
+        products.filter(
+          (product) => {
+            const productName =
+              String(
+                product.name || ""
+              );
 
-      const matchesCategory =
-        category === "All" ||
-        productCategory === category;
+            const productBrand =
+              String(
+                product.brand || ""
+              );
 
-      return matchesSearch && matchesCategory;
-    });
+            const productCategory =
+              String(
+                product.category || ""
+              );
 
-    if (sort === "low") {
-      result.sort(
-        (a, b) =>
-          Number(a.price || 0) -
-          Number(b.price || 0)
-      );
-    }
+            const productDescription =
+              String(
+                product.description ||
+                  ""
+              );
 
-    if (sort === "high") {
-      result.sort(
-        (a, b) =>
-          Number(b.price || 0) -
-          Number(a.price || 0)
-      );
-    }
+            // -------------------------------------------------
+            // SEARCH
+            // -------------------------------------------------
 
-    if (sort === "rating") {
-      result.sort(
-        (a, b) =>
-          Number(b.rating || 0) -
-          Number(a.rating || 0)
-      );
-    }
+            const searchableText = `
+              ${productName}
+              ${productBrand}
+              ${productCategory}
+              ${productDescription}
+            `.toLowerCase();
 
-    return result;
-  }, [products, search, category, sort]);
+            const matchesSearch =
+              !normalizedSearch ||
+              searchableText.includes(
+                normalizedSearch
+              );
+
+            // -------------------------------------------------
+            // CATEGORY
+            // -------------------------------------------------
+
+            const matchesCategory =
+              category === "All" ||
+              productCategory
+                .trim()
+                .toLowerCase() ===
+                category
+                  .trim()
+                  .toLowerCase();
+
+            // -------------------------------------------------
+            // PRICE
+            // -------------------------------------------------
+
+            const price =
+              Number(
+                product.price || 0
+              );
+
+            const minimum =
+              Number(minPrice);
+
+            const maximum =
+              Number(maxPrice);
+
+            const matchesMinPrice =
+              !minPrice ||
+              Number.isNaN(minimum) ||
+              price >= minimum;
+
+            const matchesMaxPrice =
+              !maxPrice ||
+              Number.isNaN(maximum) ||
+              price <= maximum;
+
+            // -------------------------------------------------
+            // RATING
+            // -------------------------------------------------
+
+            const rating =
+              Number(
+                product.rating || 0
+              );
+
+            const matchesRating =
+              rating >=
+              Number(minRating);
+
+            return (
+              matchesSearch &&
+              matchesCategory &&
+              matchesMinPrice &&
+              matchesMaxPrice &&
+              matchesRating
+            );
+          }
+        );
+
+      // ===================================================
+      // SORT
+      // ===================================================
+
+      if (sort === "low") {
+        result.sort(
+          (a, b) =>
+            Number(
+              a.price || 0
+            ) -
+            Number(
+              b.price || 0
+            )
+        );
+      }
+
+      if (sort === "high") {
+        result.sort(
+          (a, b) =>
+            Number(
+              b.price || 0
+            ) -
+            Number(
+              a.price || 0
+            )
+        );
+      }
+
+      if (sort === "rating") {
+        result.sort(
+          (a, b) =>
+            Number(
+              b.rating || 0
+            ) -
+            Number(
+              a.rating || 0
+            )
+        );
+      }
+
+      if (sort === "newest") {
+        result.sort(
+          (a, b) =>
+            new Date(
+              b.createdAt || 0
+            ) -
+            new Date(
+              a.createdAt || 0
+            )
+        );
+      }
+
+      return result;
+    }, [
+      products,
+      search,
+      category,
+      sort,
+      minPrice,
+      maxPrice,
+      minRating,
+    ]);
+
+  // =====================================================
+  // CLEAR FILTERS
+  // =====================================================
+
+  const clearFilters = () => {
+    setSearch("");
+    setCategory("All");
+    setSort("featured");
+    setMinPrice("");
+    setMaxPrice("");
+    setMinRating(0);
+  };
+
+  // =====================================================
+  // ACTIVE FILTER CHECK
+  // =====================================================
+
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    category !== "All" ||
+    sort !== "featured" ||
+    minPrice !== "" ||
+    maxPrice !== "" ||
+    minRating !== 0;
 
   // =====================================================
   // LOADING
@@ -171,17 +443,13 @@ function Products() {
       <Navbar />
 
       <main>
-
         {/* =================================================
-            COMPACT PAGE HEADER
+            PAGE HEADER
         ================================================= */}
 
         <section className="border-b border-white/10">
-
           <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:py-12">
-
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-
               {/* TITLE */}
 
               <motion.div
@@ -197,7 +465,6 @@ function Products() {
                   duration: 0.6,
                 }}
               >
-
                 <p className="text-[9px] font-semibold uppercase tracking-[0.35em] text-[#00e5ff]">
                   NexaTech Store
                 </p>
@@ -215,17 +482,14 @@ function Products() {
                   smart devices and technology built for
                   what's next.
                 </p>
-
               </motion.div>
 
               {/* SEARCH + SORT */}
 
               <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:min-w-[440px]">
-
-                {/* Search */}
+                {/* SEARCH */}
 
                 <div className="relative flex-1">
-
                   <Search
                     size={16}
                     className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600"
@@ -235,36 +499,39 @@ function Products() {
                     type="text"
                     value={search}
                     onChange={(e) =>
-                      setSearch(e.target.value)
+                      setSearch(
+                        e.target.value
+                      )
                     }
-                    placeholder="Search products..."
+                    placeholder="Search products, brands..."
                     className="h-10 w-full border border-white/10 bg-white/[0.03] pl-10 pr-9 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
                   />
 
                   {search && (
                     <button
                       type="button"
-                      onClick={() => setSearch("")}
+                      onClick={() =>
+                        setSearch("")
+                      }
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 transition hover:text-white"
                     >
                       <X size={14} />
                     </button>
                   )}
-
                 </div>
 
-                {/* Sort */}
+                {/* SORT */}
 
-                <div className="relative sm:w-[170px]">
-
+                <div className="relative sm:w-[180px]">
                   <select
                     value={sort}
                     onChange={(e) =>
-                      setSort(e.target.value)
+                      setSort(
+                        e.target.value
+                      )
                     }
                     className="h-10 w-full appearance-none border border-white/10 bg-white/[0.03] px-3 pr-9 text-xs text-gray-400 outline-none transition hover:border-white/20 focus:border-[#00e5ff]/40"
                   >
-
                     <option value="featured">
                       Featured
                     </option>
@@ -281,33 +548,29 @@ function Products() {
                       Highest Rated
                     </option>
 
+                    <option value="newest">
+                      Newest
+                    </option>
                   </select>
 
                   <ChevronDown
                     size={13}
                     className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"
                   />
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
-
         </section>
 
         {/* =================================================
-            CATEGORY + PRODUCT AREA
+            PRODUCTS SECTION
         ================================================= */}
 
         <section className="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-9">
-
           <div className="grid gap-7 lg:grid-cols-[240px_1fr] lg:gap-10">
-
             {/* =================================================
-                CATEGORY SIDEBAR
+                CATEGORY / FILTER SIDEBAR
             ================================================= */}
 
             <aside
@@ -317,111 +580,254 @@ function Products() {
                   : "hidden"
               } lg:block`}
             >
+              {/* =================================================
+                  STABLE STICKY SIDEBAR
+
+                  No internal scrolling.
+                  Page itself scrolls.
+              ================================================= */}
 
               <div className="lg:sticky lg:top-24">
+                {/* SIDEBAR HEADER */}
 
                 <div className="flex items-center justify-between">
-
                   <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gray-600">
-                    Categories
+                    Filters
                   </p>
 
                   <button
                     type="button"
                     onClick={() =>
-                      setMobileFilter(false)
+                      setMobileFilter(
+                        false
+                      )
                     }
                     className="text-gray-600 hover:text-white lg:hidden"
                   >
                     <X size={15} />
                   </button>
-
                 </div>
 
-                {/* CATEGORY LIST */}
+                {/* =================================================
+                    CATEGORIES
+                ================================================= */}
 
-                <div className="mt-3 space-y-1">
+                <div className="mt-4">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gray-700">
+                    Categories
+                  </p>
 
-                  {categories.map((item) => (
+                  <div className="mt-3 space-y-1">
+                    {categories.map(
+                      (item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => {
+                            setCategory(
+                              item
+                            );
+
+                            setMobileFilter(
+                              false
+                            );
+                          }}
+                          className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition ${
+                            category ===
+                            item
+                              ? "bg-[#00e5ff]/10 text-[#00e5ff]"
+                              : "text-gray-500 hover:bg-white/[0.03] hover:text-white"
+                          }`}
+                        >
+                          <span>
+                            {item}
+                          </span>
+
+                          {category ===
+                            item && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#00e5ff]" />
+                          )}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* DIVIDER */}
+
+                <div className="my-6 border-t border-white/10" />
+
+                {/* =================================================
+                    PRICE RANGE
+                ================================================= */}
+
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gray-700">
+                    Price Range
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      value={minPrice}
+                      onChange={(e) =>
+                        setMinPrice(
+                          e.target.value
+                        )
+                      }
+                      placeholder="Min"
+                      className="h-9 w-full border border-white/10 bg-white/[0.03] px-3 text-xs text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                    />
+
+                    <input
+                      type="number"
+                      min="0"
+                      value={maxPrice}
+                      onChange={(e) =>
+                        setMaxPrice(
+                          e.target.value
+                        )
+                      }
+                      placeholder="Max"
+                      className="h-9 w-full border border-white/10 bg-white/[0.03] px-3 text-xs text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                    />
+                  </div>
+
+                  <p className="mt-2 text-[9px] text-gray-700">
+                    Enter price in LKR
+                  </p>
+                </div>
+
+                {/* DIVIDER */}
+
+                <div className="my-6 border-t border-white/10" />
+
+                {/* =================================================
+                    RATING
+                ================================================= */}
+
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gray-700">
+                    Rating
+                  </p>
+
+                  <div className="mt-3 space-y-1">
+                    {ratingOptions.map(
+                      (option) => (
+                        <button
+                          key={
+                            option.value
+                          }
+                          type="button"
+                          onClick={() =>
+                            setMinRating(
+                              option.value
+                            )
+                          }
+                          className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${
+                            minRating ===
+                            option.value
+                              ? "bg-[#00e5ff]/10 text-[#00e5ff]"
+                              : "text-gray-500 hover:bg-white/[0.03] hover:text-white"
+                          }`}
+                        >
+                          <Star
+                            size={12}
+                            className={
+                              minRating ===
+                              option.value
+                                ? "fill-[#00e5ff]"
+                                : ""
+                            }
+                          />
+
+                          <span>
+                            {
+                              option.label
+                            }
+                          </span>
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* =================================================
+                    CLEAR ALL FILTERS
+                ================================================= */}
+
+                {hasActiveFilters && (
+                  <>
+                    <div className="my-6 border-t border-white/10" />
 
                     <button
-                      key={item}
                       type="button"
-                      onClick={() => {
-                        setCategory(item);
-                        setMobileFilter(false);
-                      }}
-                      className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition ${
-                        category === item
-                          ? "bg-[#00e5ff]/10 text-[#00e5ff]"
-                          : "text-gray-500 hover:bg-white/[0.03] hover:text-white"
-                      }`}
+                      onClick={
+                        clearFilters
+                      }
+                      className="flex w-full items-center justify-center gap-2 border border-white/10 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 transition hover:border-[#00e5ff]/40 hover:text-[#00e5ff]"
                     >
+                      <RotateCcw
+                        size={13}
+                      />
 
-                      <span>
-                        {item}
-                      </span>
-
-                      {category === item && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00e5ff]" />
-                      )}
-
+                      Clear All Filters
                     </button>
-
-                  ))}
-
-                </div>
-
+                  </>
+                )}
               </div>
-
             </aside>
 
             {/* =================================================
-                PRODUCTS
+                PRODUCT AREA
             ================================================= */}
 
             <div>
-
-              {/* MOBILE FILTER */}
+              {/* MOBILE FILTER BUTTON */}
 
               <div className="mb-5 flex items-center justify-between lg:hidden">
-
                 <p className="text-xs text-gray-600">
-                  {filteredProducts.length} products
+                  {
+                    filteredProducts.length
+                  }{" "}
+                  products
                 </p>
 
                 <button
                   type="button"
                   onClick={() =>
-                    setMobileFilter(!mobileFilter)
+                    setMobileFilter(
+                      !mobileFilter
+                    )
                   }
                   className="flex h-9 items-center gap-2 border border-white/10 px-3 text-[10px] uppercase tracking-wider text-gray-400 transition hover:border-[#00e5ff]/40 hover:text-white"
                 >
-
-                  <SlidersHorizontal size={14} />
+                  <SlidersHorizontal
+                    size={14}
+                  />
 
                   Filter
-
                 </button>
-
               </div>
 
               {/* RESULT HEADER */}
 
               <div className="mb-5 flex items-end justify-between">
-
                 <div>
-
                   <p className="text-[10px] text-gray-600">
-                    {filteredProducts.length} products
+                    {
+                      filteredProducts.length
+                    }{" "}
+                    products
                   </p>
 
                   <h2 className="mt-0.5 text-lg font-semibold tracking-tight">
-                    {category === "All"
+                    {category ===
+                    "All"
                       ? "All Products"
                       : category}
                   </h2>
-
                 </div>
 
                 {search && (
@@ -429,64 +835,77 @@ function Products() {
                     Results for "{search}"
                   </p>
                 )}
-
               </div>
 
-              {/* PRODUCT GRID */}
+              {/* =================================================
+                  PRODUCT GRID
+                  
+                  Active filter badges intentionally removed.
+              ================================================= */}
 
-              {filteredProducts.length > 0 ? (
-
+              {filteredProducts.length >
+              0 ? (
                 <motion.div
                   layout
                   className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
                 >
-
-                  {filteredProducts.map((product) => (
-
-                    <motion.div
-                      key={product._id}
-                      layout
-                      initial={{
-                        opacity: 0,
-                        y: 12,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                      }}
-                    >
-
-                      <Link
-                        to={`/products/${product._id}`}
-                        className="block"
+                  {filteredProducts.map(
+                    (product) => (
+                      <motion.div
+                        key={
+                          product._id
+                        }
+                        layout
+                        initial={{
+                          opacity: 0,
+                          y: 12,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
                       >
-
-                        <ProductCard
-                          id={product._id}
-                          name={product.name}
-                          category={product.category}
-                          price={`Rs. ${Number(
-                            product.price || 0
-                          ).toLocaleString()}`}
-                          discount={product.discount}
-                          rating={product.rating || 0}
-                          reviews={product.reviews || 0}
-                        />
-
-                      </Link>
-
-                    </motion.div>
-
-                  ))}
-
+                        <Link
+                          to={`/products/${product._id}`}
+                          className="block"
+                        >
+                          <ProductCard
+                            id={
+                              product._id
+                            }
+                            name={
+                              product.name
+                            }
+                            category={
+                              product.category
+                            }
+                            price={`Rs. ${Number(
+                              product.price ||
+                                0
+                            ).toLocaleString()}`}
+                            discount={
+                              product.discount
+                            }
+                            rating={
+                              product.rating ||
+                              0
+                            }
+                            reviews={
+                              product.reviews ||
+                              0
+                            }
+                          />
+                        </Link>
+                      </motion.div>
+                    )
+                  )}
                 </motion.div>
-
               ) : (
-
                 <div className="flex min-h-[350px] flex-col items-center justify-center border border-dashed border-white/10">
-
                   <div className="mb-4 flex h-12 w-12 items-center justify-center border border-white/10 text-gray-600">
-                    <Search size={18} />
+                    <Search
+                      size={18}
+                    />
                   </div>
 
                   <h3 className="text-base font-semibold">
@@ -494,28 +913,24 @@ function Products() {
                   </h3>
 
                   <p className="mt-2 text-xs text-gray-600">
-                    Try another search or category.
+                    Try another search
+                    or adjust your
+                    filters.
                   </p>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearch("");
-                      setCategory("All");
-                    }}
+                    onClick={
+                      clearFilters
+                    }
                     className="mt-5 border border-white/10 px-4 py-2 text-[10px] font-semibold text-gray-400 transition hover:border-[#00e5ff]/40 hover:text-[#00e5ff]"
                   >
                     Clear Filters
                   </button>
-
                 </div>
-
               )}
-
             </div>
-
           </div>
-
         </section>
 
         {/* =================================================
@@ -523,11 +938,8 @@ function Products() {
         ================================================= */}
 
         <section className="border-t border-white/10">
-
           <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-18 lg:py-20">
-
             <div className="relative overflow-hidden border border-white/10 bg-[#080808] px-6 py-10 sm:px-10 sm:py-12">
-
               <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-[#00e5ff]/[0.05] blur-[100px]" />
 
               <p className="relative text-[9px] font-semibold uppercase tracking-[0.3em] text-[#00e5ff]">
@@ -538,14 +950,17 @@ function Products() {
                 Find the technology
 
                 <span className="text-gray-600">
-                  {" "}that fits you.
+                  {" "}
+                  that fits you.
                 </span>
               </h2>
 
               <p className="relative mt-3 max-w-xl text-xs leading-6 text-gray-500 sm:text-sm">
-                Our intelligent shopping experience
-                will help you discover products based
-                on your needs and preferences.
+                Our intelligent shopping
+                experience will help you
+                discover products based
+                on your needs and
+                preferences.
               </p>
 
               <button
@@ -554,15 +969,10 @@ function Products() {
               >
                 AI Shopping — Coming Soon
               </button>
-
             </div>
-
           </div>
-
         </section>
-
       </main>
-
     </div>
   );
 }
