@@ -30,17 +30,13 @@ function Products() {
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("featured");
 
-  const [mobileFilter, setMobileFilter] =
-    useState(false);
+  const [mobileFilter, setMobileFilter] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   // =====================================================
-  // LOAD PRODUCTS FROM BACKEND
+  // LOAD PRODUCTS
   // =====================================================
 
   useEffect(() => {
@@ -57,23 +53,16 @@ function Products() {
 
         if (!response.ok) {
           throw new Error(
-            data.message ||
-              "Failed to load products."
+            data.message || "Failed to load products."
           );
         }
 
-        setProducts(
-          data.products || []
-        );
+        setProducts(data.products || []);
       } catch (err) {
-        console.error(
-          "Products loading error:",
-          err
-        );
+        console.error("Products loading error:", err);
 
         setError(
-          err.message ||
-            "Unable to load products."
+          err.message || "Unable to load products."
         );
       } finally {
         setLoading(false);
@@ -88,31 +77,20 @@ function Products() {
   // =====================================================
 
   const filteredProducts = useMemo(() => {
-    let result = products.filter(
-      (product) => {
-        const productName =
-          product.name || "";
+    let result = products.filter((product) => {
+      const productName = product.name || "";
+      const productCategory = product.category || "";
 
-        const productCategory =
-          product.category || "";
+      const matchesSearch = productName
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-        const matchesSearch =
-          productName
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            );
+      const matchesCategory =
+        category === "All" ||
+        productCategory === category;
 
-        const matchesCategory =
-          category === "All" ||
-          productCategory === category;
-
-        return (
-          matchesSearch &&
-          matchesCategory
-        );
-      }
-    );
+      return matchesSearch && matchesCategory;
+    });
 
     if (sort === "low") {
       result.sort(
@@ -139,12 +117,7 @@ function Products() {
     }
 
     return result;
-  }, [
-    products,
-    search,
-    category,
-    sort,
-  ]);
+  }, [products, search, category, sort]);
 
   // =====================================================
   // LOADING
@@ -155,7 +128,7 @@ function Products() {
       <div className="min-h-screen bg-[#050505] text-white">
         <Navbar />
 
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="flex min-h-[calc(100vh-64px)] items-center justify-center">
           <p className="text-xs uppercase tracking-[0.3em] text-gray-600">
             Loading Products...
           </p>
@@ -173,7 +146,7 @@ function Products() {
       <div className="min-h-screen bg-[#050505] text-white">
         <Navbar />
 
-        <div className="mx-auto max-w-7xl px-6 pt-32">
+        <div className="mx-auto max-w-7xl px-5 pt-16 sm:px-8">
           <div className="border border-red-500/20 bg-red-500/5 p-8">
             <p className="text-sm text-red-400">
               {error}
@@ -195,165 +168,148 @@ function Products() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
+
       <Navbar />
 
-      <main className="pt-24">
+      <main>
 
         {/* =================================================
-            HERO
+            COMPACT PAGE HEADER
         ================================================= */}
 
         <section className="border-b border-white/10">
-          <div className="mx-auto max-w-7xl px-6 py-20">
 
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 25,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.7,
-              }}
-              className="max-w-3xl"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-[#00e5ff]">
-                NexaTech Store
-              </p>
+          <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:py-12">
 
-              <h1 className="mt-5 text-5xl font-black tracking-[-0.05em] sm:text-6xl lg:text-7xl">
-                Explore
-                <span className="block text-gray-600">
-                  the future.
-                </span>
-              </h1>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
 
-              <p className="mt-6 max-w-xl text-sm leading-7 text-gray-500 sm:text-base">
-                Discover premium electronics,
-                gaming hardware, smart devices
-                and technology built for what's next.
-              </p>
-            </motion.div>
+              {/* TITLE */}
 
-          </div>
-        </section>
-
-        {/* =================================================
-            CONTROLS
-        ================================================= */}
-
-        <section className="sticky top-0 z-30 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
-          <div className="mx-auto max-w-7xl px-6">
-
-            <div className="flex min-h-[72px] items-center gap-4">
-
-              {/* Search */}
-
-              <div className="relative flex-1">
-
-                <Search
-                  size={17}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"
-                />
-
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Search products..."
-                  className="h-11 w-full border border-white/10 bg-white/[0.03] pl-11 pr-10 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
-                />
-
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSearch("")
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white"
-                  >
-                    <X size={15} />
-                  </button>
-                )}
-
-              </div>
-
-              {/* Sort */}
-
-              <div className="relative hidden sm:block">
-
-                <select
-                  value={sort}
-                  onChange={(e) =>
-                    setSort(
-                      e.target.value
-                    )
-                  }
-                  className="h-11 appearance-none border border-white/10 bg-white/[0.03] px-4 pr-10 text-xs text-gray-400 outline-none transition hover:border-white/20 focus:border-[#00e5ff]/40"
-                >
-                  <option value="featured">
-                    Featured
-                  </option>
-
-                  <option value="low">
-                    Price: Low to High
-                  </option>
-
-                  <option value="high">
-                    Price: High to Low
-                  </option>
-
-                  <option value="rating">
-                    Highest Rated
-                  </option>
-                </select>
-
-                <ChevronDown
-                  size={14}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"
-                />
-
-              </div>
-
-              {/* Mobile Filter */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setMobileFilter(
-                    !mobileFilter
-                  )
-                }
-                className="flex h-11 items-center gap-2 border border-white/10 px-4 text-xs text-gray-400 transition hover:border-[#00e5ff]/40 hover:text-white lg:hidden"
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 15,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.6,
+                }}
               >
-                <SlidersHorizontal
-                  size={15}
-                />
 
-                Filter
-              </button>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.35em] text-[#00e5ff]">
+                  NexaTech Store
+                </p>
+
+                <h1 className="mt-2 text-4xl font-black leading-none tracking-[-0.05em] sm:text-5xl">
+                  Explore
+
+                  <span className="ml-2 text-gray-600">
+                    the future.
+                  </span>
+                </h1>
+
+                <p className="mt-3 max-w-lg text-xs leading-6 text-gray-500 sm:text-sm">
+                  Premium electronics, gaming hardware,
+                  smart devices and technology built for
+                  what's next.
+                </p>
+
+              </motion.div>
+
+              {/* SEARCH + SORT */}
+
+              <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:min-w-[440px]">
+
+                {/* Search */}
+
+                <div className="relative flex-1">
+
+                  <Search
+                    size={16}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600"
+                  />
+
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) =>
+                      setSearch(e.target.value)
+                    }
+                    placeholder="Search products..."
+                    className="h-10 w-full border border-white/10 bg-white/[0.03] pl-10 pr-9 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                  />
+
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 transition hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+
+                </div>
+
+                {/* Sort */}
+
+                <div className="relative sm:w-[170px]">
+
+                  <select
+                    value={sort}
+                    onChange={(e) =>
+                      setSort(e.target.value)
+                    }
+                    className="h-10 w-full appearance-none border border-white/10 bg-white/[0.03] px-3 pr-9 text-xs text-gray-400 outline-none transition hover:border-white/20 focus:border-[#00e5ff]/40"
+                  >
+
+                    <option value="featured">
+                      Featured
+                    </option>
+
+                    <option value="low">
+                      Price: Low to High
+                    </option>
+
+                    <option value="high">
+                      Price: High to Low
+                    </option>
+
+                    <option value="rating">
+                      Highest Rated
+                    </option>
+
+                  </select>
+
+                  <ChevronDown
+                    size={13}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"
+                  />
+
+                </div>
+
+              </div>
 
             </div>
 
           </div>
+
         </section>
 
         {/* =================================================
-            CONTENT
+            CATEGORY + PRODUCT AREA
         ================================================= */}
 
-        <section className="mx-auto max-w-7xl px-6 py-12">
+        <section className="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-9">
 
-          <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
+          <div className="grid gap-7 lg:grid-cols-[200px_1fr] lg:gap-9">
 
-            {/* Sidebar */}
+            {/* =================================================
+                CATEGORY SIDEBAR
+            ================================================= */}
 
             <aside
               className={`${
@@ -362,71 +318,105 @@ function Products() {
                   : "hidden"
               } lg:block`}
             >
-              <div className="sticky top-28">
 
-                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gray-600">
-                  Categories
-                </p>
+              <div className="lg:sticky lg:top-24">
 
-                <div className="mt-5 space-y-1">
+                <div className="flex items-center justify-between">
 
-                  {categories.map(
-                    (item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => {
-                          setCategory(
-                            item
-                          );
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-gray-600">
+                    Categories
+                  </p>
 
-                          setMobileFilter(
-                            false
-                          );
-                        }}
-                        className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition ${
-                          category === item
-                            ? "bg-[#00e5ff]/10 text-[#00e5ff]"
-                            : "text-gray-500 hover:bg-white/[0.03] hover:text-white"
-                        }`}
-                      >
-                        <span>
-                          {item}
-                        </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMobileFilter(false)
+                    }
+                    className="text-gray-600 hover:text-white lg:hidden"
+                  >
+                    <X size={15} />
+                  </button>
 
-                        {category ===
-                          item && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#00e5ff]" />
-                        )}
-                      </button>
-                    )
-                  )}
+                </div>
+
+                <div className="mt-3 space-y-0.5">
+
+                  {categories.map((item) => (
+
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => {
+                        setCategory(item);
+                        setMobileFilter(false);
+                      }}
+                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition ${
+                        category === item
+                          ? "bg-[#00e5ff]/10 text-[#00e5ff]"
+                          : "text-gray-500 hover:bg-white/[0.03] hover:text-white"
+                      }`}
+                    >
+
+                      <span>
+                        {item}
+                      </span>
+
+                      {category === item && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00e5ff]" />
+                      )}
+
+                    </button>
+
+                  ))}
 
                 </div>
 
               </div>
+
             </aside>
 
-            {/* Products */}
+            {/* =================================================
+                PRODUCTS
+            ================================================= */}
 
             <div>
 
-              {/* Result Header */}
+              {/* MOBILE FILTER */}
 
-              <div className="mb-7 flex items-center justify-between">
+              <div className="mb-5 flex items-center justify-between lg:hidden">
+
+                <p className="text-xs text-gray-600">
+                  {filteredProducts.length} products
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobileFilter(!mobileFilter)
+                  }
+                  className="flex h-9 items-center gap-2 border border-white/10 px-3 text-[10px] uppercase tracking-wider text-gray-400 transition hover:border-[#00e5ff]/40 hover:text-white"
+                >
+
+                  <SlidersHorizontal size={14} />
+
+                  Filter
+
+                </button>
+
+              </div>
+
+              {/* RESULT HEADER */}
+
+              <div className="mb-5 flex items-end justify-between">
 
                 <div>
 
-                  <p className="text-xs text-gray-600">
-                    {
-                      filteredProducts.length
-                    }{" "}
-                    products
+                  <p className="text-[10px] text-gray-600">
+                    {filteredProducts.length} products
                   </p>
 
-                  <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                    {category ===
-                    "All"
+                  <h2 className="mt-0.5 text-lg font-semibold tracking-tight">
+                    {category === "All"
                       ? "All Products"
                       : category}
                   </h2>
@@ -434,96 +424,91 @@ function Products() {
                 </div>
 
                 {search && (
-                  <p className="hidden text-xs text-gray-600 sm:block">
-                    Results for "
-                    {search}"
+                  <p className="hidden text-[10px] text-gray-600 sm:block">
+                    Results for "{search}"
                   </p>
                 )}
 
               </div>
 
-              {/* Grid */}
+              {/* PRODUCT GRID */}
 
-              {filteredProducts.length >
-              0 ? (
+              {filteredProducts.length > 0 ? (
+
                 <motion.div
                   layout
-                  className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
+                  className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
                 >
-                  {filteredProducts.map(
-                    (product) => (
-                      <motion.div
-                        key={
-                          product._id
-                        }
-                        layout
-                        initial={{
-                          opacity: 0,
-                          y: 15,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                        }}
+
+                  {filteredProducts.map((product) => (
+
+                    <motion.div
+                      key={product._id}
+                      layout
+                      initial={{
+                        opacity: 0,
+                        y: 12,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                    >
+
+                      <Link
+                        to={`/products/${product._id}`}
+                        className="block"
                       >
 
-                        {/* IMPORTANT:
-                            MongoDB _id is used here
-                        */}
+                        <ProductCard
+                          id={product._id}
+                          name={product.name}
+                          category={product.category}
+                          price={`Rs. ${Number(
+                            product.price || 0
+                          ).toLocaleString()}`}
+                          discount={product.discount}
+                          rating={product.rating || 0}
+                          reviews={product.reviews || 0}
+                        />
 
-                        <Link
-                          to={`/products/${product._id}`}
-                          className="block"
-                        >
-                          <ProductCard
-  id={product._id}
-  name={product.name}
-  category={product.category}
-  price={`Rs. ${Number(
-    product.price || 0
-  ).toLocaleString()}`}
-  discount={product.discount}
-  rating={product.rating || 0}
-  reviews={product.reviews || 0}
-/>
-                        </Link>
+                      </Link>
 
-                      </motion.div>
-                    )
-                  )}
+                    </motion.div>
+
+                  ))}
+
                 </motion.div>
+
               ) : (
-                /* Empty State */
 
-                <div className="flex min-h-[400px] flex-col items-center justify-center border border-dashed border-white/10">
+                <div className="flex min-h-[350px] flex-col items-center justify-center border border-dashed border-white/10">
 
-                  <div className="mb-5 flex h-14 w-14 items-center justify-center border border-white/10 text-gray-600">
-                    <Search size={20} />
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center border border-white/10 text-gray-600">
+                    <Search size={18} />
                   </div>
 
-                  <h3 className="text-lg font-semibold">
+                  <h3 className="text-base font-semibold">
                     No products found
                   </h3>
 
-                  <p className="mt-2 text-sm text-gray-600">
-                    Try another search or
-                    category.
+                  <p className="mt-2 text-xs text-gray-600">
+                    Try another search or category.
                   </p>
 
                   <button
                     type="button"
                     onClick={() => {
                       setSearch("");
-                      setCategory(
-                        "All"
-                      );
+                      setCategory("All");
                     }}
-                    className="mt-6 border border-white/10 px-5 py-2.5 text-xs font-semibold text-gray-400 transition hover:border-[#00e5ff]/40 hover:text-[#00e5ff]"
+                    className="mt-5 border border-white/10 px-4 py-2 text-[10px] font-semibold text-gray-400 transition hover:border-[#00e5ff]/40 hover:text-[#00e5ff]"
                   >
                     Clear Filters
                   </button>
 
                 </div>
+
               )}
 
             </div>
@@ -537,33 +522,34 @@ function Products() {
         ================================================= */}
 
         <section className="border-t border-white/10">
-          <div className="mx-auto max-w-7xl px-6 py-24">
 
-            <div className="relative overflow-hidden border border-white/10 bg-[#080808] px-8 py-16 sm:px-12">
+          <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-18 lg:py-20">
 
-              <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-[#00e5ff]/[0.05] blur-[100px]" />
+            <div className="relative overflow-hidden border border-white/10 bg-[#080808] px-6 py-10 sm:px-10 sm:py-12">
 
-              <p className="relative text-[10px] font-semibold uppercase tracking-[0.3em] text-[#00e5ff]">
+              <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-[#00e5ff]/[0.05] blur-[100px]" />
+
+              <p className="relative text-[9px] font-semibold uppercase tracking-[0.3em] text-[#00e5ff]">
                 Need help choosing?
               </p>
 
-              <h2 className="relative mt-4 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+              <h2 className="relative mt-3 max-w-2xl text-2xl font-bold tracking-tight sm:text-3xl">
                 Find the technology
+
                 <span className="text-gray-600">
                   {" "}that fits you.
                 </span>
               </h2>
 
-              <p className="relative mt-5 max-w-xl text-sm leading-7 text-gray-500">
-                Our intelligent shopping
-                experience will help you discover
-                products based on your needs and
-                preferences.
+              <p className="relative mt-3 max-w-xl text-xs leading-6 text-gray-500 sm:text-sm">
+                Our intelligent shopping experience
+                will help you discover products based
+                on your needs and preferences.
               </p>
 
               <button
                 type="button"
-                className="relative mt-8 border border-[#00e5ff]/30 px-6 py-3 text-xs font-semibold uppercase tracking-wider text-[#00e5ff] transition hover:bg-[#00e5ff] hover:text-black"
+                className="relative mt-6 border border-[#00e5ff]/30 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-[#00e5ff] transition hover:bg-[#00e5ff] hover:text-black"
               >
                 AI Shopping — Coming Soon
               </button>
@@ -571,9 +557,11 @@ function Products() {
             </div>
 
           </div>
+
         </section>
 
       </main>
+
     </div>
   );
 }

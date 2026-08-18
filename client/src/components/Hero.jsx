@@ -1,24 +1,19 @@
 import { motion } from "framer-motion";
 import { ArrowDownRight } from "lucide-react";
 
-
 function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[#050505]">
-
-      
+    <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-[#050505]">
 
       {/* Subtle atmosphere */}
 
       <div className="pointer-events-none absolute inset-0 z-[1]">
-
         <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5FF]/[0.035] blur-[150px]" />
-
       </div>
 
       {/* Main */}
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1400px] items-center px-5 pt-24 sm:px-8">
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-64px)] max-w-[1400px] items-center px-5 py-12 sm:px-8 sm:py-14 lg:py-16">
 
         <div className="w-full">
 
@@ -36,7 +31,7 @@ function Hero() {
             transition={{
               duration: 0.7,
             }}
-            className="mb-8 flex items-center gap-3"
+            className="mb-5 flex items-center gap-3 sm:mb-6"
           >
 
             <span className="h-2 w-2 rounded-full bg-[#00E5FF]" />
@@ -63,7 +58,7 @@ function Hero() {
             className="pointer-events-none"
           >
 
-            <h1 className="max-w-[1200px] text-[15vw] font-black leading-[0.78] tracking-[-0.075em] text-white sm:text-[13vw] lg:text-[11vw]">
+            <h1 className="max-w-[1200px] text-[14vw] font-black leading-[0.78] tracking-[-0.075em] text-white sm:text-[12vw] lg:text-[10vw]">
 
               TECHNOLOGY
 
@@ -81,7 +76,7 @@ function Hero() {
 
           {/* Bottom Hero Content */}
 
-          <div className="mt-12 flex flex-col gap-8 border-t border-white/10 pt-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mt-8 flex flex-col gap-6 border-t border-white/10 pt-5 sm:mt-10 sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:pt-6">
 
             <motion.p
               initial={{
@@ -138,7 +133,7 @@ function Hero() {
       {/* Bottom label */}
 
       <div className="absolute bottom-5 right-6 z-20 hidden text-[10px] uppercase tracking-[0.3em] text-gray-600 sm:right-8 md:block">
-        
+
       </div>
 
     </section>

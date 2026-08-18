@@ -1,439 +1,561 @@
 import {
-  Search,
-  Plus,
-  MoreHorizontal,
+  Edit3,
   Folder,
   Package,
-  Edit,
+  Plus,
+  Search,
   Trash2,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
+import AdminNavbar from "../../components/AdminNavbar";
+
+const API_URL = "http://localhost:5000/api";
 
 function AdminCategories() {
+  const [categories, setCategories] = useState([]);
+
   const [search, setSearch] = useState("");
 
-  const [categories] = useState([
-    {
-      id: 1,
-      name: "Laptops",
-      description: "Business, gaming and premium laptops",
-      products: 24,
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Smartphones",
-      description: "Latest smartphones and mobile devices",
-      products: 32,
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Gaming",
-      description: "Gaming PCs, consoles and gaming gear",
-      products: 41,
-      status: "Active",
-    },
-    {
-      id: 4,
-      name: "Audio",
-      description: "Headphones, speakers and audio equipment",
-      products: 18,
-      status: "Active",
-    },
-    {
-      id: 5,
-      name: "Monitors",
-      description: "Professional, gaming and 4K monitors",
-      products: 15,
-      status: "Active",
-    },
-    {
-      id: 6,
-      name: "Cameras",
-      description: "Digital cameras and photography equipment",
-      products: 12,
-      status: "Active",
-    },
-    {
-      id: 7,
-      name: "Accessories",
-      description: "Keyboards, mice, cables and accessories",
-      products: 56,
-      status: "Active",
-    },
-    {
-      id: 8,
-      name: "Networking",
-      description: "Routers, switches and networking equipment",
-      products: 9,
-      status: "Inactive",
-    },
-  ]);
+  const [showModal, setShowModal] = useState(false);
 
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.name.toLowerCase().includes(search.toLowerCase()) ||
-      category.description.toLowerCase().includes(search.toLowerCase())
-  );
+  const [editingCategory, setEditingCategory] = useState(null);
+
+  const [categoryName, setCategoryName] = useState("");
+
+  const [loading, setLoading] = useState(true);
+
+  const [saving, setSaving] = useState(false);
+
+  const [error, setError] = useState("");
+
+  // ==========================================================
+  // FETCH CATEGORIES
+  // ==========================================================
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const token =
+        localStorage.getItem("nexatech_token");
+
+      const response = await fetch(
+        `${API_URL}/admin/categories`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to fetch categories."
+        );
+      }
+
+      setCategories(data.categories || []);
+    } catch (error) {
+      console.error(
+        "Fetch categories error:",
+        error
+      );
+
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // ==========================================================
+  // OPEN ADD MODAL
+  // ==========================================================
+
+  const openAddModal = () => {
+    setEditingCategory(null);
+    setCategoryName("");
+    setError("");
+    setShowModal(true);
+  };
+
+  // ==========================================================
+  // OPEN EDIT MODAL
+  // ==========================================================
+
+  const openEditModal = (category) => {
+    setEditingCategory(category);
+    setCategoryName(category.name);
+    setError("");
+    setShowModal(true);
+  };
+
+  // ==========================================================
+  // SAVE CATEGORY
+  // ==========================================================
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    if (!categoryName.trim()) {
+      setError("Category name is required.");
+      return;
+    }
+
+    // Currently categories are derived from products.
+    // Editing is handled by changing product categories.
+    if (editingCategory) {
+      setError(
+        "Category editing is available when the category model is enabled. For now, edit the category directly from the product."
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+
+      const token =
+        localStorage.getItem("nexatech_token");
+
+      const response = await fetch(
+        `${API_URL}/admin/categories`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            name: categoryName.trim(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to create category."
+        );
+      }
+
+      setShowModal(false);
+
+      setCategoryName("");
+
+      await fetchCategories();
+    } catch (error) {
+      console.error(
+        "Save category error:",
+        error
+      );
+
+      setError(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ==========================================================
+  // DELETE CATEGORY
+  // ==========================================================
+
+  const handleDelete = async (category) => {
+    if (category.productCount > 0) {
+      alert(
+        "This category contains products. Remove or move those products first."
+      );
+
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete category "${category.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token =
+        localStorage.getItem("nexatech_token");
+
+      const response = await fetch(
+        `${API_URL}/admin/categories/${encodeURIComponent(
+          category.name
+        )}`,
+        {
+          method: "DELETE",
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to delete category."
+        );
+      }
+
+      await fetchCategories();
+    } catch (error) {
+      console.error(
+        "Delete category error:",
+        error
+      );
+
+      alert(error.message);
+    }
+  };
+
+  // ==========================================================
+  // SEARCH
+  // ==========================================================
+
+  const filteredCategories =
+    categories.filter((category) =>
+      category.name
+        ?.toLowerCase()
+        .includes(search.toLowerCase())
+    );
+
+  // ==========================================================
+  // UI
+  // ==========================================================
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
 
-      {/* ================= HEADER ================= */}
-      <header className="border-b border-white/10 bg-[#090909]">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-6 sm:px-8">
+      <AdminNavbar />
+
+      <main className="mx-auto max-w-[1600px] px-5 py-8 sm:px-8">
+
+        {/* HEADER */}
+
+        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
 
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#00E5FF]">
-              NEXATECH ADMIN
+
+            <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.25em] text-[#00e5ff]">
+              Product Organization
             </p>
 
-            <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em]">
+            <h1 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
               Categories
             </h1>
 
-            <p className="mt-2 text-sm text-gray-600">
-              Organize and manage your product categories.
+            <p className="mt-2 text-sm text-gray-500">
+              Manage product categories.
             </p>
+
           </div>
 
-          {/* Add Category */}
           <button
-            type="button"
-            className="flex items-center gap-2 bg-[#00E5FF] px-5 py-3 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-white"
+            onClick={openAddModal}
+            className="flex items-center justify-center gap-2 bg-[#00e5ff] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-black transition hover:bg-white"
           >
             <Plus size={15} />
             Add Category
           </button>
 
         </div>
-      </header>
 
-      {/* ================= CONTENT ================= */}
-      <main className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8">
 
-        {/* ================= STATS ================= */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* STATS */}
 
-          {/* Total Categories */}
-          <div className="border border-white/10 bg-[#090909] p-6">
+        <div className="mb-8 grid gap-4 sm:grid-cols-2">
 
-            <div className="flex items-center justify-between">
+          <div className="border border-white/10 bg-[#0a0a0a] p-5">
 
-              <p className="text-xs uppercase tracking-wider text-gray-600">
+            <div className="mb-4 flex items-center justify-between">
+
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-gray-500">
                 Total Categories
               </p>
 
               <Folder
-                size={18}
-                className="text-gray-600"
+                size={17}
+                className="text-[#00e5ff]"
               />
 
             </div>
 
-            <p className="mt-5 text-4xl font-bold tracking-tight">
+            <p className="text-3xl font-black">
               {categories.length}
             </p>
 
-            <p className="mt-2 text-xs text-gray-600">
-              Product categories
-            </p>
-
           </div>
 
-          {/* Active */}
-          <div className="border border-white/10 bg-[#090909] p-6">
 
-            <div className="flex items-center justify-between">
+          <div className="border border-white/10 bg-[#0a0a0a] p-5">
 
-              <p className="text-xs uppercase tracking-wider text-gray-600">
-                Active
-              </p>
+            <div className="mb-4 flex items-center justify-between">
 
-              <span className="h-2 w-2 rounded-full bg-green-400" />
-
-            </div>
-
-            <p className="mt-5 text-4xl font-bold tracking-tight">
-              7
-            </p>
-
-            <p className="mt-2 text-xs text-gray-600">
-              Active categories
-            </p>
-
-          </div>
-
-          {/* Products */}
-          <div className="border border-white/10 bg-[#090909] p-6">
-
-            <div className="flex items-center justify-between">
-
-              <p className="text-xs uppercase tracking-wider text-gray-600">
-                Total Products
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-gray-500">
+                Products
               </p>
 
               <Package
-                size={18}
-                className="text-gray-600"
+                size={17}
+                className="text-[#00e5ff]"
               />
 
             </div>
 
-            <p className="mt-5 text-4xl font-bold tracking-tight">
-              207
-            </p>
+            <p className="text-3xl font-black">
 
-            <p className="mt-2 text-xs text-gray-600">
-              Across all categories
-            </p>
+              {categories.reduce(
+                (total, category) =>
+                  total +
+                  (category.productCount || 0),
+                0
+              )}
 
-          </div>
-
-          {/* Inactive */}
-          <div className="border border-white/10 bg-[#090909] p-6">
-
-            <div className="flex items-center justify-between">
-
-              <p className="text-xs uppercase tracking-wider text-gray-600">
-                Inactive
-              </p>
-
-              <span className="h-2 w-2 rounded-full bg-gray-600" />
-
-            </div>
-
-            <p className="mt-5 text-4xl font-bold tracking-tight">
-              1
-            </p>
-
-            <p className="mt-2 text-xs text-gray-600">
-              Hidden categories
             </p>
 
           </div>
 
         </div>
 
-        {/* ================= CATEGORY TABLE ================= */}
-        <section className="mt-8 border border-white/10 bg-[#090909]">
 
-          {/* Table Header */}
-          <div className="flex flex-col gap-4 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+        {/* SEARCH */}
 
-            <div>
-              <h2 className="text-lg font-semibold">
-                All Categories
-              </h2>
+        <div className="mb-6">
 
-              <p className="mt-1 text-xs text-gray-600">
-                Manage product categories and their visibility.
-              </p>
-            </div>
+          <div className="relative max-w-xl">
 
-            {/* Search */}
-            <div className="relative w-full sm:w-80">
+            <Search
+              size={16}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"
+            />
 
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600"
-              />
-
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search categories..."
-                className="h-10 w-full border border-white/10 bg-white/[0.02] pl-10 pr-4 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00E5FF]/50"
-              />
-
-            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              placeholder="Search categories..."
+              className="w-full border border-white/10 bg-[#0a0a0a] py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+            />
 
           </div>
 
-          {/* ================= TABLE ================= */}
-          <div className="overflow-x-auto">
+        </div>
 
-            <table className="w-full min-w-[800px] text-left">
 
-              <thead>
-                <tr className="border-b border-white/10 text-[10px] uppercase tracking-[0.15em] text-gray-600">
+        {/* ERROR */}
 
-                  <th className="px-5 py-4">
-                    Category
-                  </th>
+        {error && (
+          <div className="mb-6 border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
 
-                  <th className="px-5 py-4">
-                    Description
-                  </th>
 
-                  <th className="px-5 py-4">
-                    Products
-                  </th>
+        {/* CATEGORY GRID */}
 
-                  <th className="px-5 py-4">
-                    Status
-                  </th>
+        {loading ? (
 
-                  <th className="px-5 py-4 text-right">
-                    Actions
-                  </th>
+          <div className="border border-white/10 bg-[#080808] py-16 text-center text-sm text-gray-600">
+            Loading categories...
+          </div>
 
-                </tr>
-              </thead>
+        ) : filteredCategories.length === 0 ? (
 
-              <tbody>
+          <div className="border border-white/10 bg-[#080808] py-16 text-center">
 
-                {filteredCategories.map((category) => (
+            <Folder
+              size={28}
+              className="mx-auto mb-4 text-gray-700"
+            />
 
-                  <tr
-                    key={category.id}
-                    className="border-b border-white/5 transition hover:bg-white/[0.02]"
-                  >
+            <p className="text-sm text-gray-500">
+              No categories found.
+            </p>
 
-                    {/* Category */}
-                    <td className="px-5 py-5">
+          </div>
 
-                      <div className="flex items-center gap-3">
+        ) : (
 
-                        <div className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.03]">
-                          <Folder
-                            size={17}
-                            className="text-[#00E5FF]"
-                          />
-                        </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
-                        <div>
+            {filteredCategories.map(
+              (category) => (
 
-                          <p className="text-sm font-semibold text-white">
-                            {category.name}
-                          </p>
+                <div
+                  key={category.name}
+                  className="group border border-white/10 bg-[#080808] p-5 transition hover:border-[#00e5ff]/30"
+                >
 
-                          <p className="mt-1 text-[10px] uppercase tracking-wider text-gray-700">
-                            Category #{String(category.id).padStart(2, "0")}
-                          </p>
+                  <div className="mb-6 flex items-start justify-between">
 
-                        </div>
+                    <div className="flex h-11 w-11 items-center justify-center border border-[#00e5ff]/20 bg-[#00e5ff]/5 text-[#00e5ff]">
 
-                      </div>
+                      <Folder size={18} />
 
-                    </td>
+                    </div>
 
-                    {/* Description */}
-                    <td className="max-w-sm px-5 py-5">
+                    <div className="flex gap-2">
 
-                      <p className="truncate text-sm text-gray-500">
-                        {category.description}
-                      </p>
-
-                    </td>
-
-                    {/* Products */}
-                    <td className="px-5 py-5">
-
-                      <div className="flex items-center gap-2">
-
-                        <Package
-                          size={14}
-                          className="text-gray-700"
-                        />
-
-                        <span className="text-sm text-gray-400">
-                          {category.products}
-                        </span>
-
-                      </div>
-
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-5 py-5">
-
-                      <span
-                        className={`inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider ${
-                          category.status === "Active"
-                            ? "text-green-400"
-                            : "text-gray-600"
-                        }`}
+                      <button
+                        onClick={() =>
+                          openEditModal(category)
+                        }
+                        className="flex h-8 w-8 items-center justify-center border border-white/10 text-gray-600 transition hover:border-[#00e5ff]/30 hover:text-[#00e5ff]"
                       >
+                        <Edit3 size={13} />
+                      </button>
 
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            category.status === "Active"
-                              ? "bg-green-400"
-                              : "bg-gray-600"
-                          }`}
-                        />
+                      <button
+                        onClick={() =>
+                          handleDelete(category)
+                        }
+                        className="flex h-8 w-8 items-center justify-center border border-white/10 text-gray-600 transition hover:border-red-500/30 hover:text-red-400"
+                      >
+                        <Trash2 size={13} />
+                      </button>
 
-                        {category.status}
+                    </div>
 
-                      </span>
+                  </div>
 
-                    </td>
 
-                    {/* Actions */}
-                    <td className="px-5 py-5">
+                  <h2 className="text-lg font-bold">
+                    {category.name}
+                  </h2>
 
-                      <div className="flex items-center justify-end gap-2">
 
-                        <button
-                          type="button"
-                          title="Edit category"
-                          className="inline-flex h-9 w-9 items-center justify-center border border-white/10 text-gray-500 transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF]"
-                        >
-                          <Edit size={14} />
-                        </button>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
 
-                        <button
-                          type="button"
-                          title="Delete category"
-                          className="inline-flex h-9 w-9 items-center justify-center border border-white/10 text-gray-500 transition hover:border-red-500/40 hover:text-red-400"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    <Package size={13} />
 
-                        <button
-                          type="button"
-                          title="More"
-                          className="inline-flex h-9 w-9 items-center justify-center border border-white/10 text-gray-500 transition hover:border-white/25 hover:text-white"
-                        >
-                          <MoreHorizontal size={16} />
-                        </button>
+                    {category.productCount || 0}
 
-                      </div>
+                    {category.productCount === 1
+                      ? " product"
+                      : " products"}
 
-                    </td>
+                  </div>
 
-                  </tr>
+                </div>
 
-                ))}
-
-              </tbody>
-
-            </table>
+              )
+            )}
 
           </div>
 
-          {/* Empty State */}
-          {filteredCategories.length === 0 && (
-            <div className="px-5 py-16 text-center">
-
-              <Folder
-                size={28}
-                className="mx-auto text-gray-700"
-              />
-
-              <p className="mt-4 text-sm text-gray-500">
-                No categories found.
-              </p>
-
-            </div>
-          )}
-
-        </section>
+        )}
 
       </main>
+
+
+      {/* MODAL */}
+
+      {showModal && (
+
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-5 backdrop-blur-sm">
+
+          <div className="w-full max-w-md border border-white/10 bg-[#0a0a0a]">
+
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+
+              <div>
+
+                <p className="text-[9px] uppercase tracking-[0.2em] text-[#00e5ff]">
+                  Category
+                </p>
+
+                <h2 className="mt-1 text-xl font-black">
+                  {editingCategory
+                    ? "Edit Category"
+                    : "Add Category"}
+                </h2>
+
+              </div>
+
+              <button
+                onClick={() =>
+                  setShowModal(false)
+                }
+                className="text-gray-500 transition hover:text-white"
+              >
+                <X size={18} />
+              </button>
+
+            </div>
+
+
+            <form
+              onSubmit={handleSave}
+              className="space-y-5 p-6"
+            >
+
+              <div>
+
+                <label className="mb-2 block text-[9px] font-semibold uppercase tracking-[0.15em] text-gray-500">
+                  Category Name
+                </label>
+
+                <input
+                  type="text"
+                  value={categoryName}
+                  onChange={(e) =>
+                    setCategoryName(
+                      e.target.value
+                    )
+                  }
+                  placeholder="e.g. Tablets"
+                  className="w-full border border-white/10 bg-[#050505] px-4 py-3 text-sm text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                  autoFocus
+                />
+
+              </div>
+
+
+              {error && (
+                <p className="text-xs text-red-400">
+                  {error}
+                </p>
+              )}
+
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex w-full items-center justify-center gap-2 bg-[#00e5ff] py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving
+                  ? "Saving..."
+                  : editingCategory
+                  ? "Update Category"
+                  : "Create Category"}
+              </button>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      )}
 
     </div>
   );

@@ -70,8 +70,15 @@ function Login() {
         );
       }
 
-      // Save authentication data
-      localStorage.setItem("nexatech_token", data.token);
+      // ==========================================
+      // SAVE AUTHENTICATION DATA
+      // ==========================================
+
+      localStorage.setItem(
+        "nexatech_token",
+        data.token
+      );
+
       localStorage.setItem(
         "nexatech_user",
         JSON.stringify(data.user)
@@ -79,9 +86,18 @@ function Login() {
 
       setSuccess("Login successful! Redirecting...");
 
+      // ==========================================
+      // ROLE BASED REDIRECT
+      // ==========================================
+
       setTimeout(() => {
-        navigate("/");
+        if (data.user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }, 800);
+
     } catch (err) {
       console.error("Login Error:", err);
 
@@ -98,10 +114,13 @@ function Login() {
     <div className="min-h-screen bg-[#050505] text-white">
 
       {/* ================= AUTH NAVBAR ================= */}
+
       <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
+
         <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
 
           {/* LOGO */}
+
           <Link
             to="/"
             className="text-xl font-black tracking-[-0.06em]"
@@ -111,6 +130,7 @@ function Login() {
           </Link>
 
           {/* REGISTER */}
+
           <Link
             to="/register"
             className="hidden h-10 items-center border border-white/20 px-5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black sm:flex"
@@ -119,18 +139,25 @@ function Login() {
           </Link>
 
         </div>
+
       </header>
 
+
       {/* ================= MAIN ================= */}
+
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pb-16 pt-28">
 
         {/* BACKGROUND GLOW */}
+
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00e5ff]/[0.05] blur-[140px]" />
 
         {/* BACKGROUND GRID */}
+
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:32px_32px]" />
 
+
         {/* LOGIN CONTAINER */}
+
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
@@ -139,6 +166,7 @@ function Login() {
         >
 
           {/* HEADER */}
+
           <div className="mb-8 text-center">
 
             <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-[#00e5ff]">
@@ -159,7 +187,9 @@ function Login() {
 
           </div>
 
+
           {/* LOGIN CARD */}
+
           <div className="border border-white/10 bg-[#090909] p-6 shadow-2xl sm:p-8">
 
             <form
@@ -168,20 +198,25 @@ function Login() {
             >
 
               {/* ERROR */}
+
               {error && (
                 <div className="border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
                   {error}
                 </div>
               )}
 
+
               {/* SUCCESS */}
+
               {success && (
                 <div className="border border-[#00e5ff]/20 bg-[#00e5ff]/5 px-4 py-3 text-sm text-[#00e5ff]">
                   {success}
                 </div>
               )}
 
+
               {/* EMAIL */}
+
               <div>
 
                 <label
@@ -213,7 +248,9 @@ function Login() {
 
               </div>
 
+
               {/* PASSWORD */}
+
               <div>
 
                 <div className="mb-2 flex items-center justify-between">
@@ -228,11 +265,17 @@ function Login() {
                   <button
                     type="button"
                     className="text-[10px] text-gray-600 transition hover:text-[#00e5ff]"
+                    onClick={() => {
+                      setError(
+                        "Password reset is not available yet."
+                      );
+                    }}
                   >
                     Forgot password?
                   </button>
 
                 </div>
+
 
                 <div className="relative">
 
@@ -244,13 +287,18 @@ function Login() {
                   <input
                     id="password"
                     name="password"
-                    type={showPassword ? "text" : "password"}
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
                     value={formData.password}
                     onChange={handleChange}
                     autoComplete="current-password"
                     placeholder="Enter your password"
                     className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-20 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/60 focus:bg-[#00e5ff]/[0.02]"
                   />
+
 
                   <button
                     type="button"
@@ -259,14 +307,18 @@ function Login() {
                     }
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wider text-gray-600 transition hover:text-[#00e5ff]"
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    {showPassword
+                      ? "Hide"
+                      : "Show"}
                   </button>
 
                 </div>
 
               </div>
 
+
               {/* REMEMBER ME */}
+
               <div className="flex items-center gap-3">
 
                 <input
@@ -288,13 +340,18 @@ function Login() {
 
               </div>
 
+
               {/* SIGN IN */}
+
               <button
                 type="submit"
                 disabled={loading}
                 className="group flex h-12 w-full items-center justify-center gap-3 bg-[#00e5ff] text-sm font-bold text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? "Signing In..." : "Sign In"}
+
+                {loading
+                  ? "Signing In..."
+                  : "Sign In"}
 
                 {!loading && (
                   <ArrowRight
@@ -302,11 +359,14 @@ function Login() {
                     className="transition-transform group-hover:translate-x-1"
                   />
                 )}
+
               </button>
 
             </form>
 
+
             {/* DIVIDER */}
+
             <div className="my-7 flex items-center gap-4">
 
               <div className="h-px flex-1 bg-white/10" />
@@ -319,21 +379,27 @@ function Login() {
 
             </div>
 
+
             {/* GOOGLE LOGIN */}
+
             <button
               type="button"
               className="flex h-12 w-full items-center justify-center gap-3 border border-white/10 bg-white/[0.02] text-xs font-semibold text-gray-400 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
             >
+
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-black">
                 G
               </span>
 
               Continue with Google
+
             </button>
 
           </div>
 
+
           {/* SECURITY */}
+
           <p className="mt-8 text-center text-[9px] uppercase tracking-[0.2em] text-gray-800">
             Secure · Private · NEXATECH
           </p>

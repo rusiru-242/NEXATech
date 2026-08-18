@@ -23,13 +23,13 @@ function Home() {
 
         <section className="border-y border-white/10">
 
-          <div className="mx-auto max-w-[1400px] px-5 py-14 sm:px-8">
+          <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 sm:py-12 lg:py-14">
 
-            <p className="mb-10 text-xs uppercase tracking-[0.25em] text-gray-600">
+            <p className="mb-7 text-xs uppercase tracking-[0.25em] text-gray-600 sm:mb-9">
               Trusted Technology
             </p>
 
-            <div className="grid grid-cols-2 gap-y-8 text-xl font-bold tracking-[-0.04em] text-gray-500 sm:grid-cols-4 lg:grid-cols-7">
+            <div className="grid grid-cols-2 gap-y-7 text-lg font-bold tracking-[-0.04em] text-gray-500 sm:grid-cols-4 sm:text-xl lg:grid-cols-7">
 
               <span className="transition hover:text-white">
                 APPLE
@@ -69,16 +69,16 @@ function Home() {
 
         <section
           id="categories"
-          className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8 scroll-mt-20"
+          className="mx-auto max-w-[1400px] scroll-mt-20 px-5 py-20 sm:px-8 sm:py-24 lg:py-28"
         >
 
-          <div className="mb-16 max-w-3xl">
+          <div className="mb-10 max-w-3xl sm:mb-12">
 
             <p className="text-xs uppercase tracking-[0.25em] text-[#00E5FF]">
               Explore
             </p>
 
-            <h2 className="mt-5 text-5xl font-bold leading-[0.95] tracking-[-0.06em] sm:text-7xl">
+            <h2 className="mt-3 text-5xl font-bold leading-[0.92] tracking-[-0.06em] sm:mt-4 sm:text-6xl lg:text-7xl">
               SHOP THE
 
               <span className="block text-gray-600">
@@ -107,25 +107,23 @@ function Home() {
                 whileHover={{
                   x: 8,
                 }}
-                className="group flex items-center justify-between py-7 transition sm:py-9"
+                className="group flex items-center justify-between py-6 transition sm:py-8"
               >
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-5 sm:gap-6">
 
                   <span className="text-xs text-gray-700">
                     0{index + 1}
                   </span>
 
-                  {/* Smaller Category Font */}
-
-                  <h3 className="text-2xl font-semibold tracking-[-0.04em] text-gray-300 transition group-hover:text-white sm:text-4xl">
+                  <h3 className="text-xl font-semibold tracking-[-0.04em] text-gray-300 transition group-hover:text-white sm:text-3xl lg:text-4xl">
                     {category}
                   </h3>
 
                 </div>
 
                 <ArrowUpRight
-                  size={24}
+                  size={22}
                   className="text-gray-700 transition group-hover:text-[#00E5FF]"
                 />
 
@@ -141,21 +139,21 @@ function Home() {
 
         <section className="border-y border-white/10">
 
-          <div className="mx-auto max-w-[1400px] px-5 py-24 sm:px-8">
+          <div className="mx-auto max-w-[1400px] px-5 py-18 sm:px-8 sm:py-20 lg:py-24">
 
             <p className="text-xs uppercase tracking-[0.25em] text-gray-600">
               The NexaTech Standard
             </p>
 
-            <div className="mt-16 grid gap-12 sm:grid-cols-3">
+            <div className="mt-12 grid gap-10 sm:mt-14 sm:grid-cols-3 sm:gap-12">
 
               <div>
 
-                <p className="text-6xl font-bold tracking-[-0.06em] sm:text-7xl">
+                <p className="text-5xl font-bold tracking-[-0.06em] sm:text-6xl lg:text-7xl">
                   10K+
                 </p>
 
-                <p className="mt-3 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-500">
                   Premium Products
                 </p>
 
@@ -163,11 +161,11 @@ function Home() {
 
               <div>
 
-                <p className="text-6xl font-bold tracking-[-0.06em] sm:text-7xl">
+                <p className="text-5xl font-bold tracking-[-0.06em] sm:text-6xl lg:text-7xl">
                   50K+
                 </p>
 
-                <p className="mt-3 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-500">
                   Happy Customers
                 </p>
 
@@ -175,11 +173,11 @@ function Home() {
 
               <div>
 
-                <p className="text-6xl font-bold tracking-[-0.06em] sm:text-7xl">
+                <p className="text-5xl font-bold tracking-[-0.06em] sm:text-6xl lg:text-7xl">
                   4.9
                 </p>
 
-                <p className="mt-3 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-500">
                   Average Rating
                 </p>
 
@@ -195,10 +193,10 @@ function Home() {
 
         <section
           id="products"
-          className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8"
+          className="mx-auto max-w-[1400px] px-5 py-20 sm:px-8 sm:py-24 lg:py-28"
         >
 
-          <div className="mb-16 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mb-10 flex flex-col gap-5 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
 
             <div>
 
@@ -206,7 +204,7 @@ function Home() {
                 Selected
               </p>
 
-              <h2 className="mt-5 text-5xl font-bold tracking-[-0.06em] sm:text-7xl">
+              <h2 className="mt-3 text-5xl font-bold leading-[0.92] tracking-[-0.06em] sm:mt-4 sm:text-6xl lg:text-7xl">
                 FEATURED
 
                 <span className="block text-gray-600">
@@ -263,9 +261,9 @@ function Home() {
           className="border-y border-white/10 scroll-mt-20"
         >
 
-          <div className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8">
+          <div className="mx-auto max-w-[1400px] px-5 py-20 sm:px-8 sm:py-24 lg:py-28">
 
-            <div className="grid gap-16 lg:grid-cols-2 lg:items-end">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-end lg:gap-16">
 
               <div>
 
@@ -273,7 +271,7 @@ function Home() {
                   Intelligence
                 </p>
 
-                <h2 className="mt-5 text-5xl font-bold leading-[0.9] tracking-[-0.07em] sm:text-7xl">
+                <h2 className="mt-3 text-5xl font-bold leading-[0.9] tracking-[-0.07em] sm:mt-4 sm:text-6xl lg:text-7xl">
                   SHOPPING,
 
                   <span className="block text-gray-600">
@@ -294,7 +292,7 @@ function Home() {
 
                 <button
                   type="button"
-                  className="mt-8 border border-white/20 px-6 py-3 text-sm font-semibold transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+                  className="mt-7 border border-white/20 px-6 py-3 text-sm font-semibold transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
                 >
                   AI FEATURES — COMING SOON
                 </button>
@@ -311,10 +309,10 @@ function Home() {
 
         <section
           id="about"
-          className="mx-auto max-w-[1400px] px-5 py-32 sm:px-8 scroll-mt-20"
+          className="mx-auto max-w-[1400px] scroll-mt-20 px-5 py-20 sm:px-8 sm:py-24 lg:py-28"
         >
 
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
 
             <div>
 
@@ -322,7 +320,7 @@ function Home() {
                 Your Space
               </p>
 
-              <h2 className="mt-5 text-5xl font-bold leading-[0.9] tracking-[-0.07em] sm:text-7xl">
+              <h2 className="mt-3 text-5xl font-bold leading-[0.9] tracking-[-0.07em] sm:mt-4 sm:text-6xl lg:text-7xl">
                 BUILD YOUR
 
                 <span className="block text-gray-600">
@@ -331,7 +329,7 @@ function Home() {
 
               </h2>
 
-              <p className="mt-8 max-w-md text-base leading-7 text-gray-500">
+              <p className="mt-7 max-w-md text-base leading-7 text-gray-500">
                 Combine powerful devices, gaming gear and
                 accessories to create a setup built around
                 the way you work and play.
@@ -339,7 +337,7 @@ function Home() {
 
               <a
                 href="/products"
-                className="mt-8 inline-flex items-center gap-3 border border-white/20 px-6 py-3.5 text-sm font-semibold transition hover:border-white hover:bg-white hover:text-black"
+                className="mt-7 inline-flex items-center gap-3 border border-white/20 px-6 py-3.5 text-sm font-semibold transition hover:border-white hover:bg-white hover:text-black"
               >
                 Start Building
                 <ArrowUpRight size={17} />
@@ -347,7 +345,7 @@ function Home() {
 
             </div>
 
-            <div className="relative min-h-[450px] overflow-hidden border border-white/10 bg-[#0a0a0a]">
+            <div className="relative min-h-[380px] overflow-hidden border border-white/10 bg-[#0a0a0a] sm:min-h-[450px]">
 
               <div className="absolute inset-0">
 
@@ -359,11 +357,11 @@ function Home() {
 
               </div>
 
-              <div className="relative flex min-h-[450px] items-center justify-center">
+              <div className="relative flex min-h-[380px] items-center justify-center sm:min-h-[450px]">
 
                 <div className="text-center">
 
-                  <div className="text-7xl font-black tracking-[-0.08em] text-white">
+                  <div className="text-6xl font-black tracking-[-0.08em] text-white sm:text-7xl">
                     NEXA
                   </div>
 
@@ -387,13 +385,11 @@ function Home() {
 
       <footer className="border-t border-white/10">
 
-        <div className="mx-auto max-w-[1400px] px-5 py-12 sm:px-8">
+        <div className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8 sm:py-12">
 
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 
             <div>
-
-              {/* NEXATECH - FULL CAPITAL */}
 
               <p className="text-lg font-bold tracking-tight">
                 NEXATECH

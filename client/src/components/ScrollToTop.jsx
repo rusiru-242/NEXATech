@@ -9,13 +9,28 @@ export default function ScrollToTop() {
     if (hash) {
       // small timeout to allow DOM to settle
       setTimeout(() => {
-        const el = document.querySelector(hash);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        try {
+          const el = document.querySelector(hash);
+
+          if (el && el.scrollIntoView) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        } catch (err) {
+          // swallow DOM errors to avoid crashing the app
+          console.warn("ScrollToTop hash scroll failed:", err);
         }
       }, 0);
     } else {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      } catch (err) {
+        try {
+          // fallback for browsers that don't support options
+          window.scrollTo(0, 0);
+        } catch (e) {
+          console.warn("ScrollToTop scroll failed:", e);
+        }
+      }
     }
   }, [pathname, hash]);
 

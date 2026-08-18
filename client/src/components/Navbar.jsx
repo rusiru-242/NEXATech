@@ -5,355 +5,683 @@ import {
   User,
   ChevronDown,
   LogOut,
+  Sparkles,
+  Info,
+  Home as HomeIcon,
+  ShoppingBag,
 } from "lucide-react";
+
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
-  // ==============================
-  // Load Logged In User
-  // ==============================
-  useEffect(() => {
-    const storedUser = localStorage.getItem("nexatech_user");
+  // =========================================================
+  // LOAD USER
+  // =========================================================
 
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Invalid stored user:", error);
-        localStorage.removeItem("nexatech_user");
+  const loadUser = () => {
+    try {
+      const savedUser = localStorage.getItem("nexatech_user");
+
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else {
+        setUser(null);
       }
+    } catch (error) {
+      console.error("User load error:", error);
+      setUser(null);
     }
-  }, []);
-
-  // ==============================
-  // Close Mobile Menu
-  // ==============================
-  const closeMenu = () => {
-    setMenuOpen(false);
   };
 
-  // ==============================
-  // Sign Out
-  // ==============================
-  const handleSignOut = () => {
+  // =========================================================
+  // LOAD CART COUNT
+  // =========================================================
+
+  const loadCartCount = () => {
+    try {
+      const savedCart = localStorage.getItem("nexatech_cart");
+
+      if (!savedCart) {
+        setCartCount(0);
+        return;
+      }
+
+      const cart = JSON.parse(savedCart);
+
+      if (!Array.isArray(cart)) {
+        setCartCount(0);
+        return;
+      }
+
+      const count = cart.reduce(
+        (total, item) =>
+          total + Number(item.quantity || 1),
+        0
+      );
+
+      setCartCount(count);
+    } catch (error) {
+      console.error("Cart count error:", error);
+      setCartCount(0);
+    }
+  };
+
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
+
+  useEffect(() => {
+    loadUser();
+    loadCartCount();
+
+    const handleStorageChange = () => {
+      loadUser();
+      loadCartCount();
+    };
+
+    const handleCartUpdate = () => {
+      loadCartCount();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("cartUpdated", handleCartUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+    };
+  }, []);
+
+  // =========================================================
+  // ROUTE CHANGE
+  // =========================================================
+
+  useEffect(() => {
+    loadUser();
+    loadCartCount();
+  }, [location.pathname]);
+
+  // =========================================================
+  // LOGOUT
+  // =========================================================
+
+  const handleLogout = () => {
     localStorage.removeItem("nexatech_token");
     localStorage.removeItem("nexatech_user");
 
     setUser(null);
     setAccountOpen(false);
-    setMenuOpen(false);
+    setMobileOpen(false);
 
     navigate("/");
   };
 
-  return (
-    <header className="fixed left-0 top-0 z-50 w-full border-b border-white/10 bg-[#050505]/80 backdrop-blur-xl">
-      <nav className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
+  // =========================================================
+  // ACTIVE LINK
+  // =========================================================
 
-        {/* ================= LOGO ================= */}
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
+  // =========================================================
+  // DESKTOP LINK STYLE
+  // =========================================================
+
+  const desktopLinkClass = (path) => {
+    return `flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] transition ${
+      isActive(path)
+        ? "text-[#00E5FF]"
+        : "text-gray-400 hover:text-white"
+    }`;
+  };
+
+  // =========================================================
+  // MOBILE LINK STYLE
+  // =========================================================
+
+  const mobileLinkClass = (path) => {
+    return `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+      isActive(path)
+        ? "bg-[#00E5FF]/10 text-[#00E5FF]"
+        : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
+    }`;
+  };
+
+  return (
+    <header
+      className="
+        sticky top-0 z-50
+        border-b border-white/10
+        bg-[#050505]/80
+        backdrop-blur-xl
+      "
+    >
+      {/* =====================================================
+          NAVBAR CONTAINER
+      ===================================================== */}
+
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+
+        {/* =====================================================
+            LOGO
+        ===================================================== */}
+
         <Link
           to="/"
-          onClick={closeMenu}
-          className="text-xl font-black tracking-[-0.06em] text-white"
+          onClick={() => setMobileOpen(false)}
+          className="shrink-0"
         >
-          NEXA<span className="text-[#00E5FF]">TECH</span>
+          <div className="text-xl font-bold tracking-[0.2em] text-white">
+            NEXA
+            <span className="text-[#00E5FF]">
+              TECH
+            </span>
+          </div>
         </Link>
 
-        {/* ================= DESKTOP NAV ================= */}
-        <div className="hidden items-center gap-8 md:flex">
+        {/* =====================================================
+            DESKTOP NAVIGATION
+        ===================================================== */}
+
+        <nav className="hidden items-center gap-7 lg:flex">
 
           <Link
             to="/"
-            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
+            className={desktopLinkClass("/")}
           >
+            <HomeIcon size={13} />
             Home
           </Link>
 
           <Link
             to="/products"
-            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
+            className={desktopLinkClass("/products")}
           >
+            <ShoppingBag size={13} />
             Products
           </Link>
 
-          <a
-            href="#categories"
-            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
-          >
-            Categories
-          </a>
-
-          <a
-            href="#ai"
-            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
-          >
-            AI
-          </a>
-
-          <a
-            href="#about"
-            className="text-xs font-medium uppercase tracking-[0.15em] text-gray-400 transition hover:text-white"
-          >
-            About
-          </a>
-        </div>
-
-        {/* ================= RIGHT ACTIONS ================= */}
-        <div className="flex items-center gap-3">
-
-          {/* ================= CART ================= */}
           <Link
-            to="/cart"
-            aria-label="Shopping cart"
-            className="group flex h-10 w-10 items-center justify-center border border-white/10 text-gray-400 transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+            to="/ai-chat"
+            className={desktopLinkClass("/ai-chat")}
           >
-            <ShoppingCart
-              size={18}
-              className="transition-transform group-hover:scale-110"
-            />
+            <Sparkles size={13} />
+            Ask AI
           </Link>
 
-          {/* ================= DESKTOP ACCOUNT ================= */}
+          <Link
+            to="/about"
+            className={desktopLinkClass("/about")}
+          >
+            <Info size={13} />
+            About
+          </Link>
+
+        </nav>
+
+        {/* =====================================================
+            DESKTOP RIGHT SIDE
+        ===================================================== */}
+
+        <div className="hidden items-center gap-4 lg:flex">
+
+          {/* CART */}
+
+          <Link
+            to="/cart"
+            className="
+              relative flex h-10 w-10
+              items-center justify-center
+              rounded-xl
+              border border-white/10
+              bg-white/[0.03]
+              text-gray-400
+              transition
+              hover:border-[#00E5FF]/30
+              hover:text-[#00E5FF]
+            "
+            aria-label="Shopping Cart"
+          >
+            <ShoppingCart size={19} />
+
+            {cartCount > 0 && (
+              <span
+                className="
+                  absolute -right-1 -top-1
+                  flex min-h-[19px] min-w-[19px]
+                  items-center justify-center
+                  rounded-full
+                  bg-[#00E5FF]
+                  px-1
+                  text-[10px]
+                  font-bold
+                  text-black
+                "
+              >
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </Link>
+
+          {/* ACCOUNT */}
+
           {user ? (
-            <div className="relative hidden sm:block">
+            <div className="relative">
 
               <button
                 type="button"
-                onClick={() => setAccountOpen(!accountOpen)}
-                className="flex h-10 items-center gap-3 border border-white/10 px-4 text-left transition hover:border-[#00E5FF]/60"
+                onClick={() =>
+                  setAccountOpen((prev) => !prev)
+                }
+                className="
+                  flex items-center gap-2
+                  rounded-xl
+                  border border-white/10
+                  bg-white/[0.03]
+                  px-3 py-2
+                  text-sm text-gray-300
+                  transition
+                  hover:border-white/20
+                  hover:text-white
+                "
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00E5FF] text-black">
-                  <User size={14} />
-                </div>
+                <User size={16} />
 
-                <div className="max-w-[110px]">
-                  <p className="truncate text-xs font-semibold text-white">
-                    {user.name}
-                  </p>
-
-                  <p className="truncate text-[9px] uppercase tracking-wider text-gray-600">
-                    My Account
-                  </p>
-                </div>
+                <span className="max-w-[110px] truncate">
+                  {user.name || "Account"}
+                </span>
 
                 <ChevronDown
                   size={14}
-                  className={`text-gray-500 transition-transform ${
+                  className={`transition ${
                     accountOpen ? "rotate-180" : ""
                   }`}
                 />
               </button>
 
-              {/* ================= ACCOUNT DROPDOWN ================= */}
               {accountOpen && (
-                <div className="absolute right-0 top-12 w-64 border border-white/10 bg-[#090909] p-2 shadow-2xl">
-
-                  {/* User Info */}
+                <div
+                  className="
+                    absolute right-0 top-14
+                    w-56 overflow-hidden
+                    rounded-xl
+                    border border-white/10
+                    bg-[#0b0b0b]/95
+                    backdrop-blur-xl
+                    shadow-2xl
+                  "
+                >
                   <div className="border-b border-white/10 px-4 py-4">
-                    <p className="text-sm font-semibold text-white">
+
+                    <p className="truncate text-sm font-semibold text-white">
                       {user.name}
                     </p>
 
-                    <p className="mt-1 truncate text-xs text-gray-600">
+                    <p className="mt-1 truncate text-xs text-gray-500">
                       {user.email}
                     </p>
+
                   </div>
 
-                  {/* My Account */}
-                  <Link
-                    to="/account"
-                    onClick={() => setAccountOpen(false)}
-                    className="mt-2 block px-4 py-3 text-xs text-gray-400 transition hover:bg-white/[0.04] hover:text-[#00E5FF]"
-                  >
-                    My Account
-                  </Link>
+                  <div className="p-2">
 
-                  {/* My Orders */}
-                  <Link
-                    to="/orders"
-                    onClick={() => setAccountOpen(false)}
-                    className="block px-4 py-3 text-xs text-gray-400 transition hover:bg-white/[0.04] hover:text-[#00E5FF]"
-                  >
-                    My Orders
-                  </Link>
+                    <Link
+                      to="/account"
+                      onClick={() => setAccountOpen(false)}
+                      className="
+                        block rounded-lg
+                        px-3 py-2.5
+                        text-sm text-gray-400
+                        transition
+                        hover:bg-white/[0.05]
+                        hover:text-white
+                      "
+                    >
+                      My Account
+                    </Link>
 
-                  {/* Wishlist */}
-                  <Link
-                    to="/wishlist"
-                    onClick={() => setAccountOpen(false)}
-                    className="block px-4 py-3 text-xs text-gray-400 transition hover:bg-white/[0.04] hover:text-[#00E5FF]"
-                  >
-                    Wishlist
-                  </Link>
+                    <Link
+                      to="/orders"
+                      onClick={() => setAccountOpen(false)}
+                      className="
+                        block rounded-lg
+                        px-3 py-2.5
+                        text-sm text-gray-400
+                        transition
+                        hover:bg-white/[0.05]
+                        hover:text-white
+                      "
+                    >
+                      My Orders
+                    </Link>
 
-                  {/* Divider */}
-                  <div className="my-2 border-t border-white/10" />
+                    <Link
+                      to="/wishlist"
+                      onClick={() => setAccountOpen(false)}
+                      className="
+                        block rounded-lg
+                        px-3 py-2.5
+                        text-sm text-gray-400
+                        transition
+                        hover:bg-white/[0.05]
+                        hover:text-white
+                      "
+                    >
+                      Wishlist
+                    </Link>
 
-                  {/* Sign Out */}
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="flex w-full items-center gap-2 px-4 py-3 text-xs text-gray-500 transition hover:bg-red-500/5 hover:text-red-400"
-                  >
-                    <LogOut size={14} />
-                    Sign Out
-                  </button>
+                    {user.role === "admin" && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setAccountOpen(false)}
+                        className="
+                          block rounded-lg
+                          px-3 py-2.5
+                          text-sm font-medium
+                          text-[#00E5FF]
+                          transition
+                          hover:bg-[#00E5FF]/10
+                        "
+                      >
+                        Admin Panel
+                      </Link>
+                    )}
 
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="
+                        mt-1 flex w-full
+                        items-center gap-2
+                        rounded-lg
+                        px-3 py-2.5
+                        text-left
+                        text-sm text-red-400
+                        transition
+                        hover:bg-red-500/10
+                      "
+                    >
+                      <LogOut size={15} />
+                      Sign Out
+                    </button>
+
+                  </div>
                 </div>
               )}
+
             </div>
           ) : (
-            /* ================= LOGIN ================= */
             <Link
               to="/login"
-              className="hidden h-10 items-center border border-white/20 px-5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black sm:flex"
+              className="
+                rounded-xl
+                bg-[#00E5FF]
+                px-5 py-2.5
+                text-xs font-bold
+                uppercase tracking-wider
+                text-black
+                transition
+                hover:bg-[#00cce6]
+              "
             >
               Login
             </Link>
           )}
 
-          {/* ================= MOBILE MENU ================= */}
+        </div>
+
+        {/* =====================================================
+            MOBILE ACTIONS
+        ===================================================== */}
+
+        <div className="flex items-center gap-2 lg:hidden">
+
+          {/* MOBILE CART */}
+
+          <Link
+            to="/cart"
+            className="
+              relative flex h-10 w-10
+              items-center justify-center
+              rounded-xl
+              border border-white/10
+              bg-white/[0.03]
+              text-gray-400
+            "
+            aria-label="Shopping Cart"
+          >
+            <ShoppingCart size={19} />
+
+            {cartCount > 0 && (
+              <span
+                className="
+                  absolute -right-1 -top-1
+                  flex min-h-[18px] min-w-[18px]
+                  items-center justify-center
+                  rounded-full
+                  bg-[#00E5FF]
+                  px-1
+                  text-[9px] font-bold
+                  text-black
+                "
+              >
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </Link>
+
+          {/* MENU */}
+
           <button
             type="button"
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() =>
+              setMobileOpen((prev) => !prev)
+            }
+            className="
+              flex h-10 w-10
+              items-center justify-center
+              rounded-xl
+              border border-white/10
+              bg-white/[0.03]
+              text-gray-400
+            "
             aria-label="Toggle menu"
-            className="flex h-10 w-10 items-center justify-center border border-white/10 text-gray-400 transition hover:border-white/30 hover:text-white md:hidden"
           >
-            {menuOpen ? <X size={19} /> : <Menu size={19} />}
+            {mobileOpen ? (
+              <X size={20} />
+            ) : (
+              <Menu size={20} />
+            )}
           </button>
 
         </div>
-      </nav>
 
-      {/* ================= MOBILE MENU ================= */}
-      {menuOpen && (
-        <div className="border-t border-white/10 bg-[#050505] md:hidden">
+      </div>
 
-          <div className="mx-auto flex max-w-[1400px] flex-col px-5 py-6">
+      {/* =====================================================
+          MOBILE MENU
+      ===================================================== */}
+
+      {mobileOpen && (
+        <div
+          className="
+            border-t border-white/10
+            bg-[#050505]/90
+            backdrop-blur-xl
+            lg:hidden
+          "
+        >
+          <div className="mx-auto max-w-7xl space-y-2 px-6 py-5">
 
             <Link
               to="/"
-              onClick={closeMenu}
-              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
+              onClick={() => setMobileOpen(false)}
+              className={mobileLinkClass("/")}
             >
+              <HomeIcon size={17} />
               Home
             </Link>
 
             <Link
               to="/products"
-              onClick={closeMenu}
-              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
+              onClick={() => setMobileOpen(false)}
+              className={mobileLinkClass("/products")}
             >
+              <ShoppingBag size={17} />
               Products
             </Link>
 
-            <a
-              href="#categories"
-              onClick={closeMenu}
-              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
-            >
-              Categories
-            </a>
-
-            <a
-              href="#ai"
-              onClick={closeMenu}
-              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
-            >
-              AI
-            </a>
-
-            <a
-              href="#about"
-              onClick={closeMenu}
-              className="border-b border-white/10 py-4 text-sm text-gray-400 transition hover:text-white"
-            >
-              About
-            </a>
-
-            {/* Mobile Cart */}
             <Link
-              to="/cart"
-              onClick={closeMenu}
-              className="mt-5 flex items-center justify-center gap-2 border border-white/10 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-gray-400 transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+              to="/ai-chat"
+              onClick={() => setMobileOpen(false)}
+              className={mobileLinkClass("/ai-chat")}
             >
-              <ShoppingCart size={15} />
-              Cart
+              <Sparkles size={17} />
+              Ask AI
             </Link>
 
+            <Link
+              to="/about"
+              onClick={() => setMobileOpen(false)}
+              className={mobileLinkClass("/about")}
+            >
+              <Info size={17} />
+              About
+            </Link>
+
+            <Link
+              to="/cart"
+              onClick={() => setMobileOpen(false)}
+              className={mobileLinkClass("/cart")}
+            >
+              <ShoppingCart size={17} />
+
+              <span>Cart</span>
+
+              {cartCount > 0 && (
+                <span className="ml-auto rounded-full bg-[#00E5FF] px-2 py-0.5 text-[10px] font-bold text-black">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </Link>
+
+            {/* USER */}
+
             {user ? (
-              <>
-                {/* Mobile User */}
-                <div className="mt-5 border border-white/10 p-4">
-                  <div className="flex items-center gap-3">
+              <div className="mt-4 border-t border-white/10 pt-4">
 
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00E5FF] text-black">
-                      <User size={16} />
-                    </div>
+                <div className="mb-3 flex items-center gap-3 px-4">
 
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        {user.name}
-                      </p>
+                  <div className="
+                    flex h-9 w-9
+                    items-center justify-center
+                    rounded-full
+                    bg-[#00E5FF]/10
+                    text-[#00E5FF]
+                  ">
+                    <User size={17} />
+                  </div>
 
-                      <p className="text-[10px] text-gray-600">
-                        {user.email}
-                      </p>
-                    </div>
+                  <div className="min-w-0">
+
+                    <p className="truncate text-sm font-semibold text-white">
+                      {user.name}
+                    </p>
+
+                    <p className="truncate text-xs text-gray-600">
+                      {user.email}
+                    </p>
 
                   </div>
+
                 </div>
 
-                {/* Mobile Account */}
                 <Link
                   to="/account"
-                  onClick={closeMenu}
-                  className="mt-3 border border-white/10 py-3 text-center text-xs text-gray-400 transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+                  onClick={() => setMobileOpen(false)}
+                  className={mobileLinkClass("/account")}
                 >
+                  <User size={17} />
                   My Account
                 </Link>
 
-                {/* Mobile Orders */}
                 <Link
                   to="/orders"
-                  onClick={closeMenu}
-                  className="mt-2 border border-white/10 py-3 text-center text-xs text-gray-400 transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+                  onClick={() => setMobileOpen(false)}
+                  className={mobileLinkClass("/orders")}
                 >
+                  <ShoppingBag size={17} />
                   My Orders
                 </Link>
 
-                {/* Mobile Wishlist */}
                 <Link
                   to="/wishlist"
-                  onClick={closeMenu}
-                  className="mt-2 border border-white/10 py-3 text-center text-xs text-gray-400 transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+                  onClick={() => setMobileOpen(false)}
+                  className={mobileLinkClass("/wishlist")}
                 >
+                  <Sparkles size={17} />
                   Wishlist
                 </Link>
 
-                {/* Mobile Sign Out */}
+                {user.role === "admin" && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className="
+                      flex items-center gap-3
+                      rounded-xl px-4 py-3
+                      text-sm font-medium
+                      text-[#00E5FF]
+                      transition
+                      hover:bg-[#00E5FF]/10
+                    "
+                  >
+                    <User size={17} />
+                    Admin Panel
+                  </Link>
+                )}
+
                 <button
                   type="button"
-                  onClick={handleSignOut}
-                  className="mt-2 flex items-center justify-center gap-2 border border-red-500/20 py-3 text-xs text-red-400 transition hover:bg-red-500/5"
+                  onClick={handleLogout}
+                  className="
+                    mt-2 flex w-full
+                    items-center gap-3
+                    rounded-xl px-4 py-3
+                    text-sm font-medium
+                    text-red-400
+                    transition
+                    hover:bg-red-500/10
+                  "
                 >
-                  <LogOut size={14} />
+                  <LogOut size={17} />
                   Sign Out
                 </button>
-              </>
+
+              </div>
             ) : (
-              /* Mobile Login */
               <Link
                 to="/login"
-                onClick={closeMenu}
-                className="mt-3 flex items-center justify-center border border-[#00E5FF]/40 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-[#00E5FF] transition hover:bg-[#00E5FF] hover:text-black"
+                onClick={() => setMobileOpen(false)}
+                className="
+                  mt-4 flex
+                  items-center justify-center
+                  rounded-xl
+                  bg-[#00E5FF]
+                  px-4 py-3
+                  text-sm font-bold
+                  text-black
+                "
               >
                 Login
               </Link>
@@ -362,6 +690,7 @@ function Navbar() {
           </div>
         </div>
       )}
+
     </header>
   );
 }

@@ -1,363 +1,457 @@
 import {
-  BarChart3,
-  Box,
-  ShoppingBag,
-  Users,
-  DollarSign,
   ArrowUpRight,
+  Box,
+  ChevronRight,
   Package,
-  Clock,
+  ShoppingCart,
+  Users,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+
+import AdminNavbar from "../../components/AdminNavbar";
+
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function AdminDashboard() {
-  const stats = [
-    {
-      title: "Total Revenue",
-      value: "Rs. 2.84M",
-      change: "+12.5%",
-      icon: DollarSign,
-    },
-    {
-      title: "Total Orders",
-      value: "1,284",
-      change: "+8.2%",
-      icon: ShoppingBag,
-    },
+  const navigate = useNavigate();
+
+  const [admin, setAdmin] = useState(null);
+
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalOrders: 0,
+    totalUsers: 0,
+    totalRevenue: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  /*
+  ========================================
+  LOAD ADMIN DASHBOARD
+  ========================================
+  */
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      const token = localStorage.getItem(
+        "nexatech_token"
+      );
+
+      const userData = localStorage.getItem(
+        "nexatech_user"
+      );
+
+      if (!token || !userData) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const user = JSON.parse(userData);
+
+        if (user.role !== "admin") {
+          navigate("/");
+          return;
+        }
+
+        setAdmin(user);
+
+        const response = await fetch(
+          "http://localhost:5000/api/admin/dashboard",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Failed to load dashboard."
+          );
+        }
+
+        setStats(data.stats);
+
+      } catch (err) {
+        console.error(
+          "Dashboard error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Unable to load dashboard."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, [navigate]);
+
+
+  /*
+  ========================================
+  STAT CARDS
+  ========================================
+  */
+
+  const statCards = [
     {
       title: "Total Products",
-      value: "486",
-      change: "+4.6%",
-      icon: Box,
+      value: stats.totalProducts,
+      icon: Package,
+      link: "/admin/products",
     },
+
     {
-      title: "Total Users",
-      value: "8,942",
-      change: "+15.3%",
+      title: "Total Orders",
+      value: stats.totalOrders,
+      icon: ShoppingCart,
+      link: "/admin/orders",
+    },
+
+    {
+      title: "Total Customers",
+      value: stats.totalUsers,
       icon: Users,
+      link: "/admin/users",
+    },
+
+    {
+      title: "Total Revenue",
+      value: `Rs. ${stats.totalRevenue.toLocaleString()}`,
+      icon: ArrowUpRight,
+      link: "/admin/analytics",
     },
   ];
 
-  const recentOrders = [
-    {
-      id: "#NT-1024",
-      customer: "Kasun Perera",
-      product: "Nexa Pro Laptop",
-      amount: "Rs. 289,000",
-      status: "Completed",
-    },
-    {
-      id: "#NT-1023",
-      customer: "Amal Fernando",
-      product: "Ultra X Smartphone",
-      amount: "Rs. 189,000",
-      status: "Processing",
-    },
-    {
-      id: "#NT-1022",
-      customer: "Nimal Silva",
-      product: "Pulse Gaming Headset",
-      amount: "Rs. 49,000",
-      status: "Pending",
-    },
-    {
-      id: "#NT-1021",
-      customer: "Sahan Perera",
-      product: "Vision 4K Monitor",
-      amount: "Rs. 159,000",
-      status: "Completed",
-    },
-  ];
+
+  /*
+  ========================================
+  LOADING
+  ========================================
+  */
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] text-white">
+
+        <AdminNavbar />
+
+        <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
+
+          <div className="text-center">
+
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#00e5ff]" />
+
+            <p className="text-xs uppercase tracking-[0.25em] text-gray-600">
+              Loading Dashboard
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
 
-      {/* Header */}
-      <header className="border-b border-white/10 bg-[#090909]">
-        <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
+      {/* ========================================
+          ADMIN NAVBAR
+      ======================================== */}
 
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[#00E5FF]">
-              NEXATECH
+      <AdminNavbar />
+
+
+      {/* ========================================
+          MAIN CONTENT
+      ======================================== */}
+
+      <main>
+
+        <div className="mx-auto max-w-[1600px] p-6 sm:p-10">
+
+
+          {/* ========================================
+              PAGE HEADER
+          ======================================== */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.5,
+            }}
+            className="mb-8"
+          >
+
+            <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-[#00e5ff]">
+              Administration
             </p>
 
-            <h1 className="mt-1 text-xl font-bold tracking-tight">
-              Admin Dashboard
+            <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+              Dashboard
+              <span className="text-gray-700">
+                .
+              </span>
             </h1>
+
+            <p className="mt-3 text-sm text-gray-600">
+              Welcome back,{" "}
+              <span className="text-gray-400">
+                {admin?.name}
+              </span>
+            </p>
+
+          </motion.div>
+
+
+          {/* ========================================
+              ERROR
+          ======================================== */}
+
+          {error && (
+            <div className="mb-6 border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
+
+
+          {/* ========================================
+              STAT CARDS
+          ======================================== */}
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+            {statCards.map(
+              (card, index) => {
+
+                const Icon = card.icon;
+
+                return (
+                  <motion.div
+                    key={card.title}
+                    initial={{
+                      opacity: 0,
+                      y: 20,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.08,
+                    }}
+                  >
+
+                    <Link
+                      to={card.link}
+                      className="group block border border-white/10 bg-[#090909] p-5 transition hover:border-[#00e5ff]/30"
+                    >
+
+                      <div className="mb-6 flex items-start justify-between">
+
+                        <div className="flex h-10 w-10 items-center justify-center bg-[#00e5ff]/5 text-[#00e5ff]">
+                          <Icon size={18} />
+                        </div>
+
+                        <ArrowUpRight
+                          size={15}
+                          className="text-gray-700 transition group-hover:text-[#00e5ff]"
+                        />
+
+                      </div>
+
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-600">
+                        {card.title}
+                      </p>
+
+                      <p className="mt-2 text-2xl font-black">
+                        {card.value}
+                      </p>
+
+                    </Link>
+
+                  </motion.div>
+                );
+              }
+            )}
+
           </div>
 
-          <Link
-            to="/"
-            className="flex items-center gap-2 border border-white/10 px-4 py-2 text-xs font-semibold text-gray-400 transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
-          >
-            View Store
-            <ArrowUpRight size={14} />
-          </Link>
 
-        </div>
-      </header>
+          {/* ========================================
+              QUICK ACTIONS
+          ======================================== */}
 
-      {/* Main */}
-      <main className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8">
+          <section className="mt-10">
 
-        {/* Page Heading */}
-        <div className="mb-10">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-600">
-            Overview
-          </p>
+            <div className="mb-5">
 
-          <h2 className="mt-3 text-4xl font-bold tracking-[-0.05em] sm:text-5xl">
-            STORE
-            <span className="text-gray-600"> PERFORMANCE.</span>
-          </h2>
-        </div>
+              <p className="text-[9px] uppercase tracking-[0.3em] text-gray-700">
+                Quick Actions
+              </p>
 
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-
-            return (
-              <div
-                key={stat.title}
-                className="border border-white/10 bg-[#090909] p-6 transition hover:border-[#00E5FF]/30"
-              >
-
-                <div className="flex items-center justify-between">
-
-                  <div className="flex h-10 w-10 items-center justify-center border border-white/10 text-[#00E5FF]">
-                    <Icon size={18} />
-                  </div>
-
-                  <span className="text-xs text-[#00E5FF]">
-                    {stat.change}
-                  </span>
-
-                </div>
-
-                <p className="mt-6 text-xs uppercase tracking-[0.15em] text-gray-600">
-                  {stat.title}
-                </p>
-
-                <p className="mt-2 text-2xl font-bold tracking-tight">
-                  {stat.value}
-                </p>
-
-              </div>
-            );
-          })}
-
-        </div>
-
-        {/* Content */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-
-          {/* Recent Orders */}
-          <section className="border border-white/10 bg-[#090909] lg:col-span-2">
-
-            <div className="flex items-center justify-between border-b border-white/10 p-6">
-
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-gray-600">
-                  Orders
-                </p>
-
-                <h3 className="mt-2 text-lg font-semibold">
-                  Recent Orders
-                </h3>
-              </div>
-
-              <Link
-                to="/admin/orders"
-                className="text-xs text-gray-500 transition hover:text-[#00E5FF]"
-              >
-                View all →
-              </Link>
+              <h2 className="mt-2 text-xl font-bold">
+                Manage Store
+              </h2>
 
             </div>
 
-            <div className="overflow-x-auto">
 
-              <table className="w-full text-left">
+            <div className="grid gap-4 md:grid-cols-3">
 
-                <thead>
-                  <tr className="border-b border-white/10 text-[10px] uppercase tracking-[0.15em] text-gray-600">
-                    <th className="px-6 py-4">Order</th>
-                    <th className="px-6 py-4">Customer</th>
-                    <th className="px-6 py-4">Product</th>
-                    <th className="px-6 py-4">Amount</th>
-                    <th className="px-6 py-4">Status</th>
-                  </tr>
-                </thead>
 
-                <tbody>
+              {/* PRODUCTS */}
 
-                  {recentOrders.map((order) => (
-                    <tr
-                      key={order.id}
-                      className="border-b border-white/5 transition hover:bg-white/[0.02]"
-                    >
+              <Link
+                to="/admin/products"
+                className="group border border-white/10 bg-[#090909] p-6 transition hover:border-[#00e5ff]/30"
+              >
 
-                      <td className="px-6 py-5 text-xs font-semibold">
-                        {order.id}
-                      </td>
+                <Box
+                  size={22}
+                  className="mb-5 text-[#00e5ff]"
+                />
 
-                      <td className="px-6 py-5 text-xs text-gray-400">
-                        {order.customer}
-                      </td>
+                <h3 className="font-bold">
+                  Manage Products
+                </h3>
 
-                      <td className="px-6 py-5 text-xs text-gray-400">
-                        {order.product}
-                      </td>
+                <p className="mt-2 text-xs leading-5 text-gray-600">
+                  Add, edit and remove products
+                  from your store.
+                </p>
 
-                      <td className="px-6 py-5 text-xs font-semibold">
-                        {order.amount}
-                      </td>
+                <div className="mt-5 flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-600 transition group-hover:text-[#00e5ff]">
 
-                      <td className="px-6 py-5">
+                  Open
 
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-                            order.status === "Completed"
-                              ? "bg-green-400/10 text-green-400"
-                              : order.status === "Processing"
-                              ? "bg-[#00E5FF]/10 text-[#00E5FF]"
-                              : "bg-yellow-400/10 text-yellow-400"
-                          }`}
-                        >
-                          {order.status}
-                        </span>
+                  <ChevronRight size={13} />
 
-                      </td>
+                </div>
 
-                    </tr>
-                  ))}
+              </Link>
 
-                </tbody>
 
-              </table>
+              {/* ORDERS */}
+
+              <Link
+                to="/admin/orders"
+                className="group border border-white/10 bg-[#090909] p-6 transition hover:border-[#00e5ff]/30"
+              >
+
+                <ShoppingCart
+                  size={22}
+                  className="mb-5 text-[#00e5ff]"
+                />
+
+                <h3 className="font-bold">
+                  Manage Orders
+                </h3>
+
+                <p className="mt-2 text-xs leading-5 text-gray-600">
+                  View customer orders and
+                  update order status.
+                </p>
+
+                <div className="mt-5 flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-600 transition group-hover:text-[#00e5ff]">
+
+                  Open
+
+                  <ChevronRight size={13} />
+
+                </div>
+
+              </Link>
+
+
+              {/* CUSTOMERS */}
+
+              <Link
+                to="/admin/users"
+                className="group border border-white/10 bg-[#090909] p-6 transition hover:border-[#00e5ff]/30"
+              >
+
+                <Users
+                  size={22}
+                  className="mb-5 text-[#00e5ff]"
+                />
+
+                <h3 className="font-bold">
+                  Manage Customers
+                </h3>
+
+                <p className="mt-2 text-xs leading-5 text-gray-600">
+                  View and manage registered
+                  customer accounts.
+                </p>
+
+                <div className="mt-5 flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-600 transition group-hover:text-[#00e5ff]">
+
+                  Open
+
+                  <ChevronRight size={13} />
+
+                </div>
+
+              </Link>
 
             </div>
 
           </section>
 
-          {/* Quick Actions */}
-          <section className="border border-white/10 bg-[#090909]">
 
-            <div className="border-b border-white/10 p-6">
+          {/* ========================================
+              SYSTEM STATUS
+          ======================================== */}
 
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-600">
-                Management
-              </p>
+          <section className="mt-10 border border-white/10 bg-[#090909] p-5">
 
-              <h3 className="mt-2 text-lg font-semibold">
-                Quick Actions
-              </h3>
+            <div className="flex items-center justify-between">
 
-            </div>
+              <div>
 
-            <div className="space-y-3 p-6">
+                <p className="text-[9px] uppercase tracking-[0.25em] text-gray-700">
+                  System Status
+                </p>
 
-              <Link
-                to="/admin/products"
-                className="flex items-center justify-between border border-white/10 p-4 transition hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/[0.03]"
-              >
+                <p className="mt-2 text-sm text-gray-400">
+                  NexaTech backend services
+                </p>
 
-                <div className="flex items-center gap-3">
+              </div>
 
-                  <Package
-                    size={17}
-                    className="text-[#00E5FF]"
-                  />
+              <div className="flex items-center gap-2">
 
-                  <span className="text-sm">
-                    Manage Products
-                  </span>
+                <span className="h-2 w-2 rounded-full bg-[#00e5ff]" />
 
-                </div>
+                <span className="text-[10px] uppercase tracking-wider text-[#00e5ff]">
+                  Operational
+                </span>
 
-                <ArrowUpRight
-                  size={15}
-                  className="text-gray-600"
-                />
-
-              </Link>
-
-              <Link
-                to="/admin/orders"
-                className="flex items-center justify-between border border-white/10 p-4 transition hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/[0.03]"
-              >
-
-                <div className="flex items-center gap-3">
-
-                  <Clock
-                    size={17}
-                    className="text-[#00E5FF]"
-                  />
-
-                  <span className="text-sm">
-                    Manage Orders
-                  </span>
-
-                </div>
-
-                <ArrowUpRight
-                  size={15}
-                  className="text-gray-600"
-                />
-
-              </Link>
-
-              <Link
-                to="/admin/users"
-                className="flex items-center justify-between border border-white/10 p-4 transition hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/[0.03]"
-              >
-
-                <div className="flex items-center gap-3">
-
-                  <Users
-                    size={17}
-                    className="text-[#00E5FF]"
-                  />
-
-                  <span className="text-sm">
-                    Manage Users
-                  </span>
-
-                </div>
-
-                <ArrowUpRight
-                  size={15}
-                  className="text-gray-600"
-                />
-
-              </Link>
-
-              <Link
-                to="/admin/analytics"
-                className="flex items-center justify-between border border-white/10 p-4 transition hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/[0.03]"
-              >
-
-                <div className="flex items-center gap-3">
-
-                  <BarChart3
-                    size={17}
-                    className="text-[#00E5FF]"
-                  />
-
-                  <span className="text-sm">
-                    View Analytics
-                  </span>
-
-                </div>
-
-                <ArrowUpRight
-                  size={15}
-                  className="text-gray-600"
-                />
-
-              </Link>
+              </div>
 
             </div>
 
