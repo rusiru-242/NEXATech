@@ -1,3 +1,4 @@
+
 import {
   User,
   Mail,
@@ -86,15 +87,12 @@ function Account() {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/auth/me`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -182,8 +180,6 @@ function Account() {
       setOrders(data.orders || []);
     } catch (err) {
       console.error("Orders error:", err);
-
-      // Don't show order API error as the main account error
       setOrders([]);
     } finally {
       setOrdersLoading(false);
@@ -224,7 +220,6 @@ function Account() {
       setWishlist(data.wishlist || []);
     } catch (err) {
       console.error("Wishlist error:", err);
-
       setWishlist([]);
     } finally {
       setWishlistLoading(false);
@@ -307,10 +302,7 @@ function Account() {
 
     const addressTrim = formData.address.trim();
 
-    if (
-      addressTrim &&
-      addressTrim.length < 5
-    ) {
+    if (addressTrim && addressTrim.length < 5) {
       setError(
         "Address must be at least 5 characters."
       );
@@ -346,8 +338,7 @@ function Account() {
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            "Failed to update profile."
+          data.message || "Failed to update profile."
         );
       }
 
@@ -401,9 +392,7 @@ function Account() {
       return;
     }
 
-    if (
-      passwordData.newPassword.length < 6
-    ) {
+    if (passwordData.newPassword.length < 6) {
       setError(
         "New password must be at least 6 characters."
       );
@@ -515,21 +504,21 @@ function Account() {
   // PAGE
   // ==============================
   return (
-    <div className="min-h-screen bg-[#050505] px-5 pb-20 pt-28 text-white">
+    <div className="min-h-screen bg-[#050505] px-5 pb-12 text-white">
 
       <Navbar />
 
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-6xl pt-6 md:pt-20">
 
         {/* ==============================
             HEADER
         ============================== */}
 
-        <div className="mb-10">
+        <div className="mb-7">
 
           <Link
             to="/"
-            className="mb-6 inline-flex items-center gap-2 text-xs text-gray-600 transition hover:text-[#00E5FF]"
+            className="mb-4 inline-flex items-center gap-2 text-xs text-gray-600 transition hover:text-[#00E5FF]"
           >
             <ArrowLeft size={14} />
             Back to Store
@@ -548,8 +537,7 @@ function Account() {
           </h1>
 
           <p className="mt-3 text-sm text-gray-600">
-            Manage your account, orders and
-            saved products.
+            Manage your account, orders and saved products.
           </p>
 
         </div>
@@ -705,14 +693,14 @@ function Account() {
                           Order #
                           {String(
                             order._id ||
-                              order.id
+                            order.id
                           ).slice(-8)}
                         </p>
 
                         <p className="mt-1 text-[10px] text-gray-600">
                           {formatDate(
                             order.createdAt ||
-                              order.date
+                            order.date
                           )}
                         </p>
 
@@ -721,9 +709,7 @@ function Account() {
                       <div className="flex items-center gap-3">
 
                         <span className="border border-white/10 px-2 py-1 text-[9px] uppercase tracking-wider text-gray-500">
-                          {getOrderStatus(
-                            order
-                          )}
+                          {getOrderStatus(order)}
                         </span>
 
                         <ChevronRight
@@ -1220,3 +1206,4 @@ function Account() {
 }
 
 export default Account;
+

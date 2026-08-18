@@ -68,12 +68,22 @@ router.post("/", authMiddleware, async (req, res) => {
     const orderItems = [];
 
     for (const item of items) {
-      const product = await Product.findById(item._id);
+      // Support payloads that pass product id as `item._id` or `item.product`
+      const productId = item._id || item.product;
+
+      if (!productId) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid order item: missing product id",
+        });
+      }
+
+      const product = await Product.findById(productId);
 
       if (!product) {
         return res.status(404).json({
           success: false,
-          message: `Product not found: ${item.name}`,
+          message: `Product not found: ${productId}`,
         });
       }
 

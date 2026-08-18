@@ -18,6 +18,8 @@ import Orders from "./pages/Orders";
 import About from "./pages/About";
 import AIChat from "./pages/AIChat";
 import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancelled from "./pages/PaymentCancelled";
 
 // ================= ADMIN PAGES =================
 
@@ -51,6 +53,15 @@ function App() {
         <Route
           path="/products"
           element={<Products />}
+        />
+        <Route
+         path="/payment-success"
+           element={<PaymentSuccess />}
+              />
+
+        <Route
+         path="/payment-cancelled"
+          element={<PaymentCancelled />}
         />
 
         <Route

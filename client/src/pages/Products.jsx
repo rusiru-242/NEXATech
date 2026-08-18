@@ -168,7 +168,6 @@ function Products() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
-
       <Navbar />
 
       <main>
@@ -305,7 +304,7 @@ function Products() {
 
         <section className="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-9">
 
-          <div className="grid gap-7 lg:grid-cols-[200px_1fr] lg:gap-9">
+          <div className="grid gap-7 lg:grid-cols-[240px_1fr] lg:gap-10">
 
             {/* =================================================
                 CATEGORY SIDEBAR
@@ -323,7 +322,7 @@ function Products() {
 
                 <div className="flex items-center justify-between">
 
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-gray-600">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gray-600">
                     Categories
                   </p>
 
@@ -339,7 +338,9 @@ function Products() {
 
                 </div>
 
-                <div className="mt-3 space-y-0.5">
+                {/* CATEGORY LIST */}
+
+                <div className="mt-3 space-y-1">
 
                   {categories.map((item) => (
 
@@ -350,7 +351,7 @@ function Products() {
                         setCategory(item);
                         setMobileFilter(false);
                       }}
-                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition ${
+                      className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition ${
                         category === item
                           ? "bg-[#00e5ff]/10 text-[#00e5ff]"
                           : "text-gray-500 hover:bg-white/[0.03] hover:text-white"

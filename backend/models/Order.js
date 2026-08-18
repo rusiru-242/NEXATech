@@ -117,6 +117,10 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "pending",
     },
+    stripeSessionId: {
+    type: String,
+     default: null,
+        },
 
     // ==============================
     // PRICE

@@ -1,126 +1,206 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  CheckCircle,
   CreditCard,
-  Loader2,
   MapPin,
-  ShoppingBag,
+  ShieldCheck,
   Truck,
 } from "lucide-react";
-
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 
 function Checkout() {
   const navigate = useNavigate();
 
-  const [cart] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("nexatech_cart")) || [];
-    } catch {
-      return [];
-    }
-  });
+  const [cart, setCart] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: "",
     phone: "",
     address: "",
     city: "",
   });
 
-  const [paymentMethod, setPaymentMethod] = useState("cod");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // =====================================================
+  // LOAD CART
+  // =====================================================
+
+  useEffect(() => {
+    try {
+      const savedCart =
+        JSON.parse(
+          localStorage.getItem("nexatech_cart")
+        ) || [];
+
+      console.log("CART:", savedCart);
+
+      setCart(Array.isArray(savedCart) ? savedCart : []);
+    } catch (err) {
+      console.error("Cart loading error:", err);
+      setCart([]);
+    }
+  }, []);
+
+  // =====================================================
+  // TOTALS
+  // =====================================================
 
   const subtotal = useMemo(() => {
     return cart.reduce(
       (total, item) =>
-        total + Number(item.price) * Number(item.quantity),
+        total +
+        Number(item.price || 0) *
+          Number(item.quantity || 0),
       0
     );
   }, [cart]);
 
-  const shippingFee = subtotal >= 100 || subtotal === 0 ? 0 : 10;
+  const shippingFee = subtotal >= 100 ? 0 : 10;
 
   const total = subtotal + shippingFee;
 
-  // ==========================================================
+  // =====================================================
   // FORM CHANGE
-  // ==========================================================
+  // =====================================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
+    setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
-
-    // Clear previous error when user starts typing
-    if (error) {
-      setError("");
-    }
   };
 
-  // ==========================================================
-  // PLACE ORDER
-  // ==========================================================
+  // =====================================================
+  // SUBMIT ORDER
+  // =====================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (loading) {
+    setError("");
+
+    console.log("================================");
+    console.log("CHECKOUT STARTED");
+    console.log("================================");
+
+    // -----------------------------------------------------
+    // TOKEN
+    // -----------------------------------------------------
+
+    const token =
+      localStorage.getItem("nexatech_token");
+
+    console.log(
+      "Token exists:",
+      !!token
+    );
+
+    if (!token) {
+      setError(
+        "You are not logged in. Please login first."
+      );
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+
       return;
     }
 
-    // --------------------------------------------------------
-    // Check cart
-    // --------------------------------------------------------
+    // -----------------------------------------------------
+    // CART
+    // -----------------------------------------------------
 
     if (!cart.length) {
       setError("Your cart is empty.");
       return;
     }
 
-    // --------------------------------------------------------
-    // Check authentication
-    // --------------------------------------------------------
+    // -----------------------------------------------------
+    // VALIDATE CART PRODUCTS
+    // -----------------------------------------------------
 
-    const token = localStorage.getItem("nexatech_token");
+    const invalidItem = cart.find(
+      (item) =>
+        !item._id ||
+        !item.quantity ||
+        Number(item.quantity) <= 0
+    );
 
-    if (!token) {
-      alert("Please login before placing your order.");
-      navigate("/login");
+    if (invalidItem) {
+      console.error(
+        "Invalid cart item:",
+        invalidItem
+      );
+
+      setError(
+        "One or more cart items are invalid. Please remove them and add again."
+      );
+
       return;
     }
 
-    // --------------------------------------------------------
-    // Basic validation
-    // --------------------------------------------------------
+    // -----------------------------------------------------
+    // FORM VALIDATION
+    // -----------------------------------------------------
 
     if (
-      !formData.name.trim() ||
-      !formData.phone.trim() ||
-      !formData.address.trim() ||
-      !formData.city.trim()
+      !form.name.trim() ||
+      !form.phone.trim() ||
+      !form.address.trim() ||
+      !form.city.trim()
     ) {
-      setError("Please complete all delivery information.");
+      setError(
+        "Please complete all delivery details."
+      );
+
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
 
-      // ------------------------------------------------------
-      // Send order to backend
-      // ------------------------------------------------------
+      // ===================================================
+      // ORDER PAYLOAD
+      // ===================================================
 
-      const response = await fetch(
+      const orderPayload = {
+        items: cart.map((item) => ({
+          product: item._id,
+          quantity: Number(item.quantity),
+        })),
+
+        shippingAddress: {
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          address: form.address.trim(),
+          city: form.city.trim(),
+        },
+
+        paymentMethod,
+
+        subtotal: Number(subtotal),
+        shippingFee: Number(shippingFee),
+        total: Number(total),
+      };
+
+      console.log(
+        "ORDER PAYLOAD:",
+        orderPayload
+      );
+
+      // ===================================================
+      // CREATE ORDER
+      // ===================================================
+
+      const orderResponse = await fetch(
         "http://localhost:5000/api/orders",
         {
           method: "POST",
@@ -130,164 +210,293 @@ function Checkout() {
             Authorization: `Bearer ${token}`,
           },
 
-          body: JSON.stringify({
-            items: cart,
-
-            shippingAddress: {
-              name: formData.name.trim(),
-              phone: formData.phone.trim(),
-              address: formData.address.trim(),
-              city: formData.city.trim(),
-            },
-
-            paymentMethod,
-
-            subtotal,
-            shippingFee,
-            total,
-          }),
+          body: JSON.stringify(orderPayload),
         }
       );
 
-      const data = await response.json();
-
-      // ------------------------------------------------------
-      // Handle backend error
-      // ------------------------------------------------------
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to place your order."
-        );
-      }
-
-      // ------------------------------------------------------
-      // Save last order
-      // ------------------------------------------------------
-
-      if (data.order) {
-        localStorage.setItem(
-          "nexatech_last_order",
-          JSON.stringify(data.order)
-        );
-      }
-
-      // ------------------------------------------------------
-      // Clear cart
-      // ------------------------------------------------------
-
-      localStorage.removeItem("nexatech_cart");
-
-      // ------------------------------------------------------
-      // Update Navbar cart count
-      // ------------------------------------------------------
-
-      window.dispatchEvent(
-        new Event("cartUpdated")
+      console.log(
+        "Order HTTP Status:",
+        orderResponse.status
       );
 
-      // ------------------------------------------------------
-      // Go to Orders page
-      // ------------------------------------------------------
+      // ---------------------------------------------------
+      // READ RESPONSE SAFELY
+      // ---------------------------------------------------
 
-      navigate("/orders");
+      const responseText =
+        await orderResponse.text();
+
+      console.log(
+        "Raw Order Response:",
+        responseText
+      );
+
+      let orderData = {};
+
+      try {
+        orderData =
+          responseText
+            ? JSON.parse(responseText)
+            : {};
+      } catch (jsonError) {
+        console.error(
+          "JSON parse error:",
+          jsonError
+        );
+
+        throw new Error(
+          `Backend returned an invalid response. HTTP ${orderResponse.status}`
+        );
+      }
+
+      console.log(
+        "ORDER RESPONSE:",
+        orderData
+      );
+
+      // ---------------------------------------------------
+      // ORDER ERROR
+      // ---------------------------------------------------
+
+      if (!orderResponse.ok) {
+        throw new Error(
+          orderData.message ||
+            `Unable to create order. HTTP ${orderResponse.status}`
+        );
+      }
+
+      // ---------------------------------------------------
+      // CHECK ORDER
+      // ---------------------------------------------------
+
+      const order = orderData.order;
+
+      if (!order || !order._id) {
+        console.error(
+          "Invalid order response:",
+          orderData
+        );
+
+        throw new Error(
+          "Order was not returned by the server."
+        );
+      }
+
+      console.log(
+        "ORDER CREATED:",
+        order
+      );
+
+      // ===================================================
+      // CASH ON DELIVERY
+      // ===================================================
+
+      if (paymentMethod === "cod") {
+        console.log(
+          "COD order created successfully."
+        );
+
+        localStorage.setItem(
+          "nexatech_last_order",
+          JSON.stringify(order)
+        );
+
+        localStorage.removeItem(
+          "nexatech_cart"
+        );
+
+        window.dispatchEvent(
+          new Event("cartUpdated")
+        );
+
+        navigate("/orders");
+
+        return;
+      }
+
+      // ===================================================
+      // STRIPE CARD PAYMENT
+      // ===================================================
+
+      console.log(
+        "Creating Stripe checkout session..."
+      );
+
+      const paymentResponse =
+        await fetch(
+          "http://localhost:5000/api/payments/create-checkout-session",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              orderId: order._id,
+            }),
+          }
+        );
+
+      console.log(
+        "Payment HTTP Status:",
+        paymentResponse.status
+      );
+
+      const paymentText =
+        await paymentResponse.text();
+
+      console.log(
+        "Raw Payment Response:",
+        paymentText
+      );
+
+      let paymentData = {};
+
+      try {
+        paymentData =
+          paymentText
+            ? JSON.parse(paymentText)
+            : {};
+      } catch (jsonError) {
+        console.error(
+          "Payment JSON parse error:",
+          jsonError
+        );
+
+        throw new Error(
+          "Payment server returned an invalid response."
+        );
+      }
+
+      console.log(
+        "PAYMENT RESPONSE:",
+        paymentData
+      );
+
+      if (!paymentResponse.ok) {
+        throw new Error(
+          paymentData.message ||
+            "Unable to start card payment."
+        );
+      }
+
+      localStorage.setItem(
+        "nexatech_last_order",
+        JSON.stringify(order)
+      );
+
+      // ---------------------------------------------------
+      // STRIPE REDIRECT
+      // ---------------------------------------------------
+
+      if (paymentData.url) {
+        console.log(
+          "Redirecting to Stripe..."
+        );
+
+        window.location.href =
+          paymentData.url;
+
+        return;
+      }
+
+      throw new Error(
+        "Stripe checkout URL was not returned."
+      );
+
     } catch (err) {
-      console.error("Checkout Error:", err);
+      console.error(
+        "================================"
+      );
+
+      console.error(
+        "CHECKOUT ERROR:",
+        err
+      );
+
+      console.error(
+        "================================"
+      );
 
       setError(
         err.message ||
-          "Something went wrong while placing your order."
+          "Checkout failed. Please try again."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // ==========================================================
+  // =====================================================
   // EMPTY CART
-  // ==========================================================
+  // =====================================================
 
   if (!cart.length) {
     return (
       <div className="min-h-screen bg-[#050505] text-white">
-
         <Navbar />
 
-        <main className="mx-auto flex min-h-[70vh] max-w-3xl items-center justify-center px-6">
-
+        <main className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center px-5">
           <div className="text-center">
 
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 text-gray-500">
-              <ShoppingBag size={30} />
-            </div>
-
-            <h1 className="mt-5 text-3xl font-bold">
-              Your cart is empty
-            </h1>
-
-            <p className="mt-3 text-gray-400">
-              Add some products before proceeding to checkout.
+            <p className="text-[10px] uppercase tracking-[0.3em] text-gray-600">
+              Checkout
             </p>
+
+            <h1 className="mt-3 text-3xl font-bold">
+              Your cart is empty.
+            </h1>
 
             <Link
               to="/products"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#00E5FF] px-6 py-3 font-semibold text-black transition hover:bg-[#00cce6]"
+              className="mt-7 inline-flex border border-[#00e5ff]/30 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[#00e5ff] transition hover:bg-[#00e5ff] hover:text-black"
             >
-              <ShoppingBag size={18} />
-              Browse Products
+              Continue Shopping
             </Link>
 
           </div>
-
         </main>
-
       </div>
     );
   }
 
-  // ==========================================================
-  // CHECKOUT PAGE
-  // ==========================================================
+  // =====================================================
+  // PAGE
+  // =====================================================
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
-
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-12">
+      <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
 
-        {/* Header */}
+        <Link
+          to="/cart"
+          className="mb-8 inline-flex items-center gap-2 text-xs text-gray-500 transition hover:text-white"
+        >
+          <ArrowLeft size={14} />
+          Back to Cart
+        </Link>
+
         <div className="mb-8">
 
-          <Link
-            to="/cart"
-            className="inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-[#00E5FF]"
-          >
-            <ArrowLeft size={16} />
-            Back to Cart
-          </Link>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.35em] text-[#00e5ff]">
+            Secure Checkout
+          </p>
 
-          <div className="mt-5">
-
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#00E5FF]">
-              Secure Checkout
-            </p>
-
-            <h1 className="mt-2 text-4xl font-bold sm:text-5xl">
-              Complete your order.
-            </h1>
-
-            <p className="mt-3 text-gray-400">
-              Enter your delivery details and select your payment method.
-            </p>
-
-          </div>
+          <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+            Complete your order.
+          </h1>
 
         </div>
 
-        {/* Error Message */}
         {error && (
-          <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/5 px-5 py-4 text-sm text-red-400">
+          <div className="mb-6 border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-400">
             {error}
           </div>
         )}
@@ -297,111 +506,100 @@ function Checkout() {
           className="grid gap-8 lg:grid-cols-[1fr_380px]"
         >
 
-          {/* ==================================================
+          {/* =================================================
               LEFT
-          ================================================== */}
+          ================================================= */}
 
           <div className="space-y-6">
 
-            {/* Delivery Details */}
-            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            {/* DELIVERY */}
 
-              <div className="flex items-center gap-3 border-b border-white/10 pb-5">
+            <section className="border border-white/10 bg-white/[0.02] p-5 sm:p-6">
 
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00E5FF]/10 text-[#00E5FF]">
-                  <MapPin size={20} />
+              <div className="mb-6 flex items-center gap-3">
+
+                <div className="flex h-9 w-9 items-center justify-center border border-[#00e5ff]/20 text-[#00e5ff]">
+                  <MapPin size={16} />
                 </div>
 
                 <div>
-                  <h2 className="font-semibold">
+                  <h2 className="text-sm font-semibold">
                     Delivery Information
                   </h2>
 
-                  <p className="text-xs text-gray-500">
+                  <p className="mt-1 text-[10px] text-gray-600">
                     Where should we deliver your order?
                   </p>
                 </div>
 
               </div>
 
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
 
-                {/* Name */}
-                <div>
+                <div className="sm:col-span-2">
 
-                  <label className="mb-2 block text-sm text-gray-300">
+                  <label className="mb-2 block text-[10px] uppercase tracking-wider text-gray-600">
                     Full Name
                   </label>
 
                   <input
                     type="text"
                     name="name"
-                    value={formData.name}
+                    value={form.name}
                     onChange={handleChange}
                     placeholder="Enter your full name"
-                    required
-                    disabled={loading}
-                    className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-[#00E5FF]/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-11 w-full border border-white/10 bg-black/30 px-4 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
                   />
 
                 </div>
 
-                {/* Phone */}
                 <div>
 
-                  <label className="mb-2 block text-sm text-gray-300">
+                  <label className="mb-2 block text-[10px] uppercase tracking-wider text-gray-600">
                     Phone Number
                   </label>
 
                   <input
                     type="tel"
                     name="phone"
-                    value={formData.phone}
+                    value={form.phone}
                     onChange={handleChange}
-                    placeholder="Enter your phone number"
-                    required
-                    disabled={loading}
-                    className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-[#00E5FF]/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="07X XXX XXXX"
+                    className="h-11 w-full border border-white/10 bg-black/30 px-4 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
                   />
 
                 </div>
 
-                {/* Address */}
-                <div className="sm:col-span-2">
-
-                  <label className="mb-2 block text-sm text-gray-300">
-                    Address
-                  </label>
-
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    placeholder="Enter your delivery address"
-                    required
-                    rows={3}
-                    disabled={loading}
-                    className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-[#00E5FF]/50 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-
-                </div>
-
-                {/* City */}
                 <div>
 
-                  <label className="mb-2 block text-sm text-gray-300">
+                  <label className="mb-2 block text-[10px] uppercase tracking-wider text-gray-600">
                     City
                   </label>
 
                   <input
                     type="text"
                     name="city"
-                    value={formData.city}
+                    value={form.city}
                     onChange={handleChange}
-                    placeholder="Enter your city"
-                    required
-                    disabled={loading}
-                    className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-[#00E5FF]/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Your city"
+                    className="h-11 w-full border border-white/10 bg-black/30 px-4 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                  />
+
+                </div>
+
+                <div className="sm:col-span-2">
+
+                  <label className="mb-2 block text-[10px] uppercase tracking-wider text-gray-600">
+                    Delivery Address
+                  </label>
+
+                  <textarea
+                    name="address"
+                    value={form.address}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="House number, street, area..."
+                    className="w-full resize-none border border-white/10 bg-black/30 px-4 py-3 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
                   />
 
                 </div>
@@ -410,147 +608,136 @@ function Checkout() {
 
             </section>
 
-            {/* Payment */}
-            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            {/* PAYMENT */}
 
-              <div className="flex items-center gap-3 border-b border-white/10 pb-5">
+            <section className="border border-white/10 bg-white/[0.02] p-5 sm:p-6">
 
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00E5FF]/10 text-[#00E5FF]">
-                  <CreditCard size={20} />
+              <div className="mb-6 flex items-center gap-3">
+
+                <div className="flex h-9 w-9 items-center justify-center border border-[#00e5ff]/20 text-[#00e5ff]">
+                  <CreditCard size={16} />
                 </div>
 
                 <div>
-
-                  <h2 className="font-semibold">
+                  <h2 className="text-sm font-semibold">
                     Payment Method
                   </h2>
 
-                  <p className="text-xs text-gray-500">
-                    Select how you want to pay
+                  <p className="mt-1 text-[10px] text-gray-600">
+                    Select how you want to pay.
                   </p>
-
                 </div>
 
               </div>
 
-              <div className="mt-5 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
 
                 {/* COD */}
-                <label
-                  className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 transition ${
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPaymentMethod("cod")
+                  }
+                  className={`border p-4 text-left transition ${
                     paymentMethod === "cod"
-                      ? "border-[#00E5FF]/50 bg-[#00E5FF]/5"
+                      ? "border-[#00e5ff]/50 bg-[#00e5ff]/5"
                       : "border-white/10 bg-black/20 hover:border-white/20"
-                  } ${
-                    loading
-                      ? "pointer-events-none opacity-50"
-                      : ""
                   }`}
                 >
 
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="cod"
-                    checked={paymentMethod === "cod"}
-                    onChange={(e) =>
-                      setPaymentMethod(e.target.value)
-                    }
-                    disabled={loading}
-                    className="accent-[#00E5FF]"
-                  />
+                  <div className="flex items-center justify-between">
 
-                  <Truck
-                    size={20}
-                    className={
-                      paymentMethod === "cod"
-                        ? "text-[#00E5FF]"
-                        : "text-gray-400"
-                    }
-                  />
+                    <Truck
+                      size={18}
+                      className={
+                        paymentMethod === "cod"
+                          ? "text-[#00e5ff]"
+                          : "text-gray-600"
+                      }
+                    />
 
-                  <div className="flex-1">
-
-                    <p className="font-medium">
-                      Cash on Delivery
-                    </p>
-
-                    <p className="mt-1 text-xs text-gray-500">
-                      Pay when your order arrives.
-                    </p>
+                    <span
+                      className={`h-3 w-3 rounded-full border ${
+                        paymentMethod === "cod"
+                          ? "border-[#00e5ff] bg-[#00e5ff]"
+                          : "border-gray-700"
+                      }`}
+                    />
 
                   </div>
 
-                  {paymentMethod === "cod" && (
-                    <CheckCircle
-                      size={20}
-                      className="text-[#00E5FF]"
-                    />
-                  )}
+                  <p className="mt-4 text-xs font-semibold">
+                    Cash on Delivery
+                  </p>
 
-                </label>
+                  <p className="mt-1 text-[10px] text-gray-600">
+                    Pay when your order arrives.
+                  </p>
 
-                {/* Card */}
-                <label
-                  className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 transition ${
+                </button>
+
+                {/* CARD */}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPaymentMethod("card")
+                  }
+                  className={`border p-4 text-left transition ${
                     paymentMethod === "card"
-                      ? "border-[#00E5FF]/50 bg-[#00E5FF]/5"
+                      ? "border-[#00e5ff]/50 bg-[#00e5ff]/5"
                       : "border-white/10 bg-black/20 hover:border-white/20"
-                  } ${
-                    loading
-                      ? "pointer-events-none opacity-50"
-                      : ""
                   }`}
                 >
 
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="card"
-                    checked={paymentMethod === "card"}
-                    onChange={(e) =>
-                      setPaymentMethod(e.target.value)
-                    }
-                    disabled={loading}
-                    className="accent-[#00E5FF]"
-                  />
+                  <div className="flex items-center justify-between">
 
-                  <CreditCard
-                    size={20}
-                    className={
-                      paymentMethod === "card"
-                        ? "text-[#00E5FF]"
-                        : "text-gray-400"
-                    }
-                  />
+                    <CreditCard
+                      size={18}
+                      className={
+                        paymentMethod === "card"
+                          ? "text-[#00e5ff]"
+                          : "text-gray-600"
+                      }
+                    />
 
-                  <div className="flex-1">
-
-                    <p className="font-medium">
-                      Credit / Debit Card
-                    </p>
-
-                    <p className="mt-1 text-xs text-gray-500">
-                      Secure online card payment.
-                    </p>
+                    <span
+                      className={`h-3 w-3 rounded-full border ${
+                        paymentMethod === "card"
+                          ? "border-[#00e5ff] bg-[#00e5ff]"
+                          : "border-gray-700"
+                      }`}
+                    />
 
                   </div>
 
-                  {paymentMethod === "card" && (
-                    <CheckCircle
-                      size={20}
-                      className="text-[#00E5FF]"
-                    />
-                  )}
+                  <p className="mt-4 text-xs font-semibold">
+                    Card Payment
+                  </p>
 
-                </label>
+                  <p className="mt-1 text-[10px] text-gray-600">
+                    Secure payment using Stripe.
+                  </p>
+
+                </button>
 
               </div>
 
               {paymentMethod === "card" && (
-                <div className="mt-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 text-sm text-yellow-400">
-                  Online card payment integration will be
-                  connected in the next step.
+                <div className="mt-4 flex gap-3 border border-[#00e5ff]/10 bg-[#00e5ff]/[0.03] p-4">
+
+                  <ShieldCheck
+                    size={17}
+                    className="shrink-0 text-[#00e5ff]"
+                  />
+
+                  <p className="text-[10px] leading-5 text-gray-500">
+                    You will be redirected to Stripe's
+                    secure checkout page to complete
+                    your card payment.
+                  </p>
+
                 </div>
               )}
 
@@ -558,151 +745,139 @@ function Checkout() {
 
           </div>
 
-          {/* ==================================================
-              RIGHT - ORDER SUMMARY
-          ================================================== */}
+          {/* =================================================
+              RIGHT
+          ================================================= */}
 
-          <aside className="h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-6 lg:sticky lg:top-24">
+          <aside>
 
-            <div className="flex items-center justify-between border-b border-white/10 pb-5">
+            <div className="sticky top-24 border border-white/10 bg-white/[0.02] p-5 sm:p-6">
 
-              <h2 className="font-semibold">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-gray-600">
                 Order Summary
+              </p>
+
+              <h2 className="mt-2 text-lg font-semibold">
+                Your Order
               </h2>
 
-              <span className="text-xs text-gray-500">
-                {cart.length}{" "}
-                {cart.length === 1 ? "item" : "items"}
-              </span>
+              <div className="mt-6 space-y-4">
 
-            </div>
+                {cart.map((item) => (
 
-            {/* Products */}
-            <div className="mt-5 space-y-4">
+                  <div
+                    key={item._id}
+                    className="flex gap-3"
+                  >
 
-              {cart.map((item) => (
+                    <div className="h-14 w-14 shrink-0 overflow-hidden border border-white/10 bg-black">
 
-                <div
-                  key={item._id}
-                  className="flex gap-3"
-                >
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-[8px] text-gray-700">
+                          NEXA
+                        </div>
+                      )}
 
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                    </div>
 
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
+                    <div className="min-w-0 flex-1">
+
+                      <p className="truncate text-xs font-medium">
+                        {item.name}
+                      </p>
+
+                      <p className="mt-1 text-[10px] text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
+
+                    </div>
+
+                    <p className="text-xs font-semibold">
+                      Rs.{" "}
+                      {(
+                        Number(item.price || 0) *
+                        Number(item.quantity || 0)
+                      ).toLocaleString()}
+                    </p>
 
                   </div>
 
-                  <div className="min-w-0 flex-1">
+                ))}
 
-                    <p className="line-clamp-2 text-sm font-medium">
-                      {item.name}
-                    </p>
+              </div>
 
-                    <p className="mt-1 text-xs text-gray-500">
-                      Qty: {item.quantity}
-                    </p>
+              <div className="mt-6 space-y-3 border-t border-white/10 pt-5">
 
-                  </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">
+                    Subtotal
+                  </span>
 
-                  <p className="text-sm font-semibold">
+                  <span>
+                    Rs.{" "}
+                    {subtotal.toLocaleString()}
+                  </span>
+                </div>
 
-                    $
-                    {(
-                      Number(item.price) *
-                      Number(item.quantity)
-                    ).toFixed(2)}
+                <div className="flex justify-between text-xs">
 
-                  </p>
+                  <span className="text-gray-600">
+                    Shipping
+                  </span>
+
+                  <span>
+                    {shippingFee === 0
+                      ? "FREE"
+                      : `Rs. ${shippingFee.toLocaleString()}`}
+                  </span>
 
                 </div>
 
-              ))}
+                <div className="flex justify-between border-t border-white/10 pt-4">
+
+                  <span className="text-sm font-semibold">
+                    Total
+                  </span>
+
+                  <span className="text-lg font-bold text-[#00e5ff]">
+                    Rs.{" "}
+                    {total.toLocaleString()}
+                  </span>
+
+                </div>
+
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-6 flex h-12 w-full items-center justify-center border border-[#00e5ff]/40 bg-[#00e5ff] text-xs font-bold uppercase tracking-wider text-black transition hover:bg-transparent hover:text-[#00e5ff] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading
+                  ? "Processing..."
+                  : paymentMethod === "card"
+                  ? "Pay with Stripe"
+                  : "Place Order"}
+              </button>
+
+              <p className="mt-4 text-center text-[9px] leading-4 text-gray-700">
+                By placing your order, you agree
+                to NexaTech's terms and conditions.
+              </p>
 
             </div>
-
-            {/* Totals */}
-            <div className="mt-6 space-y-3 border-t border-white/10 pt-5">
-
-              <div className="flex justify-between text-sm">
-
-                <span className="text-gray-400">
-                  Subtotal
-                </span>
-
-                <span>
-                  ${subtotal.toFixed(2)}
-                </span>
-
-              </div>
-
-              <div className="flex justify-between text-sm">
-
-                <span className="text-gray-400">
-                  Shipping
-                </span>
-
-                <span>
-                  {shippingFee === 0
-                    ? "FREE"
-                    : `$${shippingFee.toFixed(2)}`}
-                </span>
-
-              </div>
-
-              <div className="flex justify-between border-t border-white/10 pt-4 text-lg font-bold">
-
-                <span>
-                  Total
-                </span>
-
-                <span className="text-[#00E5FF]">
-                  ${total.toFixed(2)}
-                </span>
-
-              </div>
-
-            </div>
-
-            {/* Place Order */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#00E5FF] px-5 py-3.5 font-semibold text-black transition hover:bg-[#00cce6] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-
-              {loading ? (
-                <>
-                  <Loader2
-                    size={18}
-                    className="animate-spin"
-                  />
-                  Placing Order...
-                </>
-              ) : (
-                <>
-                  <ShoppingBag size={18} />
-                  Place Order
-                </>
-              )}
-
-            </button>
-
-            <p className="mt-4 text-center text-xs leading-5 text-gray-600">
-              By placing your order, you agree to our terms
-              and conditions.
-            </p>
 
           </aside>
 
         </form>
 
       </main>
-
     </div>
   );
 }

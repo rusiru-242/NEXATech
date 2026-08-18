@@ -10,6 +10,7 @@ import {
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 function Cart() {
   const [cart, setCart] = useState([]);
@@ -146,6 +147,7 @@ function Cart() {
   if (cart.length === 0) {
     return (
       <div className="min-h-screen bg-[#050505] text-white">
+        <Navbar />
 
         <main className="mx-auto flex min-h-[80vh] max-w-7xl items-center justify-center px-6">
 
@@ -186,6 +188,7 @@ function Cart() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
+      <Navbar />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
 
