@@ -5,7 +5,8 @@ import {
   User,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 
@@ -19,6 +20,16 @@ function AIChat() {
       text: "Hi! I'm NexaTech AI. How can I help you find the right technology product today?",
     },
   ]);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("nexatech_token");
+    if (!token) {
+      // Redirect guests to login before allowing AI access
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const suggestedQuestions = [
     "Which laptop is best for gaming?",

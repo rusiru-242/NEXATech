@@ -1,19 +1,24 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
-  ArrowRight,
   ArrowLeft,
+  ArrowRight,
   LockKeyhole,
   Mail,
   User,
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+
+const API_URL = "http://localhost:5000/api/auth";
 
 function Register() {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,37 +28,19 @@ function Register() {
   });
 
   const [terms, setTerms] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  // ==============================
-  // Handle Input Changes
-  // ==============================
   const handleChange = (e) => {
-    const { id, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
-      [id]: value,
+      [e.target.id]: e.target.value,
     }));
-
     setError("");
-    setSuccess("");
   };
 
-  // ==============================
-  // Register User
-  // ==============================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setError("");
-    setSuccess("");
-
-    // ==============================
-    // Validation
-    // ==============================
 
     if (
       !formData.name.trim() ||
@@ -61,150 +48,54 @@ function Register() {
       !formData.password ||
       !formData.confirmPassword
     ) {
-      setError("Please fill in all required fields.");
-      return;
+      return setError("Please fill in all fields.");
     }
 
     if (formData.name.trim().length < 2) {
-      setError("Name must be at least 2 characters.");
-      return;
+      return setError("Name must be at least 2 characters.");
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
+      return setError("Password must be at least 6 characters.");
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+      return setError("Passwords do not match.");
     }
 
     if (!terms) {
-      setError("Please agree to the Terms & Conditions.");
-      return;
+      return setError("Please accept the Terms & Conditions.");
     }
 
     try {
       setLoading(true);
 
-      // ==============================
-      // API REQUEST
-      // ==============================
-
-      const response = await fetch(
-        "http://localhost:5000/api/auth/register",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            name: formData.name.trim(),
-            email: formData.email.trim().toLowerCase(),
-            password: formData.password,
-          }),
-        }
-      );
-
-      // ==============================
-      // Read Response
-      // ==============================
-
-      let data;
-
-      try {
-        data = await response.json();
-      } catch {
-        throw new Error(
-          "The server returned an invalid response."
-        );
-      }
-
-      // ==============================
-      // Backend Error
-      // ==============================
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            `Registration failed (${response.status}).`
-        );
-      }
-
-      // ==============================
-      // Save Token
-      // ==============================
-
-      if (data.token) {
-        localStorage.setItem(
-          "nexatech_token",
-          data.token
-        );
-      }
-
-      // ==============================
-      // Save User
-      // ==============================
-
-      if (data.user) {
-        localStorage.setItem(
-          "nexatech_user",
-          JSON.stringify(data.user)
-        );
-      }
-
-      // ==============================
-      // Success
-      // ==============================
-
-      setSuccess(
-        data.message ||
-          "Account created successfully!"
-      );
-
-      // Clear form
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
+      const response = await fetch(`${API_URL}/send-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+        }),
       });
 
-      setTerms(false);
+      const data = await response.json();
 
-      // ==============================
-      // Redirect To Login
-      // ==============================
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1200);
-    } catch (err) {
-      console.error(
-        "Registration error:",
-        err
-      );
-
-      // ==============================
-      // Connection Error
-      // ==============================
-
-      if (
-        err instanceof TypeError &&
-        err.message.toLowerCase().includes("fetch")
-      ) {
-        setError(
-          "Unable to connect to the server. Please make sure the backend is running on port 5000."
-        );
-      } else {
-        setError(
-          err.message ||
-            "Something went wrong. Please try again."
-        );
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP.");
       }
+
+      navigate("/verify-email", {
+        state: {
+          email: formData.email.trim().toLowerCase(),
+          resendAfter: 60,
+        },
+      });
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -212,80 +103,50 @@ function Register() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
+      {/* ================= NAVBAR ================= */}
 
-      {/* ================= AUTH NAVBAR ================= */}
-
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
-
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
-
-          {/* Logo */}
-
           <Link
             to="/"
             className="text-xl font-black tracking-[-0.06em]"
           >
-            <span className="text-white">
-              NEXA
-            </span>
-
-            <span className="text-[#00E5FF]">
-              TECH
-            </span>
+            <span className="text-white">NEXA</span>
+            <span className="text-[#00E5FF]">TECH</span>
           </Link>
-
-          {/* Back To Store */}
 
           <Link
             to="/products"
-            className="group flex items-center gap-2 text-xs font-medium text-gray-500 transition hover:text-white"
+            className="group flex items-center gap-2 text-xs text-gray-500 transition hover:text-white"
           >
             <ArrowLeft
               size={14}
               className="transition-transform group-hover:-translate-x-1"
             />
-
             Back to Store
           </Link>
-
         </div>
-
       </header>
 
       {/* ================= MAIN ================= */}
 
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pb-16 pt-28">
+        {/* Glow */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5FF]/[0.05] blur-[140px]" />
 
-        {/* Background Glow */}
-
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00e5ff]/[0.05] blur-[140px]" />
-
-        {/* Background Grid */}
-
+        {/* Grid */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:32px_32px]" />
 
-        {/* ================= REGISTER CONTAINER ================= */}
-
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 25,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.6,
-          }}
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
           className="relative z-10 w-full max-w-md"
         >
-
-          {/* ================= HEADER ================= */}
+          {/* Header */}
 
           <div className="mb-8 text-center">
-
-            <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-[#00e5ff]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-[#00E5FF]">
               NEXATECH ACCOUNT
             </p>
 
@@ -297,189 +158,160 @@ function Register() {
             </h1>
 
             <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-gray-600">
-              Create your NexaTech account to manage
-              orders, wishlist and your personalized
-              shopping experience.
+              Create your NexaTech account using a real email address.
             </p>
-
           </div>
 
-          {/* ================= CARD ================= */}
+          {/* Card */}
 
           <div className="border border-white/10 bg-[#090909] p-6 shadow-2xl sm:p-8">
-
             <form
               onSubmit={handleSubmit}
+              autoComplete="off"
               className="space-y-5"
             >
-
-              {/* ================= ERROR ================= */}
-
               {error && (
-                <div className="border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs leading-5 text-red-400">
+                <div className="border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-400">
                   {error}
                 </div>
               )}
 
-              {/* ================= SUCCESS ================= */}
-
-              {success && (
-                <div className="border border-[#00e5ff]/20 bg-[#00e5ff]/5 px-4 py-3 text-xs leading-5 text-[#00e5ff]">
-                  {success}
-                </div>
-              )}
-
-              {/* ================= FULL NAME ================= */}
+              {/* Full Name */}
 
               <div>
-
-                <label
-                  htmlFor="name"
-                  className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500"
-                >
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
                   Full Name
                 </label>
 
                 <div className="relative">
-
                   <User
                     size={16}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
                   />
 
                   <input
                     id="name"
+                    name="register_name"
                     type="text"
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Your full name"
-                    disabled={loading}
-                    autoComplete="name"
-                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/60 focus:bg-[#00e5ff]/[0.02] disabled:cursor-not-allowed disabled:opacity-50"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    readOnly
+                    onFocus={(e) =>
+                      e.target.removeAttribute("readonly")
+                    }
+                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00E5FF]"
                   />
-
                 </div>
-
               </div>
 
-              {/* ================= EMAIL ================= */}
+              {/* Email */}
 
               <div>
-
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500"
-                >
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
                   Email Address
                 </label>
 
                 <div className="relative">
-
                   <Mail
                     size={16}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
                   />
 
                   <input
                     id="email"
+                    name="register_email"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="you@example.com"
-                    disabled={loading}
-                    autoComplete="email"
-                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/60 focus:bg-[#00e5ff]/[0.02] disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="you@gmail.com"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    readOnly
+                    onFocus={(e) =>
+                      e.target.removeAttribute("readonly")
+                    }
+                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00E5FF]"
                   />
-
                 </div>
-
               </div>
 
-              {/* ================= PASSWORD ================= */}
+              {/* Password */}
 
               <div>
-
-                <label
-                  htmlFor="password"
-                  className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500"
-                >
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
                   Password
                 </label>
 
                 <div className="relative">
-
                   <LockKeyhole
                     size={16}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
                   />
 
                   <input
                     id="password"
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
+                    name="register_password"
+                    type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Create a password"
-                    disabled={loading}
                     autoComplete="new-password"
-                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-20 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/60 focus:bg-[#00e5ff]/[0.02] disabled:cursor-not-allowed disabled:opacity-50"
+                    readOnly
+                    onFocus={(e) =>
+                      e.target.removeAttribute("readonly")
+                    }
+                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-20 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00E5FF]"
                   />
 
                   <button
                     type="button"
                     onClick={() =>
-                      setShowPassword(
-                        !showPassword
-                      )
+                      setShowPassword(!showPassword)
                     }
-                    disabled={loading}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wider text-gray-600 transition hover:text-[#00e5ff]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wider text-gray-600 transition hover:text-[#00E5FF]"
                   >
-                    {showPassword
-                      ? "Hide"
-                      : "Show"}
+                    {showPassword ? "Hide" : "Show"}
                   </button>
-
                 </div>
-
               </div>
 
-              {/* ================= CONFIRM PASSWORD ================= */}
+              {/* Confirm Password */}
 
               <div>
-
-                <label
-                  htmlFor="confirmPassword"
-                  className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500"
-                >
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
                   Confirm Password
                 </label>
 
                 <div className="relative">
-
                   <LockKeyhole
                     size={16}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700"
                   />
 
                   <input
                     id="confirmPassword"
+                    name="register_confirm_password"
                     type={
                       showConfirmPassword
                         ? "text"
                         : "password"
                     }
-                    value={
-                      formData.confirmPassword
-                    }
+                    value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm your password"
-                    disabled={loading}
                     autoComplete="new-password"
-                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-20 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/60 focus:bg-[#00e5ff]/[0.02] disabled:cursor-not-allowed disabled:opacity-50"
+                    readOnly
+                    onFocus={(e) =>
+                      e.target.removeAttribute("readonly")
+                    }
+                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-20 text-sm text-white outline-none transition placeholder:text-gray-700 focus:border-[#00E5FF]"
                   />
 
                   <button
@@ -489,22 +321,18 @@ function Register() {
                         !showConfirmPassword
                       )
                     }
-                    disabled={loading}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wider text-gray-600 transition hover:text-[#00e5ff]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wider text-gray-600 transition hover:text-[#00E5FF]"
                   >
                     {showConfirmPassword
                       ? "Hide"
                       : "Show"}
                   </button>
-
                 </div>
-
               </div>
 
-              {/* ================= TERMS ================= */}
+              {/* Terms */}
 
               <div className="flex items-start gap-3">
-
                 <input
                   id="terms"
                   type="checkbox"
@@ -512,115 +340,54 @@ function Register() {
                   onChange={(e) =>
                     setTerms(e.target.checked)
                   }
-                  disabled={loading}
-                  className="mt-0.5 h-3.5 w-3.5 accent-[#00e5ff]"
+                  className="mt-1 h-3.5 w-3.5 accent-[#00E5FF]"
                 />
 
                 <label
                   htmlFor="terms"
-                  className="text-xs leading-5 text-gray-600"
+                  className="text-xs text-gray-500"
                 >
-                  I agree to the{" "}
-                  <span className="text-gray-400">
-                    Terms & Conditions
-                  </span>{" "}
-                  and Privacy Policy.
+                  I agree to the Terms & Conditions and
+                  Privacy Policy.
                 </label>
-
               </div>
 
-              {/* ================= REGISTER BUTTON ================= */}
+              {/* Continue */}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="group flex h-12 w-full items-center justify-center gap-3 bg-[#00e5ff] text-sm font-bold text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="group flex h-12 w-full items-center justify-center gap-3 bg-[#00E5FF] text-sm font-bold text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
+                {loading ? "Sending OTP..." : "Continue"}
 
-                {loading ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-
-                    Creating Account...
-                  </>
-                ) : (
-                  <>
-                    Create Account
-
-                    <ArrowRight
-                      size={16}
-                      className="transition-transform group-hover:translate-x-1"
-                    />
-                  </>
+                {!loading && (
+                  <ArrowRight
+                    size={16}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 )}
-
               </button>
-
             </form>
 
-            {/* ================= DIVIDER ================= */}
+            {/* Login */}
 
-            <div className="my-7 flex items-center gap-4">
-
-              <div className="h-px flex-1 bg-white/10" />
-
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-700">
-                Or
-              </span>
-
-              <div className="h-px flex-1 bg-white/10" />
-
+            <div className="mt-8 text-center text-xs text-gray-500">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-[#00E5FF] hover:underline"
+              >
+                Sign In
+              </Link>
             </div>
-
-            {/* ================= GOOGLE ================= */}
-
-            <button
-              type="button"
-              className="flex h-12 w-full items-center justify-center gap-3 border border-white/10 bg-white/[0.02] text-xs font-semibold text-gray-400 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
-            >
-
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-black">
-                G
-              </span>
-
-              Continue with Google
-
-            </button>
-
           </div>
-
-          {/* ================= LOGIN ================= */}
-
-          <div className="mt-7 text-center">
-
-            <p className="text-xs text-gray-600">
-              Already have an account?
-            </p>
-
-            <Link
-              to="/login"
-              className="mt-3 inline-flex h-10 items-center justify-center border border-white/10 px-6 text-xs font-semibold text-gray-400 transition hover:border-[#00e5ff] hover:bg-[#00e5ff] hover:text-black"
-            >
-              Sign In
-
-              <ArrowRight
-                size={14}
-                className="ml-2"
-              />
-            </Link>
-
-          </div>
-
-          {/* ================= SECURITY ================= */}
 
           <p className="mt-8 text-center text-[9px] uppercase tracking-[0.2em] text-gray-800">
-            Secure · Private · NEXATECH
+            Secure · Email Verification · NEXATECH
           </p>
-
         </motion.div>
-
       </main>
-
     </div>
   );
 }

@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const PendingRegistration = require("../models/PendingRegistration");
+const sendEmail = require("../utils/sendEmail");
 
 // ==============================
 // Generate JWT Token
@@ -543,16 +545,192 @@ const getWishlist = async (req, res) => {
   }
 };
 
+// (exports moved to end of file so functions are defined before exporting)
+
 // ==============================
-// EXPORT
+// SEND OTP (start registration)
+// POST /api/auth/send-otp
 // ==============================
-module.exports = {
-  registerUser,
-  loginUser,
-  getMe,
-  updateProfile,
-  changePassword,
-  addToWishlist,
-  removeFromWishlist,
-  getWishlist,
+const sendOTP = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: "Name, email and password are required" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Do not allow if user already exists
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: "An account with this email already exists" });
+    }
+
+    // Generate OTP and hashes
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Upsert pending registration
+    await PendingRegistration.findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        name: name.trim(),
+        email: normalizedEmail,
+        password: hashedPassword,
+        otpHash,
+        otpExpiresAt: expiresAt,
+        lastSentAt: new Date(),
+        otpAttempts: 0,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    // Send email (or log in dev)
+    const subject = "Your NexaTech verification code";
+    const html = `<p>Your NexaTech verification code is: <strong>${otp}</strong></p><p>This code expires in 10 minutes.</p>`;
+
+    const result = await sendEmail({ to: normalizedEmail, subject, html });
+
+    if (result.devFallback) {
+      return res.status(200).json({ success: true, message: "OTP generated and logged to server (dev fallback).", devFallback: true });
+    }
+
+    return res.status(200).json({ success: true, message: "OTP sent to email." });
+  } catch (error) {
+    console.error("sendOTP error:", error);
+    return res.status(500).json({ success: false, message: "Server error while sending OTP" });
+  }
 };
+
+// ==============================
+// VERIFY OTP (complete registration)
+// POST /api/auth/verify-otp
+// ==============================
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email and OTP are required" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const pending = await PendingRegistration.findOne({ email: normalizedEmail });
+
+    if (!pending) {
+      return res.status(404).json({ success: false, message: "No pending registration found for this email" });
+    }
+
+    if (pending.otpExpiresAt < new Date()) {
+      await PendingRegistration.deleteOne({ email: normalizedEmail });
+      return res.status(410).json({ success: false, message: "OTP expired. Please register again." });
+    }
+
+    const match = await bcrypt.compare(otp, pending.otpHash);
+
+    if (!match) {
+      pending.otpAttempts = (pending.otpAttempts || 0) + 1;
+      await pending.save();
+
+      if (pending.otpAttempts >= 5) {
+        await PendingRegistration.deleteOne({ email: normalizedEmail });
+        return res.status(429).json({ success: false, message: "Too many failed attempts. Please re-register." });
+      }
+
+      return res.status(401).json({ success: false, message: "Invalid OTP" });
+    }
+
+    // Create the real user
+    const user = await User.create({
+      name: pending.name,
+      email: pending.email,
+      password: pending.password,
+      role: "customer",
+      wishlist: [],
+    });
+
+    // Remove pending registration
+    await PendingRegistration.deleteOne({ email: normalizedEmail });
+
+    const token = generateToken(user._id);
+
+    return res.status(201).json({ success: true, message: "Account verified and created", token, user: { id: user._id, name: user.name, email: user.email, role: user.role, wishlist: user.wishlist } });
+  } catch (error) {
+    console.error("verifyOTP error:", error);
+    return res.status(500).json({ success: false, message: "Server error while verifying OTP" });
+  }
+};
+
+// ==============================
+// RESEND OTP
+// POST /api/auth/resend-otp
+// ==============================
+const resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const pending = await PendingRegistration.findOne({ email: normalizedEmail });
+
+    if (!pending) {
+      return res.status(404).json({ success: false, message: "No pending registration found for this email" });
+    }
+
+    const now = new Date();
+    if (pending.lastSentAt && now - pending.lastSentAt < 60 * 1000) {
+      return res.status(429).json({ success: false, message: "Please wait before requesting another OTP" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    pending.otpHash = otpHash;
+    pending.otpExpiresAt = expiresAt;
+    pending.lastSentAt = now;
+    pending.otpAttempts = 0;
+
+    await pending.save();
+
+    const subject = "Your NexaTech verification code (resend)";
+    const html = `<p>Your NexaTech verification code is: <strong>${otp}</strong></p><p>This code expires in 10 minutes.</p>`;
+
+    const result = await sendEmail({ to: normalizedEmail, subject, html });
+
+    if (result.devFallback) {
+      return res.status(200).json({ success: true, message: "OTP resent and logged to server (dev fallback).", devFallback: true });
+    }
+
+    return res.status(200).json({ success: true, message: "OTP resent to email." });
+  } catch (error) {
+    console.error("resendOTP error:", error);
+    return res.status(500).json({ success: false, message: "Server error while resending OTP" });
+  }
+};
+
+  // ==============================
+  // EXPORT
+  // ==============================
+  module.exports = {
+    sendOTP,
+    verifyOTP,
+    resendOTP,
+    registerUser,
+    loginUser,
+    getMe,
+    updateProfile,
+    changePassword,
+    addToWishlist,
+    removeFromWishlist,
+    getWishlist,
+  };

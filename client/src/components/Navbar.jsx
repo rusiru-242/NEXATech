@@ -14,6 +14,8 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+import { getCart } from "../utils/cartStorage";
+
 function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,34 +48,16 @@ function Navbar() {
   // LOAD CART COUNT
   // =========================================================
 
-  const loadCartCount = () => {
-    try {
-      const savedCart = localStorage.getItem("nexatech_cart");
+const loadCart = () => {
+  const cart = getCart();
 
-      if (!savedCart) {
-        setCartCount(0);
-        return;
-      }
+  const count = cart.reduce(
+    (total, item) => total + Number(item.quantity || 0),
+    0
+  );
 
-      const cart = JSON.parse(savedCart);
-
-      if (!Array.isArray(cart)) {
-        setCartCount(0);
-        return;
-      }
-
-      const count = cart.reduce(
-        (total, item) =>
-          total + Number(item.quantity || 1),
-        0
-      );
-
-      setCartCount(count);
-    } catch (error) {
-      console.error("Cart count error:", error);
-      setCartCount(0);
-    }
-  };
+  setCartCount(count);
+};
 
   // =========================================================
   // INITIAL LOAD
@@ -81,33 +65,27 @@ function Navbar() {
 
   useEffect(() => {
     loadUser();
-    loadCartCount();
+    loadCart();
 
-    const handleStorageChange = () => {
+    const refresh = () => {
       loadUser();
-      loadCartCount();
+      loadCart();
     };
 
-    const handleCartUpdate = () => {
-      loadCartCount();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("cartUpdated", handleCartUpdate);
+    window.addEventListener("storage", refresh);
+    window.addEventListener("cartUpdated", refresh);
+    window.addEventListener("authChanged", refresh);
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("cartUpdated", handleCartUpdate);
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("cartUpdated", refresh);
+      window.removeEventListener("authChanged", refresh);
     };
   }, []);
 
-  // =========================================================
-  // ROUTE CHANGE
-  // =========================================================
-
   useEffect(() => {
     loadUser();
-    loadCartCount();
+    loadCart();
   }, [location.pathname]);
 
   // =========================================================
@@ -115,67 +93,42 @@ function Navbar() {
   // =========================================================
 
   const handleLogout = () => {
-    localStorage.removeItem("nexatech_token");
-    localStorage.removeItem("nexatech_user");
+  localStorage.removeItem("nexatech_token");
+  localStorage.removeItem("nexatech_user");
 
-    setUser(null);
-    setAccountOpen(false);
-    setMobileOpen(false);
+  setUser(null);
+  setAccountOpen(false);
+  setMobileOpen(false);
+  setCartCount(0);
 
-    navigate("/");
-  };
+  window.dispatchEvent(new Event("cartUpdated"));
+  window.dispatchEvent(new Event("authChanged"));
 
+  navigate("/");
+};
   // =========================================================
   // ACTIVE LINK
   // =========================================================
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
-  // =========================================================
-  // DESKTOP LINK STYLE
-  // =========================================================
-
-  const desktopLinkClass = (path) => {
-    return `flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] transition ${
+  const desktopLinkClass = (path) =>
+    `flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] transition ${
       isActive(path)
         ? "text-[#00E5FF]"
         : "text-gray-400 hover:text-white"
     }`;
-  };
 
-  // =========================================================
-  // MOBILE LINK STYLE
-  // =========================================================
-
-  const mobileLinkClass = (path) => {
-    return `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+  const mobileLinkClass = (path) =>
+    `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
       isActive(path)
         ? "bg-[#00E5FF]/10 text-[#00E5FF]"
         : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
     }`;
-  };
 
   return (
-    <header
-      className="
-        sticky top-0 z-50
-        border-b border-white/10
-        bg-[#050505]/80
-        backdrop-blur-xl
-      "
-    >
-      {/* =====================================================
-          NAVBAR CONTAINER
-      ===================================================== */}
-
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050505]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-
-        {/* =====================================================
-            LOGO
-        ===================================================== */}
-
         <Link
           to="/"
           onClick={() => setMobileOpen(false)}
@@ -183,22 +136,12 @@ function Navbar() {
         >
           <div className="text-xl font-bold tracking-[0.2em] text-white">
             NEXA
-            <span className="text-[#00E5FF]">
-              TECH
-            </span>
+            <span className="text-[#00E5FF]">TECH</span>
           </div>
         </Link>
 
-        {/* =====================================================
-            DESKTOP NAVIGATION
-        ===================================================== */}
-
         <nav className="hidden items-center gap-7 lg:flex">
-
-          <Link
-            to="/"
-            className={desktopLinkClass("/")}
-          >
+          <Link to="/" className={desktopLinkClass("/")}>
             <HomeIcon size={13} />
             Home
           </Link>
@@ -226,79 +169,35 @@ function Navbar() {
             <Info size={13} />
             About
           </Link>
-
         </nav>
 
-        {/* =====================================================
-            DESKTOP RIGHT SIDE
-        ===================================================== */}
-
         <div className="hidden items-center gap-4 lg:flex">
-
-          {/* CART */}
-
           <Link
             to="/cart"
-            className="
-              relative flex h-10 w-10
-              items-center justify-center
-              rounded-xl
-              border border-white/10
-              bg-white/[0.03]
-              text-gray-400
-              transition
-              hover:border-[#00E5FF]/30
-              hover:text-[#00E5FF]
-            "
-            aria-label="Shopping Cart"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-gray-400 transition hover:border-[#00E5FF]/30 hover:text-[#00E5FF]"
           >
             <ShoppingCart size={19} />
 
             {cartCount > 0 && (
-              <span
-                className="
-                  absolute -right-1 -top-1
-                  flex min-h-[19px] min-w-[19px]
-                  items-center justify-center
-                  rounded-full
-                  bg-[#00E5FF]
-                  px-1
-                  text-[10px]
-                  font-bold
-                  text-black
-                "
-              >
+              <span className="absolute -right-1 -top-1 flex min-h-[19px] min-w-[19px] items-center justify-center rounded-full bg-[#00E5FF] px-1 text-[10px] font-bold text-black">
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
           </Link>
 
-          {/* ACCOUNT */}
-
           {user ? (
             <div className="relative">
-
               <button
                 type="button"
                 onClick={() =>
-                  setAccountOpen((prev) => !prev)
+                  setAccountOpen(!accountOpen)
                 }
-                className="
-                  flex items-center gap-2
-                  rounded-xl
-                  border border-white/10
-                  bg-white/[0.03]
-                  px-3 py-2
-                  text-sm text-gray-300
-                  transition
-                  hover:border-white/20
-                  hover:text-white
-                "
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white"
               >
                 <User size={16} />
 
                 <span className="max-w-[110px] truncate">
-                  {user.name || "Account"}
+                  {user.name}
                 </span>
 
                 <ChevronDown
@@ -310,19 +209,8 @@ function Navbar() {
               </button>
 
               {accountOpen && (
-                <div
-                  className="
-                    absolute right-0 top-14
-                    w-56 overflow-hidden
-                    rounded-xl
-                    border border-white/10
-                    bg-[#0b0b0b]/95
-                    backdrop-blur-xl
-                    shadow-2xl
-                  "
-                >
+                <div className="absolute right-0 top-14 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0b0b0b]/95 backdrop-blur-xl shadow-2xl">
                   <div className="border-b border-white/10 px-4 py-4">
-
                     <p className="truncate text-sm font-semibold text-white">
                       {user.name}
                     </p>
@@ -330,52 +218,35 @@ function Navbar() {
                     <p className="mt-1 truncate text-xs text-gray-500">
                       {user.email}
                     </p>
-
                   </div>
 
                   <div className="p-2">
-
                     <Link
                       to="/account"
-                      onClick={() => setAccountOpen(false)}
-                      className="
-                        block rounded-lg
-                        px-3 py-2.5
-                        text-sm text-gray-400
-                        transition
-                        hover:bg-white/[0.05]
-                        hover:text-white
-                      "
+                      onClick={() =>
+                        setAccountOpen(false)
+                      }
+                      className="block rounded-lg px-3 py-2.5 text-sm text-gray-400 transition hover:bg-white/[0.05] hover:text-white"
                     >
                       My Account
                     </Link>
 
                     <Link
                       to="/orders"
-                      onClick={() => setAccountOpen(false)}
-                      className="
-                        block rounded-lg
-                        px-3 py-2.5
-                        text-sm text-gray-400
-                        transition
-                        hover:bg-white/[0.05]
-                        hover:text-white
-                      "
+                      onClick={() =>
+                        setAccountOpen(false)
+                      }
+                      className="block rounded-lg px-3 py-2.5 text-sm text-gray-400 transition hover:bg-white/[0.05] hover:text-white"
                     >
                       My Orders
                     </Link>
 
                     <Link
                       to="/wishlist"
-                      onClick={() => setAccountOpen(false)}
-                      className="
-                        block rounded-lg
-                        px-3 py-2.5
-                        text-sm text-gray-400
-                        transition
-                        hover:bg-white/[0.05]
-                        hover:text-white
-                      "
+                      onClick={() =>
+                        setAccountOpen(false)
+                      }
+                      className="block rounded-lg px-3 py-2.5 text-sm text-gray-400 transition hover:bg-white/[0.05] hover:text-white"
                     >
                       Wishlist
                     </Link>
@@ -383,15 +254,10 @@ function Navbar() {
                     {user.role === "admin" && (
                       <Link
                         to="/admin"
-                        onClick={() => setAccountOpen(false)}
-                        className="
-                          block rounded-lg
-                          px-3 py-2.5
-                          text-sm font-medium
-                          text-[#00E5FF]
-                          transition
-                          hover:bg-[#00E5FF]/10
-                        "
+                        onClick={() =>
+                          setAccountOpen(false)
+                        }
+                        className="block rounded-lg px-3 py-2.5 text-sm font-medium text-[#00E5FF] transition hover:bg-[#00E5FF]/10"
                       >
                         Admin Panel
                       </Link>
@@ -400,102 +266,45 @@ function Navbar() {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="
-                        mt-1 flex w-full
-                        items-center gap-2
-                        rounded-lg
-                        px-3 py-2.5
-                        text-left
-                        text-sm text-red-400
-                        transition
-                        hover:bg-red-500/10
-                      "
+                      className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-red-400 transition hover:bg-red-500/10"
                     >
                       <LogOut size={15} />
                       Sign Out
                     </button>
-
                   </div>
                 </div>
               )}
-
             </div>
           ) : (
             <Link
               to="/login"
-              className="
-                rounded-xl
-                bg-[#00E5FF]
-                px-5 py-2.5
-                text-xs font-bold
-                uppercase tracking-wider
-                text-black
-                transition
-                hover:bg-[#00cce6]
-              "
+              className="rounded-xl bg-[#00E5FF] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#00cce6]"
             >
               Login
             </Link>
           )}
-
         </div>
 
-        {/* =====================================================
-            MOBILE ACTIONS
-        ===================================================== */}
-
         <div className="flex items-center gap-2 lg:hidden">
-
-          {/* MOBILE CART */}
-
           <Link
             to="/cart"
-            className="
-              relative flex h-10 w-10
-              items-center justify-center
-              rounded-xl
-              border border-white/10
-              bg-white/[0.03]
-              text-gray-400
-            "
-            aria-label="Shopping Cart"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-gray-400"
           >
             <ShoppingCart size={19} />
 
             {cartCount > 0 && (
-              <span
-                className="
-                  absolute -right-1 -top-1
-                  flex min-h-[18px] min-w-[18px]
-                  items-center justify-center
-                  rounded-full
-                  bg-[#00E5FF]
-                  px-1
-                  text-[9px] font-bold
-                  text-black
-                "
-              >
+              <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#00E5FF] px-1 text-[9px] font-bold text-black">
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
           </Link>
 
-          {/* MENU */}
-
           <button
             type="button"
             onClick={() =>
-              setMobileOpen((prev) => !prev)
+              setMobileOpen(!mobileOpen)
             }
-            className="
-              flex h-10 w-10
-              items-center justify-center
-              rounded-xl
-              border border-white/10
-              bg-white/[0.03]
-              text-gray-400
-            "
-            aria-label="Toggle menu"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-gray-400"
           >
             {mobileOpen ? (
               <X size={20} />
@@ -503,29 +312,17 @@ function Navbar() {
               <Menu size={20} />
             )}
           </button>
-
         </div>
-
       </div>
 
-      {/* =====================================================
-          MOBILE MENU
-      ===================================================== */}
-
       {mobileOpen && (
-        <div
-          className="
-            border-t border-white/10
-            bg-[#050505]/90
-            backdrop-blur-xl
-            lg:hidden
-          "
-        >
+        <div className="border-t border-white/10 bg-[#050505]/90 backdrop-blur-xl lg:hidden">
           <div className="mx-auto max-w-7xl space-y-2 px-6 py-5">
-
             <Link
               to="/"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className={mobileLinkClass("/")}
             >
               <HomeIcon size={17} />
@@ -534,7 +331,9 @@ function Navbar() {
 
             <Link
               to="/products"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className={mobileLinkClass("/products")}
             >
               <ShoppingBag size={17} />
@@ -543,7 +342,9 @@ function Navbar() {
 
             <Link
               to="/ai-chat"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className={mobileLinkClass("/ai-chat")}
             >
               <Sparkles size={17} />
@@ -552,7 +353,9 @@ function Navbar() {
 
             <Link
               to="/about"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className={mobileLinkClass("/about")}
             >
               <Info size={17} />
@@ -561,12 +364,13 @@ function Navbar() {
 
             <Link
               to="/cart"
-              onClick={() => setMobileOpen(false)}
+              onClick={() =>
+                setMobileOpen(false)
+              }
               className={mobileLinkClass("/cart")}
             >
               <ShoppingCart size={17} />
-
-              <span>Cart</span>
+              Cart
 
               {cartCount > 0 && (
                 <span className="ml-auto rounded-full bg-[#00E5FF] px-2 py-0.5 text-[10px] font-bold text-black">
@@ -575,25 +379,14 @@ function Navbar() {
               )}
             </Link>
 
-            {/* USER */}
-
             {user ? (
               <div className="mt-4 border-t border-white/10 pt-4">
-
                 <div className="mb-3 flex items-center gap-3 px-4">
-
-                  <div className="
-                    flex h-9 w-9
-                    items-center justify-center
-                    rounded-full
-                    bg-[#00E5FF]/10
-                    text-[#00E5FF]
-                  ">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00E5FF]/10 text-[#00E5FF]">
                     <User size={17} />
                   </div>
 
                   <div className="min-w-0">
-
                     <p className="truncate text-sm font-semibold text-white">
                       {user.name}
                     </p>
@@ -601,14 +394,14 @@ function Navbar() {
                     <p className="truncate text-xs text-gray-600">
                       {user.email}
                     </p>
-
                   </div>
-
                 </div>
 
                 <Link
                   to="/account"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className={mobileLinkClass("/account")}
                 >
                   <User size={17} />
@@ -617,7 +410,9 @@ function Navbar() {
 
                 <Link
                   to="/orders"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className={mobileLinkClass("/orders")}
                 >
                   <ShoppingBag size={17} />
@@ -626,7 +421,9 @@ function Navbar() {
 
                 <Link
                   to="/wishlist"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className={mobileLinkClass("/wishlist")}
                 >
                   <Sparkles size={17} />
@@ -636,15 +433,10 @@ function Navbar() {
                 {user.role === "admin" && (
                   <Link
                     to="/admin"
-                    onClick={() => setMobileOpen(false)}
-                    className="
-                      flex items-center gap-3
-                      rounded-xl px-4 py-3
-                      text-sm font-medium
-                      text-[#00E5FF]
-                      transition
-                      hover:bg-[#00E5FF]/10
-                    "
+                    onClick={() =>
+                      setMobileOpen(false)
+                    }
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#00E5FF] transition hover:bg-[#00E5FF]/10"
                   >
                     <User size={17} />
                     Admin Panel
@@ -654,43 +446,26 @@ function Navbar() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="
-                    mt-2 flex w-full
-                    items-center gap-3
-                    rounded-xl px-4 py-3
-                    text-sm font-medium
-                    text-red-400
-                    transition
-                    hover:bg-red-500/10
-                  "
+                  className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10"
                 >
                   <LogOut size={17} />
                   Sign Out
                 </button>
-
               </div>
             ) : (
               <Link
                 to="/login"
-                onClick={() => setMobileOpen(false)}
-                className="
-                  mt-4 flex
-                  items-center justify-center
-                  rounded-xl
-                  bg-[#00E5FF]
-                  px-4 py-3
-                  text-sm font-bold
-                  text-black
-                "
+                onClick={() =>
+                  setMobileOpen(false)
+                }
+                className="mt-4 flex items-center justify-center rounded-xl bg-[#00E5FF] px-4 py-3 text-sm font-bold text-black"
               >
                 Login
               </Link>
             )}
-
           </div>
         </div>
       )}
-
     </header>
   );
 }

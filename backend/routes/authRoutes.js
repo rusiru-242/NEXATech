@@ -2,6 +2,9 @@ const express = require("express");
 
 const {
   registerUser,
+  sendOTP,
+  verifyOTP,
+  resendOTP,
   loginUser,
   getMe,
   updateProfile,
@@ -20,6 +23,16 @@ const router = express.Router();
 // POST /api/auth/register
 // ==============================
 router.post("/register", registerUser);
+
+// ==============================
+// OTP Registration
+// POST /api/auth/send-otp
+// POST /api/auth/verify-otp
+// POST /api/auth/resend-otp
+// ==============================
+router.post("/send-otp", sendOTP);
+router.post("/verify-otp", verifyOTP);
+router.post("/resend-otp", resendOTP);
 
 // ==============================
 // LOGIN
