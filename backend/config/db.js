@@ -32,11 +32,11 @@ const connectDB = async ({ retries = 5, delayMS = 3000 } = {}) => {
       } else {
         console.error(
           "MongoDB connection failed after multiple attempts.\n" +
-            "Please check the following:\n" +
-            " - Ensure `MONGO_URI` in backend/.env is correct (user, password, host).\n" +
-            " - Your machine's IP is whitelisted in the Atlas network access settings (if using Atlas).\n" +
-            " - You have network access to the MongoDB server (VPN / firewall).\n" +
-            "The server will continue to run but database functionality will be unavailable until a connection is established."
+          "Please check the following:\n" +
+          " - Ensure `MONGO_URI` in backend/.env is correct (user, password, host).\n" +
+          " - Your machine's IP is whitelisted in the Atlas network access settings (if using Atlas).\n" +
+          " - You have network access to the MongoDB server (VPN / firewall).\n" +
+          "The server will continue to run but database functionality will be unavailable until a connection is established."
         );
         return false;
       }

@@ -49,6 +49,11 @@ function Navbar() {
   // =========================================================
 
 const loadCart = () => {
+  const token = localStorage.getItem("nexatech_token");
+  if (!token) {
+    setCartCount(0);
+    return;
+  }
   const cart = getCart();
 
   const count = cart.reduce(

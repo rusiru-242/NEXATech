@@ -138,10 +138,10 @@ function Wishlist() {
   // Page
   // ==============================
   return (
-    <div className="min-h-screen bg-[#050505] px-5 pb-20 pt-28 text-white">
+    <div className="min-h-screen bg-[#050505] text-white">
       <Navbar />
 
-      <div className="mx-auto max-w-5xl">
+      <main className="mx-auto max-w-5xl px-5 pb-20 pt-10">
 
         {/* Header */}
         <div className="mb-10">
@@ -287,7 +287,7 @@ function Wishlist() {
           </div>
         )}
 
-      </div>
+      </main>
     </div>
   );
 }

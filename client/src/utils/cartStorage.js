@@ -3,7 +3,8 @@ function getCurrentUserId() {
     const raw = localStorage.getItem("nexatech_user");
     if (!raw) return null;
     const user = JSON.parse(raw);
-    return user && user._id ? String(user._id) : null;
+    const id = user?._id || user?.id || user?.user?._id || user?.user?.id;
+    return id ? String(id) : null;
   } catch (e) {
     return null;
   }
@@ -23,19 +24,6 @@ export function getCart() {
     if (raw) {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
-    }
-
-    // Fallback: if logged in, try guest cart and don't overwrite yet
-    if (userId) {
-      const guest = localStorage.getItem("nexatech_cart");
-      if (guest) {
-        try {
-          const parsedGuest = JSON.parse(guest);
-          if (Array.isArray(parsedGuest)) return parsedGuest;
-        } catch (e) {
-          // ignore
-        }
-      }
     }
 
     return [];

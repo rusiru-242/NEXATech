@@ -6,7 +6,7 @@ import {
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { switchCartContext } from "../utils/cartStorage";
+
 
 const API_URL = "http://localhost:5000/api/auth";
 

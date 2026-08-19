@@ -9,12 +9,14 @@ import {
   Tag,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getCart, saveCart } from "../utils/cartStorage";
 
 function Cart() {
+  const navigate = useNavigate();
   const [cart, setCart] = useState([]);
+  const token = localStorage.getItem("nexatech_token");
 
   // ================= LOAD CART =================
 
@@ -64,6 +66,11 @@ function Cart() {
   };
 
   useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     loadCart();
 
     const handleCartUpdated = () => loadCart();
@@ -75,7 +82,7 @@ function Cart() {
       window.removeEventListener("cartUpdated", handleCartUpdated);
       window.removeEventListener("storage", handleCartUpdated);
     };
-  }, []);
+  }, [token, navigate]);
 
   // ================= SAVE CART =================
 
@@ -191,6 +198,10 @@ function Cart() {
   );
 
   // ================= EMPTY CART =================
+
+  if (!token) {
+    return null;
+  }
 
   if (cart.length === 0) {
     return (
