@@ -6,7 +6,7 @@ import {
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import { migrateGuestCartToUser } from "../utils/cartStorage";
 
 const API_URL = "http://localhost:5000/api/auth";
 
@@ -76,6 +76,12 @@ function Login() {
         "nexatech_user",
         JSON.stringify(data.user)
       );
+
+      // Migrate any guest cart items to the user's cart
+      const userId = data?.user?._id || data?.user?.id;
+      if (userId) {
+        migrateGuestCartToUser(userId);
+      }
 
       // Switch cart to logged-in user's cart
       window.dispatchEvent(new Event("cartUpdated"));

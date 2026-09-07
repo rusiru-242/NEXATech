@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import Navbar from "../components/Navbar";
+import { getCart, clearCart } from "../utils/cartStorage";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -35,11 +36,43 @@ function Checkout() {
 
   const loadCart = () => {
     try {
-      const savedCart = JSON.parse(
-        localStorage.getItem("nexatech_cart") || "[]"
-      );
+      const savedCart = getCart();
 
-      setCart(Array.isArray(savedCart) ? savedCart : []);
+      if (!Array.isArray(savedCart)) {
+        setCart([]);
+        return;
+      }
+
+      const normalizedCart = savedCart.map((item) => {
+        const price = Number(item?.price || 0);
+        const discount = Math.min(
+          Math.max(Number(item?.discount || 0), 0),
+          100
+        );
+
+        let originalPrice = Number(item?.originalPrice || 0);
+
+        if (
+          originalPrice <= 0 &&
+          discount > 0 &&
+          discount < 100 &&
+          price > 0
+        ) {
+          originalPrice = price / (1 - discount / 100);
+        }
+
+        if (originalPrice <= 0) originalPrice = price;
+
+        return {
+          ...item,
+          price,
+          originalPrice,
+          discount,
+          quantity: Math.max(Number(item?.quantity || 1), 1),
+        };
+      });
+
+      setCart(normalizedCart);
     } catch (err) {
       console.error("Cart loading error:", err);
       setCart([]);
@@ -47,6 +80,28 @@ function Checkout() {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("nexatech_token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const rawUser = localStorage.getItem("nexatech_user");
+      if (rawUser) {
+        const user = JSON.parse(rawUser);
+        setForm((prev) => ({
+          ...prev,
+          name: prev.name || user.name || "",
+          phone: prev.phone || user.phone || "",
+          address: prev.address || user.address || "",
+          city: prev.city || user.city || "",
+        }));
+      }
+    } catch (e) {
+      // ignore
+    }
+
     loadCart();
 
     const handleCartUpdated = () => {
@@ -67,7 +122,7 @@ function Checkout() {
         handleCartUpdated
       );
     };
-  }, []);
+  }, [navigate]);
 
   // =====================================================
   // PRICE HELPERS
@@ -342,6 +397,13 @@ function Checkout() {
       const orderPayload = {
         items: cart.map((item) => ({
           product: item._id,
+          name: item.name || "Product",
+          image: item.image || "",
+          brand: item.brand || "",
+          category: item.category || "",
+          price: getCurrentPrice(item),
+          originalPrice: getOriginalPrice(item),
+          discount: getDiscount(item),
           quantity: getQuantity(item),
         })),
 
@@ -353,6 +415,9 @@ function Checkout() {
         },
 
         paymentMethod,
+        subtotal,
+        shippingFee,
+        total,
       };
 
       console.log(
@@ -488,13 +553,7 @@ function Checkout() {
           JSON.stringify(order)
         );
 
-        localStorage.removeItem(
-          "nexatech_cart"
-        );
-
-        window.dispatchEvent(
-          new Event("cartUpdated")
-        );
+        clearCart();
 
         navigate("/orders");
 

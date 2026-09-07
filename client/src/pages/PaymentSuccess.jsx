@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import Navbar from "../components/Navbar";
+import { clearCart } from "../utils/cartStorage";
 
 const API_URL = "http://localhost:5000";
 
@@ -100,6 +101,9 @@ function PaymentSuccess() {
       if (data.verified) {
         setVerified(true);
         setOrder(data.order);
+
+        // Clear cart now that payment is confirmed
+        clearCart();
 
         // Save latest order locally
         localStorage.setItem(

@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getCart, saveCart } from "../utils/cartStorage";
+import Footer from "../components/Footer";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -769,6 +770,8 @@ function ProductDetails() {
         </div>
       </section>
     </main>
+
+    <Footer />
   </div>
 );
 }

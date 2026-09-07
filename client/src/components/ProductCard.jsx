@@ -276,11 +276,12 @@ function ProductCard({
         }
       />
     ));
-      return (
+
+  return (
     <motion.article
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.25 }}
-      className="group relative overflow-hidden border border-white/10 bg-[#090909]"
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md transition-all duration-300 hover:border-[#00E5FF]/40 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_25px_rgba(0,229,255,0.08)]"
     >
       {numericDiscount > 0 && (
         <span className="absolute left-3 top-3 z-10 bg-[#00E5FF] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-black">

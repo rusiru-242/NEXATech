@@ -6,12 +6,14 @@ import {
   ChevronDown,
   Star,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
+import Footer from "../components/Footer";
 
 const ratingOptions = [
   {
@@ -916,16 +918,19 @@ function Products() {
                 preferences.
               </p>
 
-              <button
-                type="button"
-                className="relative mt-6 border border-[#00e5ff]/30 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-[#00e5ff] transition hover:bg-[#00e5ff] hover:text-black"
+              <Link
+                to="/ai-chat"
+                className="relative mt-6 inline-flex items-center gap-2 rounded-xl bg-[#00E5FF] px-6 py-3 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#2bf0ff] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)]"
               >
-                AI Shopping — Coming Soon
-              </button>
+                <Sparkles size={14} />
+                Ask NexaTech AI
+              </Link>
             </div>
           </div>
         </section>
       </main>
+
+      <Footer />
     </div>
   );
 }

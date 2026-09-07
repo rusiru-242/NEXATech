@@ -23,6 +23,36 @@ export function getCart() {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+
+    // If logged in, but user cart key is empty, check if guest cart has items and migrate
+    if (userId) {
+      const guestRaw = localStorage.getItem("nexatech_cart");
+      if (guestRaw) {
+        try {
+          const guestParsed = JSON.parse(guestRaw);
+          if (Array.isArray(guestParsed) && guestParsed.length > 0) {
+            migrateGuestCartToUser(userId);
+            const userRaw = localStorage.getItem(key);
+            if (userRaw) {
+              const userParsed = JSON.parse(userRaw);
+              if (Array.isArray(userParsed) && userParsed.length > 0) {
+                return userParsed;
+              }
+            }
+            return guestParsed;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
+    if (raw) {
+      const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     }
 
@@ -151,5 +181,22 @@ export function clearGuestCart() {
     } catch (e) {}
   } catch (err) {
     console.error("clearGuestCart error:", err);
+  }
+}
+
+// Clear both the active user cart and guest cart (used after order completion)
+export function clearCart() {
+  try {
+    const userId = getCurrentUserId();
+    if (userId) {
+      localStorage.removeItem(`nexatech_cart_${userId}`);
+    }
+    localStorage.removeItem("nexatech_cart");
+
+    try {
+      window.dispatchEvent(new Event("cartUpdated"));
+    } catch (e) {}
+  } catch (err) {
+    console.error("clearCart error:", err);
   }
 }

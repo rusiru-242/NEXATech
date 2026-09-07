@@ -11,6 +11,7 @@ import {
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 import Navbar from "../components/Navbar";
 import ChatHistorySidebar from "../components/chat/ChatHistorySidebar";
@@ -552,7 +553,12 @@ function AIChat() {
       </div>
 
       {/* ================= MAIN SPLIT-PANE ================= */}
-      <main className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:gap-6">
+      <motion.main
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:gap-6"
+      >
         {/* ================= DESKTOP SIDEBAR ================= */}
         <div className="hidden w-72 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#070707] lg:block">
           <ChatHistorySidebar
@@ -802,7 +808,7 @@ function AIChat() {
             </div>
           </form>
         </section>
-      </main>
+      </motion.main>
     </div>
   );
 }
