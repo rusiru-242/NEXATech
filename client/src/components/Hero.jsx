@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import GlassCard from "./GlassCard";
+import { LiquidButton, MetalButton } from "./ui/LiquidButton";
 
 export function Hero() {
   const techLabels = ["/ PERFORMANCE", "/ INNOVATION", "/ SMART TECHNOLOGY"];
@@ -111,23 +112,27 @@ export function Hero() {
             }}
             className="mt-8 flex flex-wrap items-center gap-4 sm:gap-5"
           >
-            <Link
-              to="/products"
-              className="group relative inline-flex items-center gap-3 overflow-hidden rounded-xl bg-[#00E5FF] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#2bf0ff] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)]"
-            >
-              <span>Shop Products</span>
-              <ArrowUpRight
-                size={16}
-                className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-              />
+            {/* Primary CTA — Liquid Glass */}
+            <Link to="/products" className="focus:outline-none">
+              <LiquidButton
+                variant="cyan"
+                size="lg"
+                className="group gap-3 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+              >
+                <span>Shop Products</span>
+                <ArrowUpRight
+                  size={16}
+                  className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
+              </LiquidButton>
             </Link>
 
-            <Link
-              to="/ai-chat"
-              className="group inline-flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md transition hover:border-[#00E5FF]/40 hover:bg-white/[0.08] hover:text-[#00E5FF]"
-            >
-              <Sparkles size={15} className="text-[#00E5FF]" />
-              <span>Ask NexaTech AI</span>
+            {/* Secondary CTA — Metal Glass */}
+            <Link to="/ai-chat" className="focus:outline-none">
+              <MetalButton variant="dark" className="gap-2.5 px-7 text-xs uppercase tracking-wider">
+                <Sparkles size={15} className="text-[#00E5FF]" />
+                <span className="text-[#00E5FF]">Ask NexaTech AI</span>
+              </MetalButton>
             </Link>
           </motion.div>
         </div>

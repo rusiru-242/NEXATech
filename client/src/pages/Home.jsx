@@ -22,7 +22,9 @@ import ProductCard from "../components/ProductCard";
 import ScrollVideo from "../components/ScrollVideo";
 import ScrollProgress from "../components/ScrollProgress";
 import Reveal from "../components/Reveal";
+import ProductSequence from "../components/home/ProductSequence";
 import Footer from "../components/Footer";
+import { LiquidButton, MetalButton } from "../components/ui/LiquidButton";
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -141,7 +143,10 @@ function Home() {
         {/* ================= 2. CINEMATIC HERO ================= */}
         <Hero />
 
-        {/* ================= 3. SCROLL SPACER / METRICS TRANSITION ================= */}
+        {/* ================= 3. SCROLL-LINKED IMAGE SEQUENCE ================= */}
+        <ProductSequence />
+
+        {/* ================= 4. METRICS TRANSITION ================= */}
         <section className="relative border-y border-white/10 bg-[#050505]/85 py-12 backdrop-blur-xl sm:py-16">
           <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
             <Reveal>
@@ -538,15 +543,18 @@ function Home() {
 
                 <Reveal delay={300}>
                   <div className="mt-8">
-                    <Link
-                      to="/products?category=Gaming"
-                      className="group inline-flex items-center gap-3 rounded-xl bg-[#00E5FF] px-8 py-4 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#2bf0ff] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)]"
-                    >
-                      <span>Explore Gaming Rigs</span>
-                      <ArrowUpRight
-                        size={16}
-                        className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      />
+                    <Link to="/products?category=Gaming" className="focus:outline-none">
+                      <LiquidButton
+                        variant="cyan"
+                        size="lg"
+                        className="group gap-3 px-8 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                      >
+                        <span>Explore Gaming Rigs</span>
+                        <ArrowUpRight
+                          size={16}
+                          className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        />
+                      </LiquidButton>
                     </Link>
                   </div>
                 </Reveal>
@@ -608,12 +616,15 @@ function Home() {
                   </p>
 
                   <div className="mt-8 flex flex-wrap items-center gap-4">
-                    <Link
-                      to="/ai-chat"
-                      className="group inline-flex items-center gap-2.5 rounded-xl bg-[#00E5FF] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#2bf0ff] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)]"
-                    >
-                      <Sparkles size={15} />
-                      <span>Start Chat with AI</span>
+                    <Link to="/ai-chat" className="focus:outline-none">
+                      <LiquidButton
+                        variant="cyan"
+                        size="lg"
+                        className="group gap-2.5 px-7 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                      >
+                        <Sparkles size={15} />
+                        <span>Start Chat with AI</span>
+                      </LiquidButton>
                     </Link>
                   </div>
                 </Reveal>
@@ -755,23 +766,27 @@ function Home() {
               </p>
 
               <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-5">
-                <Link
-                  to="/products"
-                  className="group inline-flex items-center gap-3 rounded-xl bg-[#00E5FF] px-8 py-4 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#2bf0ff] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)]"
-                >
-                  <span>Explore Collection</span>
-                  <ArrowUpRight
-                    size={16}
-                    className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  />
+                {/* Primary glass CTA */}
+                <Link to="/products" className="focus:outline-none">
+                  <LiquidButton
+                    variant="cyan"
+                    size="xl"
+                    className="group gap-3 px-10 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                  >
+                    <span>Explore Collection</span>
+                    <ArrowUpRight
+                      size={16}
+                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    />
+                  </LiquidButton>
                 </Link>
 
-                <Link
-                  to="/ai-chat"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-7 py-4 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF]"
-                >
-                  <Sparkles size={15} className="text-[#00E5FF]" />
-                  <span>Consult AI</span>
+                {/* Secondary metal CTA */}
+                <Link to="/ai-chat" className="focus:outline-none">
+                  <MetalButton variant="dark" className="gap-2 px-7 text-xs uppercase tracking-wider">
+                    <Sparkles size={15} className="text-[#00E5FF]" />
+                    <span className="text-[#00E5FF]">Consult AI</span>
+                  </MetalButton>
                 </Link>
               </div>
             </Reveal>
