@@ -10,6 +10,7 @@ const productRoutes = require("./routes/productRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const aiChatRoutes = require("./routes/aiChatRoutes");
 
 const app = express();
 
@@ -89,6 +90,11 @@ app.use("/api/reviews", reviewRoutes);
 // POST /api/payments/create-checkout-session
 // POST /api/payments/webhook
 app.use("/api/payments", paymentRoutes);
+
+// ==============================
+// AI Chat History Routes
+// ==============================
+app.use("/api/ai-chats", aiChatRoutes);
 
 // ==============================
 // 404 Route

@@ -155,10 +155,92 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+// =========================================================
+// SEARCH PRODUCTS (For AI shopping assistant & product search)
+// GET /api/products/search
+// =========================================================
+const searchProducts = async (req, res) => {
+    try {
+        const {
+            keyword,
+            category,
+            brand,
+            minPrice,
+            maxPrice,
+            inStock,
+            limit = 20,
+        } = req.query;
+
+        const query = {};
+
+        // Keyword search across name, description, brand, category
+        if (keyword && keyword.trim()) {
+            const cleanKeyword = keyword.trim();
+            query.$or = [
+                { name: { $regex: cleanKeyword, $options: "i" } },
+                { description: { $regex: cleanKeyword, $options: "i" } },
+                { brand: { $regex: cleanKeyword, $options: "i" } },
+                { category: { $regex: cleanKeyword, $options: "i" } },
+            ];
+        }
+
+        // Category filter (flexible case-insensitive regex e.g. "laptop" matches "Laptops")
+        if (category && category.trim()) {
+            query.category = { $regex: category.trim(), $options: "i" };
+        }
+
+        // Brand filter
+        if (brand && brand.trim()) {
+            query.brand = { $regex: brand.trim(), $options: "i" };
+        }
+
+        // Price range filter
+        if ((minPrice !== undefined && minPrice !== "") || (maxPrice !== undefined && maxPrice !== "")) {
+            query.price = {};
+            if (minPrice !== undefined && minPrice !== "") {
+                const min = Number(minPrice);
+                if (!isNaN(min)) query.price.$gte = min;
+            }
+            if (maxPrice !== undefined && maxPrice !== "") {
+                const max = Number(maxPrice);
+                if (!isNaN(max)) query.price.$lte = max;
+            }
+            if (Object.keys(query.price).length === 0) {
+                delete query.price;
+            }
+        }
+
+        // In Stock filter
+        if (inStock === "true" || inStock === true) {
+            query.stock = { $gt: 0 };
+        }
+
+        const maxLimit = Math.min(Number(limit) || 20, 50);
+
+        const products = await Product.find(query)
+            .sort({ rating: -1, stock: -1, createdAt: -1 })
+            .limit(maxLimit);
+
+        res.status(200).json({
+            success: true,
+            count: products.length,
+            products,
+        });
+    } catch (error) {
+        console.error("Search Products Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to search products.",
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
     getProducts,
     getProductById,
     createProduct,
     updateProduct,
     deleteProduct,
+    searchProducts,
 };

@@ -13,6 +13,7 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  searchProducts,
 } = require("../controllers/productController");
 
 
@@ -99,6 +100,13 @@ router.get("/categories", async (req, res) => {
     });
   }
 });
+
+// =====================================================
+// SEARCH PRODUCTS (For AI shopping assistant & search)
+// GET /api/products/search
+// Public
+// =====================================================
+router.get("/search", searchProducts);
 
 // =====================================================
 // GET SINGLE PRODUCT
