@@ -5,13 +5,13 @@ import ScrollStoryText from "./ScrollStoryText";
 // CONFIGURATION — edit these constants to swap the sequence without code changes
 // ─────────────────────────────────────────────────────────────────────────────
 const FRAME_COUNT = 240;
-const FRAME_BASE_PATH = "/sequence/headphones/ezgif-frame-";
-const FRAME_EXT = ".jpg";
+const FRAME_BASE_PATH = "/sequence/headphones2/ezgif-frame-";
+const FRAME_EXT = ".png";
 const FRAME_PAD_LENGTH = 3; // zero-pads to 001, 002, … 240
 
 // How many pixels of scroll distance drives the whole sequence
-// 400vh means the sequence plays over 4 full viewport-heights of scroll
-const SECTION_VH = 4;
+// 700vh means the sequence plays over 7 full viewport-heights of scroll
+const SECTION_VH = 7;
 
 // Smooth easing factor (lower = smoother / lazier)
 const LERP = 0.12;
