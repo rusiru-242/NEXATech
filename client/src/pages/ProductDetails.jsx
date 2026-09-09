@@ -15,6 +15,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -47,7 +49,7 @@ function ProductDetails() {
         setLoading(true);
 
         const response = await fetch(
-          `http://localhost:5000/api/products/${id}`
+          `${API_URL}/api/products/${id}`
         );
 
         const data = await response.json();
@@ -77,7 +79,7 @@ function ProductDetails() {
         setReviewLoading(true);
 
         const response = await fetch(
-          `http://localhost:5000/api/reviews/product/${id}`
+          `${API_URL}/api/reviews/product/${id}`
         );
 
         const data = await response.json();
@@ -332,7 +334,7 @@ function ProductDetails() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/reviews",
+        `${API_URL}/api/reviews`,
         {
           method: "POST",
           headers: {

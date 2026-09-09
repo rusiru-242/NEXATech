@@ -29,8 +29,8 @@ app = FastAPI(
 )
 
 # Configure CORS Middleware
-# Allows requests from Vite React frontend (http://localhost:5173)
-origins = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [str(settings.CORS_ORIGINS)]
+# Allows requests from frontend service (configured via FRONTEND_URL / CORS_ORIGINS)
+origins = settings.cors_allowed_origins
 logger.info(f"Configuring CORS for allowed origins: {origins}")
 
 app.add_middleware(

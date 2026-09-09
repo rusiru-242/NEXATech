@@ -13,8 +13,9 @@ import { useEffect, useState } from "react";
 
 import AdminNavbar from "../../components/AdminNavbar";
 
-const API_URL = "http://localhost:5000/api/products";
-const CATEGORY_API_URL = "http://localhost:5000/api/products/categories";
+const API_BASE = import.meta.env.VITE_API_URL || "";
+const API_URL = `${API_BASE}/api/products`;
+const CATEGORY_API_URL = `${API_BASE}/api/products/categories`;
 
 const emptyForm = {
   name: "",

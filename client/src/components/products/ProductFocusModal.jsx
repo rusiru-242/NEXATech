@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { getCart, saveCart } from "../../utils/cartStorage";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 export default function ProductFocusModal({ product, onClose }) {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
@@ -133,7 +135,7 @@ export default function ProductFocusModal({ product, onClose }) {
 
     try {
       setWishlistLoading(true);
-      const res = await fetch("http://localhost:5000/api/auth/wishlist", {
+      const res = await fetch(`${API_URL}/api/auth/wishlist`, {
         method: isWishlisted ? "DELETE" : "POST",
         headers: {
           "Content-Type": "application/json",

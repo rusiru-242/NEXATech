@@ -1,17 +1,33 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
-# Environment variables
+# Environment variables (ignore real secrets everywhere)
 .env
 .env.*
+.env.local
+.env.development
+.env.production
+**/.env
+**/.env.*
+**/.env.local
+**/.env.development
+**/.env.production
+
+# Explicitly keep example environment templates
 !.env.example
+!**/.env.example
 
-# Backend environment
-backend/.env
-
-# Frontend environment
-client/.env
-client/.env.*
+# Python artifacts
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+**/.pytest_cache/
 
 # Logs
 *.log
@@ -19,10 +35,13 @@ logs/
 
 # Build files
 dist/
+**/dist/
 build/
+**/build/
 
-# Vite
+# Vite cache
 .vite/
+**/.vite/
 
 # OS files
 .DS_Store

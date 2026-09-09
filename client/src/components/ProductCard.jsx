@@ -13,6 +13,8 @@ import {
   saveCart,
 } from "../utils/cartStorage";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 function ProductCard({
   id,
   name = "Premium Device",
@@ -96,7 +98,7 @@ function ProductCard({
 
       try {
         const response = await fetch(
-          "http://localhost:5000/api/auth/wishlist",
+          `${API_URL}/api/auth/wishlist`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -141,7 +143,7 @@ function ProductCard({
       setWishlistLoading(true);
 
       const response = await fetch(
-        `http://localhost:5000/api/auth/wishlist/${id}`,
+        `${API_URL}/api/auth/wishlist/${id}`,
         {
           method: isWishlisted ? "DELETE" : "POST",
           headers: {

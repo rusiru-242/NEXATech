@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import AdminNavbar from "../../components/AdminNavbar";
 
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 function AdminAnalytics() {
   const [analytics, setAnalytics] = useState(null);

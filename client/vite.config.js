@@ -7,5 +7,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      // During local dev: /api requests → Express on localhost:5000
+      // In production: Express serves React and handles /api natively
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
+  },
 });
-

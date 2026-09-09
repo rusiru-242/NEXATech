@@ -20,7 +20,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 function Account() {
   const navigate = useNavigate();

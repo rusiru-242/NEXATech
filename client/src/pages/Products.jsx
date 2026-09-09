@@ -18,6 +18,8 @@ import { DarkGlassButton } from "../components/ui/DarkGlassButton";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 import ProductFocusModal from "../components/products/ProductFocusModal";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 const ratingOptions = [
   {
     label: "All Ratings",
@@ -87,7 +89,7 @@ function Products() {
         setError("");
 
         const response = await fetch(
-          "http://localhost:5000/api/products"
+          `${API_URL}/api/products`
         );
 
         const data = await response.json();
@@ -125,7 +127,7 @@ function Products() {
     const loadCategories = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/products/categories"
+          `${API_URL}/api/products/categories`
         );
 
         const data = await response.json();
@@ -381,8 +383,7 @@ function Products() {
             </p>
 
             <p className="mt-3 text-xs text-gray-600">
-              Make sure your backend is running on
-              http://localhost:5000
+              Check the backend or try again shortly.
             </p>
           </div>
         </div>

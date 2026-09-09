@@ -13,6 +13,8 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 function AdminDashboard() {
   const navigate = useNavigate();
 
@@ -60,7 +62,7 @@ function AdminDashboard() {
         setAdmin(user);
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/dashboard",
+          `${API_URL}/api/admin/dashboard`,
           {
             method: "GET",
             headers: {

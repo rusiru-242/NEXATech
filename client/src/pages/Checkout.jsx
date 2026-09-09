@@ -13,7 +13,7 @@ import Navbar from "../components/Navbar";
 import { getCart, clearCart } from "../utils/cartStorage";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL || ""}/api`;
 
 function Checkout() {
   const navigate = useNavigate();

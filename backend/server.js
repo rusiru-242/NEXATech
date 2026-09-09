@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
@@ -11,6 +13,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const aiChatRoutes = require("./routes/aiChatRoutes");
+const aiProxyRoutes = require("./routes/aiProxyRoutes");
 
 const app = express();
 
@@ -22,9 +25,26 @@ connectDB();
 // ==============================
 // CORS
 // ==============================
+const rawOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+const allowedOrigins = rawOrigins.map((o) => o.replace(/\/$/, ""));
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (such as mobile apps, server-to-server, curl)
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, "");
+      if (allowedOrigins.includes(cleanOrigin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS policy blocked access from origin: ${origin}`));
+    },
     credentials: true,
   })
 );
@@ -97,14 +117,33 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/ai-chats", aiChatRoutes);
 
 // ==============================
-// 404 Route
+// AI Proxy Routes
+// Proxies /api/ai/* to internal FastAPI service (port 8000)
+// FastAPI is never exposed publicly — all AI traffic goes through here
 // ==============================
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
+app.use("/api/ai", aiProxyRoutes);
+
+// ==============================
+// Serve React Production Build
+// Place AFTER all /api routes so the SPA fallback never intercepts API calls
+// ==============================
+const clientDist = path.join(__dirname, "../client/dist");
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+
+  // React Router fallback — serve index.html for any non-API path
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
   });
-});
+} else {
+  // Development fallback: simple 404 for unknown routes
+  app.use((req, res) => {
+    res.status(404).json({
+      success: false,
+      message: "Route not found",
+    });
+  });
+}
 
 // ==============================
 // Global Error Handler
@@ -123,6 +162,7 @@ app.use((err, req, res, next) => {
 // ==============================
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Bind to 0.0.0.0 so Docker container can accept external connections on port 7860
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`NexaTech Backend running on port ${PORT}`);
 });

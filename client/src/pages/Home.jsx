@@ -31,6 +31,8 @@ import WhyShopWithUs from "../components/home/WhyShopWithUs";
 import Footer from "../components/Footer";
 import { LiquidButton, MetalButton } from "../components/ui/LiquidButton";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 function Home() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -42,7 +44,7 @@ function Home() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/products");
+        const response = await fetch(`${API_URL}/api/products`);
         const data = await response.json();
 
         if (!response.ok) {

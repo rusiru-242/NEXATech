@@ -9,6 +9,8 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 function Wishlist() {
   const navigate = useNavigate();
 
@@ -30,7 +32,7 @@ function Wishlist() {
 
       try {
         const response = await fetch(
-          "http://localhost:5000/api/auth/wishlist",
+          `${API_URL}/api/auth/wishlist`,
           {
             method: "GET",
             headers: {
@@ -81,7 +83,7 @@ function Wishlist() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/wishlist/${productId}`,
+        `${API_URL}/api/auth/wishlist/${productId}`,
         {
           method: "DELETE",
           headers: {

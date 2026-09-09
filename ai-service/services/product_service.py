@@ -130,7 +130,7 @@ def fetch_matching_products(
     Returns:
         (products: List[Dict], used_filters: Dict, is_exact_match: bool)
     """
-    base_url = (backend_url or settings.EXPRESS_BACKEND_URL).rstrip("/")
+    base_url = (backend_url or settings.NODE_API_URL or settings.EXPRESS_BACKEND_URL).rstrip("/")
     search_url = f"{base_url}/api/products/search"
 
     filters = extract_search_filters(user_message)
@@ -187,7 +187,7 @@ def fetch_products_by_names(
     Returns:
         (found_products, found_names, missing_names)
     """
-    base_url = (backend_url or settings.EXPRESS_BACKEND_URL).rstrip("/")
+    base_url = (backend_url or settings.NODE_API_URL or settings.EXPRESS_BACKEND_URL).rstrip("/")
     search_url = f"{base_url}/api/products/search"
 
     found_products: List[Dict[str, Any]] = []

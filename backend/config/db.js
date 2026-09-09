@@ -7,7 +7,10 @@ const connectDB = async ({ retries = 5, delayMS = 3000 } = {}) => {
   const uri = process.env.MONGO_URI;
 
   if (!uri) {
-    console.error("MONGO_URI is not set in environment. Skipping MongoDB connection.");
+    console.error("FATAL: MONGO_URI is not set in environment.");
+    if (process.env.NODE_ENV === "production" || process.env.ENVIRONMENT === "production") {
+      process.exit(1);
+    }
     return false;
   }
 
