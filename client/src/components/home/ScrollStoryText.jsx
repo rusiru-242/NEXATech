@@ -33,6 +33,13 @@ export function ScrollStoryText({
       ? "items-center text-center"
       : "items-start text-left";
 
+  const bgGradient =
+    align === "left"
+      ? "linear-gradient(90deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 28%, rgba(0,0,0,0.20) 50%, transparent 68%)"
+      : align === "right"
+      ? "linear-gradient(270deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 28%, rgba(0,0,0,0.20) 50%, transparent 68%)"
+      : "radial-gradient(ellipse at center, rgba(0,0,0,0.58) 0%, rgba(0,0,0,0.30) 38%, transparent 70%)";
+
   return (
     <div
       id={phaseId}
@@ -42,9 +49,15 @@ export function ScrollStoryText({
         transform: "translateY(28px)",
         transition: "opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1)",
         willChange: "opacity, transform",
+        background: bgGradient,
       }}
     >
-      <div className={`flex flex-col gap-4 ${align === "center" ? "items-center" : align === "right" ? "items-end" : "items-start"}`}>
+      <div
+        className={`flex flex-col gap-4 ${
+          align === "center" ? "items-center" : align === "right" ? "items-end" : "items-start"
+        }`}
+        style={{ textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
+      >
         {/* Eyebrow label */}
         {label && (
           <span className="inline-flex items-center gap-2 rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-[#00E5FF]">
@@ -53,13 +66,13 @@ export function ScrollStoryText({
         )}
 
         {/* Main heading */}
-        <h2 className="max-w-lg text-4xl font-black leading-[0.92] tracking-[-0.05em] text-white sm:text-5xl lg:text-6xl">
+        <h2 className="max-w-lg text-4xl font-black leading-[0.92] tracking-[-0.05em] text-white/95 sm:text-5xl lg:text-6xl">
           {heading}
         </h2>
 
         {/* Body copy */}
         {body && (
-          <p className="max-w-sm text-sm leading-relaxed text-white/60 sm:text-base">
+          <p className="max-w-sm text-sm leading-relaxed text-[#cdd2d7]/80 sm:text-base">
             {body}
           </p>
         )}
@@ -70,7 +83,7 @@ export function ScrollStoryText({
             {bullets.map((b, i) => (
               <li
                 key={i}
-                className="flex items-center gap-2 text-xs font-medium text-white/50"
+                className="flex items-center gap-2 text-xs font-medium text-[#cdd2d7]/80"
               >
                 <span className="h-px w-4 bg-[#00E5FF]/60" />
                 {b}

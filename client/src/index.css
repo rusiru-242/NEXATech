@@ -59,6 +59,30 @@ body {
   background: #00e5ff;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Brand Marquee Animation (Linear, GPU-accelerated)
+───────────────────────────────────────────────────────────── */
+@keyframes brand-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-brand-marquee {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: brand-marquee 35s linear infinite;
+}
+
+.marquee-group:hover .animate-brand-marquee,
+.animate-brand-marquee:hover {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

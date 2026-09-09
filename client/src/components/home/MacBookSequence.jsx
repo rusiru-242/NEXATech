@@ -45,7 +45,16 @@ export function MacBookSequence({ sectionRef }) {
     function load(i) {
       return new Promise(res => {
         const img    = new Image();
-        img.onload   = () => { if (!dead) imgs[i] = img; res(); };
+        img.onload   = () => {
+          if (!dead) {
+            imgs[i] = img;
+            if (i === 0) {
+              drawFrame(0);
+              drawnRef.current = 0;
+            }
+          }
+          res();
+        };
         img.onerror  = () => res();
         img.src      = src(i);
       });
@@ -94,6 +103,9 @@ export function MacBookSequence({ sectionRef }) {
       canvas.style.width  = `${w}px`;
       canvas.style.height = `${h}px`;
       drawnRef.current = -1;
+      // Immediately draw current frame upon resize
+      const target = Math.max(0, Math.round(smoothRef.current));
+      drawFrame(target);
     }
 
     resize();
@@ -104,18 +116,18 @@ export function MacBookSequence({ sectionRef }) {
   // ── Draw ──────────────────────────────────────────────────────────────────
   function drawFrame(idx) {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return false;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return false;
 
     const img = imagesRef.current[idx];
     const cw  = canvas.width;
     const ch  = canvas.height;
 
+    if (!img || !img.naturalWidth || !img.naturalHeight) return false;
+
     // Fully transparent background — hero bg shows through
     ctx.clearRect(0, 0, cw, ch);
-
-    if (!img || !img.naturalWidth || !img.naturalHeight) return;
 
     // object-contain: scale to fit, centred
     const scale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
@@ -124,6 +136,7 @@ export function MacBookSequence({ sectionRef }) {
     const dx    = (cw - dw) / 2;
     const dy    = (ch - dh) / 2;
     ctx.drawImage(img, dx, dy, dw, dh);
+    return true;
   }
 
   // ── Scroll + RAF ──────────────────────────────────────────────────────────
@@ -146,7 +159,8 @@ export function MacBookSequence({ sectionRef }) {
       const sec = sectionRef?.current;
       if (!sec) return;
       const scrollable = sec.offsetHeight - window.innerHeight;
-      const scrolledIn = window.scrollY - sec.offsetTop;
+      const startY = sec.offsetTop <= 120 ? 0 : sec.offsetTop;
+      const scrolledIn = window.scrollY - startY;
       const progress   = clamp(scrolledIn / Math.max(scrollable, 1), 0, 1);
       targetRef.current = Math.round(progress * (FRAME_COUNT - 1));
     }
@@ -155,7 +169,9 @@ export function MacBookSequence({ sectionRef }) {
       if (!alive) return;
 
       if (reduceMotion) {
-        if (drawnRef.current !== 0) { drawFrame(0); drawnRef.current = 0; }
+        if (drawnRef.current !== 0) {
+          if (drawFrame(0)) drawnRef.current = 0;
+        }
         rafRef.current = requestAnimationFrame(tick);
         return;
       }
@@ -163,7 +179,11 @@ export function MacBookSequence({ sectionRef }) {
       if (inViewRef.current) {
         smoothRef.current += (targetRef.current - smoothRef.current) * LERP;
         const f = clamp(Math.round(smoothRef.current), 0, FRAME_COUNT - 1);
-        if (f !== drawnRef.current) { drawFrame(f); drawnRef.current = f; }
+        if (f !== drawnRef.current) {
+          if (drawFrame(f)) {
+            drawnRef.current = f;
+          }
+        }
       }
 
       rafRef.current = requestAnimationFrame(tick);
@@ -200,6 +220,16 @@ export function MacBookSequence({ sectionRef }) {
           background:
             "radial-gradient(ellipse 85% 75% at 55% 50%, rgba(0,229,255,0.09) 0%, rgba(0,180,220,0.03) 45%, transparent 72%)",
         }}
+      />
+
+      {/* Instant 1st-Frame Poster (renders immediately with HTML, zero blank flash) */}
+      <img
+        src="/sequence/macbook/ezgif-frame-001.png"
+        alt="Apple Silicon M6 Architecture"
+        fetchPriority="high"
+        loading="eager"
+        decoding="sync"
+        className="pointer-events-none absolute inset-0 z-[5] block h-full w-full object-contain"
       />
 
       {/* Left fade — seamlessly merges into hero left content */}

@@ -19,8 +19,8 @@ export function Hero() {
       className="relative"
       style={{ height: "340vh" }}
     >
-      {/* ── Sticky inner: pins the hero while outer section scrolls ── */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
+      {/* ── Sticky inner: pinned immediately below navbar (top-20 = 80px) ── */}
+      <div className="sticky top-20 h-[calc(100vh-5rem)] w-full overflow-hidden">
 
         {/* ─────────────────────────────────────────────────────────────
             MacBook canvas — absolutely positioned on the right side.
@@ -33,18 +33,34 @@ export function Hero() {
           style={{
             right: "-1vw",
             top: "50%",
-            transform: "translateY(-48%)",
+            transform: "translateY(-50%)",
             width: "clamp(680px, 58vw, 1150px)",
             aspectRatio: "16 / 9",
+            // Apply dual-axis feathering masks
+            WebkitMaskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 18%, black 82%, rgba(0,0,0,0.6) 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+            WebkitMaskComposite: "source-in",
+            maskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 18%, black 82%, rgba(0,0,0,0.6) 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+            maskComposite: "intersect"
           }}
         >
+          {/* Subtle cyan ambient glow behind the video to match existing theme */}
+          <div className="absolute inset-0 z-[-1] bg-[radial-gradient(circle_at_65%_45%,rgba(0,229,255,0.035),transparent_60%)]" />
+
           <MacBookSequence sectionRef={sectionRef} />
+
+          {/* Left-side dark gradient overlay to blend seamlessly into the #050505 background */}
+          <div 
+            className="absolute inset-0 z-10"
+            style={{
+              background: "linear-gradient(90deg, #050505 0%, rgba(5,5,5,0.85) 15%, rgba(5,5,5,0.35) 35%, transparent 55%)"
+            }}
+          />
         </div>
 
         {/* ─────────────────────────────────────────────────────────────
             Hero content layer — identical to original, z-10.
         ───────────────────────────────────────────────────────────── */}
-        <div className="relative z-10 flex h-full w-full flex-col justify-between px-6 py-8 sm:px-10 lg:px-16">
+        <div className="relative z-10 flex h-full w-full flex-col justify-between px-6 py-5 sm:px-10 sm:py-6 lg:px-16">
 
           {/* Decorative Editorial Vertical Rules (Desktop) */}
           <div
@@ -101,7 +117,7 @@ export function Hero() {
           </div>
 
           {/* Hero Main Content — left column only; MacBook overlays the right */}
-          <div className="relative z-10 mx-auto my-auto w-full max-w-7xl py-10 lg:py-16">
+          <div className="relative z-10 mx-auto my-auto w-full max-w-7xl py-4 lg:py-8">
             <div className="max-w-[58%] lg:max-w-[55%]">
               <motion.h1
                 initial={{ opacity: 0, y: 24 }}

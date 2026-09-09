@@ -25,6 +25,9 @@ import Reveal from "../components/Reveal";
 import ProductSequence from "../components/home/ProductSequence";
 import AISectionWithHandshake from "../components/home/AISectionWithHandshake";
 import GamingSectionWithPC from "../components/home/GamingSectionWithPC";
+import PowerWithoutCompromise from "../components/home/PowerWithoutCompromise";
+import FutureCTASection from "../components/home/FutureCTASection";
+import WhyShopWithUs from "../components/home/WhyShopWithUs";
 import Footer from "../components/Footer";
 import { LiquidButton, MetalButton } from "../components/ui/LiquidButton";
 
@@ -152,21 +155,40 @@ function Home() {
         <section className="relative border-y border-white/10 bg-[#050505]/85 py-12 backdrop-blur-xl sm:py-16">
           <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
             <Reveal>
-              <div className="flex flex-col items-start justify-between gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-center">
-                <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gray-500">
+              <div className="flex flex-col items-start justify-between gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-center sm:gap-12 md:gap-16">
+                <p className="shrink-0 text-[11px] font-bold uppercase tracking-[0.25em] text-gray-500">
                   Global Engineering Standards
                 </p>
-                <div className="flex flex-wrap items-center gap-6 text-xs font-bold uppercase tracking-wider text-gray-400 sm:gap-10">
-                  {["APPLE", "ASUS", "SONY", "NVIDIA", "SAMSUNG", "RAZER"].map(
-                    (brand) => (
-                      <span
-                        key={brand}
-                        className="transition duration-300 hover:text-[#00E5FF]"
+                {/* Scrolling Brand Marquee */}
+                <div
+                  className="marquee-group relative w-full flex-1 min-w-0 overflow-hidden sm:w-auto"
+                  style={{
+                    maskImage:
+                      "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                    WebkitMaskImage:
+                      "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                  }}
+                >
+                  <div className="animate-brand-marquee">
+                    {[0, 1, 2, 3].map((groupIdx) => (
+                      <div
+                        key={groupIdx}
+                        className="flex shrink-0 items-center"
+                        aria-hidden={groupIdx > 0 ? "true" : undefined}
                       >
-                        {brand}
-                      </span>
-                    )
-                  )}
+                        {["APPLE", "ASUS", "SONY", "NVIDIA", "SAMSUNG", "RAZER"].map(
+                          (brand) => (
+                            <span
+                              key={`${brand}-${groupIdx}`}
+                              className="mr-16 text-sm font-extrabold uppercase tracking-wider text-gray-400 transition duration-300 hover:text-[#00E5FF] sm:mr-20 sm:text-base md:text-lg"
+                            >
+                              {brand}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </Reveal>
@@ -220,99 +242,12 @@ function Home() {
         </section>
 
         {/* ================= 4. FEATURED TECHNOLOGY / PRODUCT SHOWCASE ================= */}
-        <section className="relative px-6 py-24 sm:px-10 lg:px-16 lg:py-32">
-          <div className="mx-auto max-w-7xl">
-            {/* Editorial Showcase Header */}
-            <div className="grid grid-cols-1 gap-8 border-b border-white/10 pb-12 lg:grid-cols-12 lg:items-end">
-              <div className="lg:col-span-7">
-                <Reveal>
-                  <span className="inline-block rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-[#00E5FF]">
-                    Ultimate Performance
-                  </span>
-                  <h2 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl">
-                    Power Without
-                    <span className="block text-gray-500">Compromise.</span>
-                  </h2>
-                </Reveal>
-              </div>
-
-              <div className="lg:col-span-5">
-                <Reveal delay={150}>
-                  <p className="text-sm leading-relaxed text-gray-400 sm:text-base sm:leading-7">
-                    Engineered from the silicon up for uncompromising speed and
-                    endurance. Every platform in our inventory is benchmarked to
-                    sustain maximum wattage without throttling.
-                  </p>
-                </Reveal>
-              </div>
-            </div>
-
-            {/* 3-Column Specs Panel */}
-            <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
-              <Reveal delay={0}>
-                <div className="group relative rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl transition duration-300 hover:border-[#00E5FF]/40 hover:bg-white/[0.05]">
-                  <div className="flex items-center justify-between text-xs font-mono text-gray-500">
-                    <span>SPEC // 01</span>
-                    <Cpu size={16} className="text-[#00E5FF]" />
-                  </div>
-                  <h3 className="mt-5 text-xl font-bold tracking-tight text-white">
-                    High Performance
-                  </h3>
-                  <p className="mt-3 text-xs leading-relaxed text-gray-400 sm:text-sm">
-                    Multi-threaded compute architectures and high-bandwidth memory
-                    engineered for extreme gaming, CAD, and real-time AI workloads.
-                  </p>
-                  <div className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#00E5FF]">
-                    Direct Boost Enabled
-                  </div>
-                </div>
-              </Reveal>
-
-              <Reveal delay={100}>
-                <div className="group relative rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl transition duration-300 hover:border-[#00E5FF]/40 hover:bg-white/[0.05]">
-                  <div className="flex items-center justify-between text-xs font-mono text-gray-500">
-                    <span>SPEC // 02</span>
-                    <Tv size={16} className="text-[#00E5FF]" />
-                  </div>
-                  <h3 className="mt-5 text-xl font-bold tracking-tight text-white">
-                    Premium Displays
-                  </h3>
-                  <p className="mt-3 text-xs leading-relaxed text-gray-400 sm:text-sm">
-                    Ultra-dense OLED and high refresh-rate IPS experiences
-                    delivering 99.8% DCI-P3 color precision with true 10-bit color.
-                  </p>
-                  <div className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#00E5FF]">
-                    Sub-1ms Response
-                  </div>
-                </div>
-              </Reveal>
-
-              <Reveal delay={200}>
-                <div className="group relative rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl transition duration-300 hover:border-[#00E5FF]/40 hover:bg-white/[0.05]">
-                  <div className="flex items-center justify-between text-xs font-mono text-gray-500">
-                    <span>SPEC // 03</span>
-                    <Bot size={16} className="text-[#00E5FF]" />
-                  </div>
-                  <h3 className="mt-5 text-xl font-bold tracking-tight text-white">
-                    Smart Selection
-                  </h3>
-                  <p className="mt-3 text-xs leading-relaxed text-gray-400 sm:text-sm">
-                    AI-powered tech assistant comparing specifications, bottleneck
-                    tolerances, and value ratios for your individual budget.
-                  </p>
-                  <div className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#00E5FF]">
-                    Zero Guesswork
-                  </div>
-                </div>
-              </Reveal>
-            </div>
-          </div>
-        </section>
+        <PowerWithoutCompromise />
 
         {/* ================= 5. FEATURED CATEGORIES ================= */}
         <section
           id="categories"
-          className="relative border-t border-white/10 bg-[#050505]/90 px-6 py-24 backdrop-blur-2xl sm:px-10 lg:px-16 lg:py-32"
+          className="relative border-t border-white/10 bg-[#050505]/90 px-6 pt-24 pb-12 backdrop-blur-2xl sm:px-10 lg:px-16 lg:pt-32 lg:pb-16"
         >
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
@@ -391,7 +326,7 @@ function Home() {
         {/* ================= 6. FEATURED PRODUCTS (REAL DATA) ================= */}
         <section
           id="products"
-          className="relative px-6 py-24 sm:px-10 lg:px-16 lg:py-32"
+          className="relative px-6 pb-24 pt-12 sm:px-10 lg:px-16 lg:pb-32 lg:pt-16"
         >
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
@@ -478,129 +413,10 @@ function Home() {
         <AISectionWithHandshake />
 
         {/* ================= 9. WHY NEXATECH (CAPABILITY PANEL) ================= */}
-        <section
-          id="about"
-          className="relative px-6 py-24 sm:px-10 lg:px-16 lg:py-32"
-        >
-          <div className="mx-auto max-w-7xl">
-            <Reveal>
-              <div className="text-center">
-                <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#00E5FF]">
-                  The NexaTech Standard
-                </span>
-                <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-6xl">
-                  WHY SHOP WITH US.
-                </h2>
-                <p className="mx-auto mt-4 max-w-xl text-xs leading-relaxed text-gray-400 sm:text-sm">
-                  We bridge state-of-the-art electronics with effortless ordering,
-                  authentic warranties, and dedicated guidance.
-                </p>
-              </div>
-            </Reveal>
+        <WhyShopWithUs />
 
-            {/* Capability Rows */}
-            <div className="mt-16 divide-y divide-white/10 border-y border-white/10">
-              {[
-                {
-                  id: "01",
-                  title: "AI-Powered Shopping",
-                  desc: "Ask natural language questions and get instantaneous hardware recommendations customized to your budget.",
-                  icon: Sparkles,
-                },
-                {
-                  id: "02",
-                  title: "Curated Technology",
-                  desc: "Explore authentic electronics from verified manufacturers, complete with full manufacturer warranty backing.",
-                  icon: Award,
-                },
-                {
-                  id: "03",
-                  title: "Built for Performance",
-                  desc: "Rigorous thermal and benchmark verification ensuring your laptops, GPUs, and peripherals perform at peak.",
-                  icon: Gauge,
-                },
-                {
-                  id: "04",
-                  title: "Secure Shopping & Delivery",
-                  desc: "End-to-end encrypted card processing via Stripe, flexible Cash on Delivery, and live order tracking.",
-                  icon: ShieldCheck,
-                },
-              ].map((cap, idx) => (
-                <Reveal key={cap.id} delay={idx * 80}>
-                  <div className="group grid grid-cols-1 items-center gap-4 py-8 sm:grid-cols-12 sm:gap-8 sm:py-10">
-                    <div className="flex items-center gap-4 sm:col-span-4">
-                      <span className="font-mono text-sm font-bold text-gray-600 group-hover:text-[#00E5FF]">
-                        //{cap.id}
-                      </span>
-                      <h3 className="text-xl font-bold tracking-tight text-white transition group-hover:text-[#00E5FF] sm:text-2xl">
-                        {cap.title}
-                      </h3>
-                    </div>
-
-                    <p className="text-xs leading-relaxed text-gray-400 sm:col-span-7 sm:text-sm sm:leading-7">
-                      {cap.desc}
-                    </p>
-
-                    <div className="flex justify-end sm:col-span-1">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.02] text-gray-400 transition group-hover:border-[#00E5FF]/40 group-hover:text-[#00E5FF]">
-                        <cap.icon size={16} />
-                      </div>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ================= 10. FINAL CINEMATIC CTA ================= */}
-        <section className="relative overflow-hidden border-t border-white/10 bg-gradient-to-b from-[#050505] to-[#070b10] px-6 py-28 text-center sm:px-10 lg:px-16 lg:py-36">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5FF]/[0.07] blur-[150px]"
-          />
-
-          <div className="relative z-10 mx-auto max-w-4xl">
-            <Reveal>
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#00E5FF]">
-                What's Next
-              </span>
-              <h2 className="mt-4 text-5xl font-black leading-[0.92] tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">
-                STEP INTO
-                <span className="block text-gray-500">THE FUTURE.</span>
-              </h2>
-              <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-gray-400 sm:text-base">
-                Discover the latest premium devices or let NexaTech AI find the
-                exact machine built for your workflow.
-              </p>
-
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-5">
-                {/* Primary glass CTA */}
-                <Link to="/products" className="focus:outline-none">
-                  <LiquidButton
-                    variant="cyan"
-                    size="xl"
-                    className="group gap-3 px-10 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
-                  >
-                    <span>Explore Collection</span>
-                    <ArrowUpRight
-                      size={16}
-                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    />
-                  </LiquidButton>
-                </Link>
-
-                {/* Secondary metal CTA */}
-                <Link to="/ai-chat" className="focus:outline-none">
-                  <MetalButton variant="dark" className="gap-2 px-7 text-xs uppercase tracking-wider">
-                    <Sparkles size={15} className="text-[#00E5FF]" />
-                    <span className="text-[#00E5FF]">Consult AI</span>
-                  </MetalButton>
-                </Link>
-              </div>
-            </Reveal>
-          </div>
-        </section>
+        {/* ================= 10. FINAL CINEMATIC CTA (Scroll Sequence Background) ================= */}
+        <FutureCTASection />
       </main>
 
       {/* ================= 11. FOOTER ================= */}

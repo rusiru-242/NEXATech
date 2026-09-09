@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
@@ -35,6 +35,7 @@ const ratingOptions = [
 ];
 
 function Products() {
+  const location = useLocation();
   const [products, setProducts] = useState([]);
 
   // =====================================================
@@ -45,7 +46,17 @@ function Products() {
 
   const [search, setSearch] = useState("");
 
-  const [category, setCategory] = useState("All");
+  const [category, setCategory] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("category") || "All";
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has("category")) {
+      setCategory(params.get("category"));
+    }
+  }, [location.search]);
 
   const [sort, setSort] = useState("featured");
 

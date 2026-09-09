@@ -1,144 +1,140 @@
 import { Link } from "react-router-dom";
-import { Sparkles, Shield, ArrowUpRight } from "lucide-react";
+import { Sparkles, Shield } from "lucide-react";
 
 export function Footer() {
+  const linkClass =
+    "group flex items-center transition-all duration-300 ease-out hover:translate-x-[3px] hover:text-white focus:outline-none focus-visible:text-[#00E5FF]";
+
   return (
-    <footer className="relative z-10 border-t border-white/10 bg-[#050505]/95 px-6 py-14 text-white backdrop-blur-xl sm:px-10 lg:px-16 lg:py-20">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Brand Col */}
-          <div className="lg:col-span-2">
-            <Link to="/" className="inline-block">
+    <footer className="relative z-10 border-t border-white/[0.08] bg-[#050505] px-6 pb-10 pt-16 text-white sm:px-10 lg:px-16 lg:pt-24 overflow-hidden">
+      {/* Top ambient glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] bg-[radial-gradient(ellipse_at_top_center,rgba(0,229,255,0.02)_0%,transparent_70%)]" />
+
+      <div className="mx-auto max-w-[1536px]">
+        {/* Main Grid: 10 columns for balanced 40/20/20/20 layout on desktop */}
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-10 lg:gap-8">
+          
+          {/* ── Brand Col (4 columns) ── */}
+          <div className="lg:col-span-4 lg:pr-12">
+            <Link
+              to="/"
+              className="inline-block rounded-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-[#00E5FF]"
+            >
               <span className="text-2xl font-black tracking-[0.2em] text-white">
                 NEXA<span className="text-[#00E5FF]">TECH</span>
               </span>
             </Link>
-            <p className="mt-4 max-w-sm text-xs leading-relaxed text-gray-400 sm:text-sm">
+            <p className="mt-5 max-w-[460px] text-[13px] leading-[1.6] text-gray-400">
               Precision-engineered electronics, high-refresh displays, and
               AI-accelerated shopping designed for the next generation.
             </p>
 
-            <div className="mt-6 flex items-center gap-3">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            <div className="mt-8 flex items-center gap-3">
+              <span className="relative flex h-2 w-2 items-center justify-center">
+                <span className="absolute inline-flex h-full w-full animate-[pulse_3s_ease-in-out_infinite] rounded-full bg-emerald-500 opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.3)]" />
               </span>
-              <span className="text-xs font-mono tracking-wider text-gray-400">
+              <span className="text-[11.5px] font-medium tracking-wide text-gray-500">
                 All Systems Operational
               </span>
             </div>
           </div>
 
-          {/* Catalog Col */}
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#00E5FF]">
+          {/* ── Catalog Col (2 columns) ── */}
+          <div className="lg:col-span-2">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#00E5FF]">
               Catalog
             </p>
-            <ul className="mt-4 space-y-2.5 text-xs text-gray-400">
+            <ul className="mt-6 space-y-3.5 text-[13px] text-gray-400">
               <li>
-                <Link
-                  to="/products?category=Laptops"
-                  className="transition hover:text-white"
-                >
+                <Link to="/products?category=Laptops" className={linkClass}>
                   Laptops &amp; Ultrabooks
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/products?category=Gaming"
-                  className="transition hover:text-white"
-                >
+                <Link to="/products?category=Gaming" className={linkClass}>
                   Gaming Rigs &amp; GPUs
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/products?category=Smartphones"
-                  className="transition hover:text-white"
-                >
+                <Link to="/products?category=Smartphones" className={linkClass}>
                   Smartphones
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/products?category=Monitors"
-                  className="transition hover:text-white"
-                >
+                <Link to="/products?category=Monitors" className={linkClass}>
                   OLED Displays
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/products?category=Audio"
-                  className="transition hover:text-white"
-                >
+                <Link to="/products?category=Audio" className={linkClass}>
                   Studio Audio
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Navigation Col */}
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#00E5FF]">
+          {/* ── Platform Col (2 columns) ── */}
+          <div className="lg:col-span-2">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#00E5FF]">
               Platform
             </p>
-            <ul className="mt-4 space-y-2.5 text-xs text-gray-400">
+            <ul className="mt-6 space-y-3.5 text-[13px] text-gray-400">
               <li>
-                <Link to="/products" className="transition hover:text-white">
+                <Link to="/products" className={linkClass}>
                   All Products
                 </Link>
               </li>
               <li>
                 <Link
                   to="/ai-chat"
-                  className="flex items-center gap-1.5 transition hover:text-[#00E5FF]"
+                  className="group flex items-center gap-2 transition-all duration-300 ease-out hover:translate-x-[3px] hover:text-[#00E5FF] focus:outline-none focus-visible:text-[#00E5FF]"
                 >
                   <Sparkles size={12} className="text-[#00E5FF]" />
                   NexaTech AI Advisor
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="transition hover:text-white">
+                <Link to="/about" className={linkClass}>
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/cart" className="transition hover:text-white">
+                <Link to="/cart" className={linkClass}>
                   My Cart
                 </Link>
               </li>
               <li>
-                <Link to="/wishlist" className="transition hover:text-white">
+                <Link to="/wishlist" className={linkClass}>
                   Wishlist
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Customer Care Col */}
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#00E5FF]">
+          {/* ── Account Col (2 columns) ── */}
+          <div className="lg:col-span-2">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#00E5FF]">
               Account
             </p>
-            <ul className="mt-4 space-y-2.5 text-xs text-gray-400">
+            <ul className="mt-6 space-y-3.5 text-[13px] text-gray-400">
               <li>
-                <Link to="/account" className="transition hover:text-white">
+                <Link to="/account" className={linkClass}>
                   Profile Settings
                 </Link>
               </li>
               <li>
-                <Link to="/orders" className="transition hover:text-white">
+                <Link to="/orders" className={linkClass}>
                   Order History
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="transition hover:text-white">
+                <Link to="/login" className={linkClass}>
                   Customer Login
                 </Link>
               </li>
               <li>
-                <Link to="/register" className="transition hover:text-white">
+                <Link to="/register" className={linkClass}>
                   Create Account
                 </Link>
               </li>
@@ -146,12 +142,12 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-gray-500 sm:flex-row">
+        {/* ── Bottom Bar ── */}
+        <div className="mt-20 flex flex-col items-center justify-between gap-5 border-t border-white/[0.08] pt-8 text-[12px] text-gray-500 sm:flex-row">
           <p>© 2026 NEXATECH. All rights reserved. Technology Built Different.</p>
-          <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1 text-gray-400">
-              <Shield size={13} className="text-[#00E5FF]" />
+          <div className="flex items-center gap-2">
+            <Shield size={14} className="text-[#00E5FF]" />
+            <span className="font-medium text-[#b4b9be]">
               Secure 256-Bit SSL Checkout
             </span>
           </div>

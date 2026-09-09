@@ -5,7 +5,7 @@ import ScrollStoryText from "./ScrollStoryText";
 // CONFIGURATION — edit these constants to swap the sequence without code changes
 // ─────────────────────────────────────────────────────────────────────────────
 const FRAME_COUNT = 240;
-const FRAME_BASE_PATH = "/sequence/headphones2/ezgif-frame-";
+const FRAME_BASE_PATH = "/sequence/headphones3/ezgif-frame-";
 const FRAME_EXT = ".png";
 const FRAME_PAD_LENGTH = 3; // zero-pads to 001, 002, … 240
 
@@ -27,45 +27,45 @@ const PHASES = [
     label: "NEXATECH AUDIO",
     heading: (
       <>
-        Engineered
+        Sound Without
         <br />
-        <span className="text-white/40">to disappear.</span>
+        <span className="text-[#b4b9be]/80">Limits.</span>
       </>
     ),
-    body: "Premium wireless sound designed for focus, comfort, and everyday performance.",
+    body: "Premium wireless audio built for music, gaming, work, and everyday listening.",
   },
   {
     id: "seq-phase-2",
     start: 0.15,
     end: 0.4,
     align: "left",
-    label: "PRECISION ENGINEERING",
+    label: "PREMIUM AUDIO",
     heading: (
       <>
-        Precision in
+        Premium From
         <br />
-        <span className="text-white/40">every layer.</span>
+        <span className="text-[#b4b9be]/80">Every Angle.</span>
       </>
     ),
-    body: "Every component is designed around clarity, durability, comfort, and performance.",
+    body: "Thoughtfully engineered comfort, premium materials, and immersive sound in every detail.",
   },
   {
     id: "seq-phase-3",
     start: 0.4,
     end: 0.65,
     align: "right",
-    label: "INTERNAL TECHNOLOGY",
+    label: "TRUSTED TECHNOLOGY",
     heading: (
       <>
-        Built from
+        Technology You
         <br />
-        <span className="text-white/40">the inside out.</span>
+        <span className="text-[#b4b9be]/80">Can Trust.</span>
       </>
     ),
     bullets: [
-      "Precision-tuned audio components",
-      "Intelligent signal processing",
-      "Carefully engineered internal structure",
+      "Premium audio components",
+      "Precision-tuned drivers",
+      "Built for everyday performance",
     ],
   },
   {
@@ -73,32 +73,32 @@ const PHASES = [
     start: 0.65,
     end: 0.85,
     align: "center",
-    label: "PERFORMANCE",
+    label: "AUDIO PERFORMANCE",
     heading: (
       <>
         Performance
         <br />
-        <span className="text-white/40">without compromise.</span>
+        <span className="text-[#b4b9be]/80">Worth Hearing.</span>
       </>
     ),
-    body: "Hardware, acoustics, and intelligent processing working together as one complete system.",
+    body: "Powerful hardware and intelligent audio working together for a richer listening experience.",
   },
   {
     id: "seq-phase-5",
     start: 0.85,
     end: 1.0,
     align: "center",
-    label: "NEXATECH",
+    label: "NEXATECH AUDIO",
     heading: (
       <>
-        Designed as one.
+        Find Your
         <br />
-        <span className="text-white/40">Built from many.</span>
+        <span className="text-[#b4b9be]/80">Perfect Sound.</span>
       </>
     ),
-    body: "Discover technology engineered around the way you live, work, play, and create.",
+    body: "Discover premium audio built for gaming, work, music, and everything in between.",
     ctas: [
-      { label: "Shop Products", to: "/products", variant: "primary" },
+      { label: "Shop Headphones", to: "/products?category=Audio", variant: "primary" },
       { label: "Ask NexaTech AI", to: "/ai-chat", variant: "secondary" },
     ],
   },

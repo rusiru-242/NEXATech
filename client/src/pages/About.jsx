@@ -13,15 +13,31 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Reveal from "../components/Reveal";
+import { LiquidButton, MetalButton } from "../components/ui/LiquidButton";
 
 function About() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-[#00E5FF] selection:text-black">
-      {/* Navbar */}
-      <Navbar />
+    <div className="relative min-h-screen bg-[#050505] text-white selection:bg-[#00E5FF] selection:text-black">
+      {/* Background Video */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover opacity-60"
+          src="/videos/cyan_lines.mp4"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-[#050505]/60 to-[#050505]" />
+      </div>
+
+      {/* Navbar Layering */}
+      <div className="relative z-20">
+        <Navbar />
+      </div>
 
       {/* Page Content */}
-      <main className="mx-auto max-w-7xl px-6 py-16 sm:px-10 sm:py-24">
+      <main className="relative z-10 mx-auto max-w-7xl px-6 pt-6 pb-16 sm:px-10 sm:pt-8 sm:pb-24">
         {/* Hero */}
         <section className="mx-auto max-w-4xl text-center">
           <Reveal>
@@ -45,7 +61,7 @@ function About() {
         {/* Mission & Vision */}
         <section className="mt-20 grid gap-8 md:grid-cols-2">
           <Reveal delay={0}>
-            <div className="group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-2xl transition duration-300 hover:border-[#00E5FF]/40 hover:bg-white/[0.05]">
+            <div className="group relative h-full overflow-hidden rounded-3xl border border-white/5 bg-transparent p-8 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition duration-300 hover:border-[#00E5FF]/30 hover:bg-white/[0.02]">
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-[#00E5FF]">
                 <Sparkles size={22} />
               </div>
@@ -65,7 +81,7 @@ function About() {
           </Reveal>
 
           <Reveal delay={120}>
-            <div className="group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-2xl transition duration-300 hover:border-[#00E5FF]/40 hover:bg-white/[0.05]">
+            <div className="group relative h-full overflow-hidden rounded-3xl border border-white/5 bg-transparent p-8 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition duration-300 hover:border-[#00E5FF]/30 hover:bg-white/[0.02]">
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-[#00E5FF]">
                 <ShieldCheck size={22} />
               </div>
@@ -99,7 +115,7 @@ function About() {
 
           <div className="grid gap-6 md:grid-cols-3">
             <Reveal delay={0}>
-              <div className="group relative h-full rounded-2xl border border-white/10 bg-white/[0.025] p-8 backdrop-blur-xl transition duration-300 hover:border-[#00E5FF]/40">
+              <div className="group relative h-full rounded-2xl border border-white/5 bg-transparent p-8 backdrop-blur-md transition duration-300 hover:border-[#00E5FF]/30 hover:bg-white/[0.02]">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-[#00E5FF]">
                   <ShoppingBag size={20} />
                 </div>
@@ -116,7 +132,7 @@ function About() {
             </Reveal>
 
             <Reveal delay={90}>
-              <div className="group relative h-full rounded-2xl border border-white/10 bg-white/[0.025] p-8 backdrop-blur-xl transition duration-300 hover:border-[#00E5FF]/40">
+              <div className="group relative h-full rounded-2xl border border-white/5 bg-transparent p-8 backdrop-blur-md transition duration-300 hover:border-[#00E5FF]/30 hover:bg-white/[0.02]">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-[#00E5FF]">
                   <CheckCircle size={20} />
                 </div>
@@ -133,7 +149,7 @@ function About() {
             </Reveal>
 
             <Reveal delay={180}>
-              <div className="group relative h-full rounded-2xl border border-white/10 bg-white/[0.025] p-8 backdrop-blur-xl transition duration-300 hover:border-[#00E5FF]/40">
+              <div className="group relative h-full rounded-2xl border border-white/5 bg-transparent p-8 backdrop-blur-md transition duration-300 hover:border-[#00E5FF]/30 hover:bg-white/[0.02]">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-[#00E5FF]">
                   <Sparkles size={20} />
                 </div>
@@ -169,25 +185,28 @@ function About() {
                 match the right configuration for your needs.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  to="/products"
-                  className="group inline-flex items-center gap-2.5 rounded-xl bg-[#00E5FF] px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#2bf0ff] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)]"
-                >
-                  <ShoppingBag size={16} />
-                  <span>Browse Products</span>
-                  <ArrowUpRight
-                    size={15}
-                    className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  />
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-5">
+                {/* Primary CTA — Liquid Glass */}
+                <Link to="/products" className="focus:outline-none">
+                  <LiquidButton
+                    variant="cyan"
+                    size="lg"
+                    className="group gap-3 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                  >
+                    <span>Shop Products</span>
+                    <ArrowUpRight
+                      size={16}
+                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    />
+                  </LiquidButton>
                 </Link>
 
-                <Link
-                  to="/ai-chat"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF]"
-                >
-                  <Sparkles size={15} className="text-[#00E5FF]" />
-                  <span>Ask AI Advisor</span>
+                {/* Secondary CTA — Metal Glass */}
+                <Link to="/ai-chat" className="focus:outline-none">
+                  <MetalButton variant="dark" className="gap-2.5 px-7 text-xs uppercase tracking-wider">
+                    <Sparkles size={15} className="text-[#00E5FF]" />
+                    <span className="text-[#00E5FF]">Ask NexaTech AI</span>
+                  </MetalButton>
                 </Link>
               </div>
             </div>

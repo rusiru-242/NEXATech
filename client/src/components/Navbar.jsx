@@ -11,7 +11,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { getCart } from "../utils/cartStorage";
@@ -25,6 +25,19 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setAccountOpen(false);
+      }
+    };
+    if (accountOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [accountOpen]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -145,8 +158,8 @@ const loadCart = () => {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "border-b border-white/15 bg-[#050505]/90 backdrop-blur-2xl shadow-xl shadow-black/40"
-          : "border-b border-white/5 bg-[#050505]/40 backdrop-blur-md"
+          ? "border-b border-white/10 bg-black/20 backdrop-blur-xl shadow-xl shadow-black/40"
+          : "border-b-transparent bg-transparent"
       }`}
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
@@ -207,7 +220,7 @@ const loadCart = () => {
           </Link>
 
           {user ? (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() =>
@@ -230,7 +243,7 @@ const loadCart = () => {
               </button>
 
               {accountOpen && (
-                <div className="absolute right-0 top-14 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0b0b0b]/95 backdrop-blur-xl shadow-2xl">
+                <div className="absolute right-0 top-14 w-56 overflow-hidden rounded-xl border border-white/10 bg-[#0b0b0b]/80 backdrop-blur-3xl shadow-2xl">
                   <div className="border-b border-white/10 px-4 py-4">
                     <p className="truncate text-sm font-semibold text-white">
                       {user.name}
