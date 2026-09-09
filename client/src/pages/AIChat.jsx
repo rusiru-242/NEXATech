@@ -193,9 +193,13 @@ function AIChat() {
   // =========================================================
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    const timeout = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 100);
+    return () => clearTimeout(timeout);
   }, [messages, loading]);
 
   // =========================================================
@@ -287,8 +291,8 @@ function AIChat() {
       if (!aiResponse.ok || !data.success) {
         throw new Error(
           data.message ||
-            data.detail ||
-            "NexaTech AI is temporarily unavailable. Please try again."
+          data.detail ||
+          "NexaTech AI is temporarily unavailable. Please try again."
         );
       }
 
@@ -522,9 +526,24 @@ function AIChat() {
   // =========================================================
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#050505] text-white">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[#050505] text-white">
+      {/* Background Video */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover opacity-40"
+          src="/videos/neural_network.mp4"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-[#050505]/70 to-[#050505]" />
+      </div>
+
       {/* ================= NAVBAR ================= */}
-      <Navbar />
+      <div className="relative z-20 shrink-0">
+        <Navbar />
+      </div>
 
       {/* ================= MOBILE SLIDE-OVER BACKDROP ================= */}
       {mobileSidebarOpen && (
@@ -536,9 +555,8 @@ function AIChat() {
 
       {/* ================= MOBILE SLIDE-OVER DRAWER ================= */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-[#070707] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${
-          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-[#070707] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <ChatHistorySidebar
           chats={chats}
@@ -557,7 +575,7 @@ function AIChat() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:gap-6"
+        className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 overflow-hidden px-4 py-4 sm:px-6 sm:py-6 lg:gap-6"
       >
         {/* ================= DESKTOP SIDEBAR ================= */}
         <div className="hidden w-72 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#070707] lg:block">
@@ -573,7 +591,7 @@ function AIChat() {
         </div>
 
         {/* ================= CHAT CONVERSATION CONTAINER ================= */}
-        <section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           {/* ================= CHAT HEADER ================= */}
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6">
             <div className="flex items-center gap-3">
@@ -621,13 +639,12 @@ function AIChat() {
           </div>
 
           {/* ================= MESSAGES FEED ================= */}
-          <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 max-h-[580px] min-h-[420px]">
+          <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
             {messages.map((item) => (
               <div
                 key={item.id}
-                className={`flex gap-3 ${
-                  item.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex gap-3 ${item.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 {/* BOT ICON */}
                 {item.sender === "bot" && (
@@ -637,19 +654,17 @@ function AIChat() {
                 )}
 
                 <div
-                  className={`flex max-w-[85%] flex-col ${
-                    item.sender === "user" ? "items-end" : "items-start"
-                  }`}
+                  className={`flex max-w-[85%] flex-col ${item.sender === "user" ? "items-end" : "items-start"
+                    }`}
                 >
                   {/* MESSAGE BUBBLE */}
                   <div
-                    className={`max-w-full rounded-2xl px-4 py-3 text-sm leading-6 ${
-                      item.sender === "user"
-                        ? "bg-[#00E5FF] text-black font-medium"
-                        : item.isError
+                    className={`max-w-full rounded-2xl px-4 py-3 text-sm leading-6 ${item.sender === "user"
+                      ? "bg-[#00E5FF] text-black font-medium"
+                      : item.isError
                         ? "border border-red-500/20 bg-red-500/5 text-red-300"
                         : "bg-white/[0.06] text-gray-300"
-                    }`}
+                      }`}
                   >
                     {item.sender === "bot"
                       ? renderAIResponse(item.text)

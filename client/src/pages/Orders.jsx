@@ -14,6 +14,7 @@ import {
   Tag,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 const API_URL = "http://localhost:5000";
 
@@ -321,11 +322,11 @@ function Orders() {
   // ==========================================
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
-
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
 
         {/* ==========================================
             HEADER
@@ -376,7 +377,7 @@ function Orders() {
 
         {!error &&
           orders.length === 0 && (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-16 text-center">
+            <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl px-6 py-16 text-center shadow-xl">
 
               <ShoppingBag
                 size={52}
@@ -436,7 +437,7 @@ function Orders() {
                 return (
                   <div
                     key={order._id}
-                    className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
+                    className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-xl"
                   >
 
                     {/* ==================================

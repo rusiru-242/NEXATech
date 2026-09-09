@@ -14,6 +14,9 @@ import { Link, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
+import { DarkGlassButton } from "../components/ui/DarkGlassButton";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
+import ProductFocusModal from "../components/products/ProductFocusModal";
 
 const ratingOptions = [
   {
@@ -37,6 +40,7 @@ const ratingOptions = [
 function Products() {
   const location = useLocation();
   const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // =====================================================
   // DYNAMIC CATEGORIES
@@ -391,15 +395,16 @@ function Products() {
   // =====================================================
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
       <Navbar />
 
-      <main>
+      <main className="relative z-10">
         {/* =================================================
             PAGE HEADER
         ================================================= */}
 
-        <section className="border-b border-white/10">
+        <section className="border-b border-white/10 bg-black/40 backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:py-12">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               {/* TITLE */}
@@ -551,6 +556,7 @@ function Products() {
                   lg:scrollbar-track-transparent
                   lg:scrollbar-thumb-white/10
                   hover:lg:scrollbar-thumb-[#00e5ff]/30
+                  rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-5 shadow-xl
                 "
               >
                 {/* SIDEBAR HEADER */}
@@ -625,36 +631,52 @@ function Products() {
                 ================================================= */}
 
                 <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gray-700">
-                    Price Range
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gray-700">
+                      Price Range
+                    </p>
+                  </div>
 
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      value={minPrice}
-                      onChange={(e) =>
-                        setMinPrice(
-                          e.target.value
-                        )
-                      }
-                      placeholder="Min"
-                      className="h-9 w-full border border-white/10 bg-white/[0.03] px-3 text-xs text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/40"
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        placeholder="Min"
+                        className="h-9 w-full border border-white/10 bg-white/[0.03] pl-3 pr-8 text-xs text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                      />
+                      {minPrice !== "" && (
+                        <button
+                          type="button"
+                          onClick={() => setMinPrice("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
 
-                    <input
-                      type="number"
-                      min="0"
-                      value={maxPrice}
-                      onChange={(e) =>
-                        setMaxPrice(
-                          e.target.value
-                        )
-                      }
-                      placeholder="Max"
-                      className="h-9 w-full border border-white/10 bg-white/[0.03] px-3 text-xs text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/40"
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        placeholder="Max"
+                        className="h-9 w-full border border-white/10 bg-white/[0.03] pl-3 pr-8 text-xs text-white outline-none placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                      />
+                      {maxPrice !== "" && (
+                        <button
+                          type="button"
+                          onClick={() => setMaxPrice("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <p className="mt-2 text-[9px] text-gray-700">
@@ -805,14 +827,12 @@ function Products() {
 
               {filteredProducts.length > 0 ? (
                 <motion.div
-                  layout
                   className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
                 >
                   {filteredProducts.map(
                     (product) => (
                       <motion.div
                         key={product._id}
-                        layout
                         initial={{
                           opacity: 0,
                           y: 12,
@@ -822,48 +842,42 @@ function Products() {
                           y: 0,
                         }}
                       >
-                        <Link
-                          to={`/products/${product._id}`}
-                          className="block"
-                        >
-                          <ProductCard
-                            id={product._id}
-                            name={product.name}
-                            category={product.category}
-                            price={Number(
-                              product.price || 0
-                            )}
-                            discount={Number(
-                              product.discount || 0
-                            )}
-
-                            image={
-                              product.image || ""
-                            }
-
-                            rating={
-                              Number(
-                                product.rating || 0
-                              )
-                            }
-
-                            reviews={
-                              Number(
-                                product.reviews || 0
-                              )
-                            }
-
-                            stock={
-                              Number(
-                                product.stock || 0
-                              )
-                            }
-
-                            brand={
-                              product.brand || ""
-                            }
-                          />
-                        </Link>
+                        <ProductCard
+                          id={product._id}
+                          name={product.name}
+                          category={product.category}
+                          price={Number(
+                            product.price || 0
+                          )}
+                          discount={Number(
+                            product.discount || 0
+                          )}
+                          image={
+                            product.image || ""
+                          }
+                          rating={
+                            Number(
+                              product.rating || 0
+                            )
+                          }
+                          reviews={
+                            Number(
+                              product.reviews || 0
+                            )
+                          }
+                          stock={
+                            Number(
+                              product.stock || 0
+                            )
+                          }
+                          brand={
+                            product.brand || ""
+                          }
+                          description={
+                            product.description || ""
+                          }
+                          onCardClick={() => setSelectedProduct(product)}
+                        />
                       </motion.div>
                     )
                   )}
@@ -905,7 +919,7 @@ function Products() {
 
         <section className="border-t border-white/10">
           <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-18 lg:py-20">
-            <div className="relative overflow-hidden border border-white/10 bg-[#080808] px-6 py-10 sm:px-10 sm:py-12">
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl px-6 py-10 sm:px-10 sm:py-12 shadow-2xl">
               <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-[#00e5ff]/[0.05] blur-[100px]" />
 
               <p className="relative text-[9px] font-semibold uppercase tracking-[0.3em] text-[#00e5ff]">
@@ -929,19 +943,26 @@ function Products() {
                 preferences.
               </p>
 
-              <Link
-                to="/ai-chat"
-                className="relative mt-6 inline-flex items-center gap-2 rounded-xl bg-[#00E5FF] px-6 py-3 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#2bf0ff] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)]"
-              >
-                <Sparkles size={14} />
-                Ask NexaTech AI
-              </Link>
+              <DarkGlassButton asChild className="mt-6 rounded-xl text-[10px] uppercase">
+                <Link to="/ai-chat">
+                  <Sparkles size={14} />
+                  Ask NexaTech AI
+                </Link>
+              </DarkGlassButton>
             </div>
           </div>
         </section>
       </main>
 
       <Footer />
+
+      {/* Product Focused Glass Modal */}
+      {selectedProduct && (
+        <ProductFocusModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   Check,
 } from "lucide-react";
 import { useState } from "react";
+import { DarkGlassButton } from "../ui/DarkGlassButton";
 
 function ChatHistorySidebar({
   chats = [],
@@ -119,14 +120,13 @@ function ChatHistorySidebar({
 
       {/* ================= NEW CHAT BUTTON ================= */}
       <div className="p-4">
-        <button
-          type="button"
+        <DarkGlassButton
           onClick={onNewChat}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#00E5FF]/40 bg-[#00E5FF]/10 py-3 text-sm font-semibold text-[#00E5FF] transition duration-200 hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black"
+          className="w-full text-sm font-semibold rounded-[16px] py-3.5"
         >
           <Plus size={16} />
           <span>New Chat</span>
-        </button>
+        </DarkGlassButton>
       </div>
 
       {/* ================= CONVERSATION LIST ================= */}
@@ -163,10 +163,10 @@ function ChatHistorySidebar({
                     <div
                       key={chat._id}
                       onClick={() => onSelectChat(chat._id)}
-                      className={`group relative flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-xs transition ${
+                      className={`group relative flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-xs transition-all duration-300 ${
                         isActive
-                          ? "border border-[#00E5FF]/30 bg-[#00E5FF]/10 text-white font-medium shadow-[0_0_15px_rgba(0,229,255,0.08)]"
-                          : "text-gray-400 hover:bg-white/[0.04] hover:text-gray-200"
+                          ? "border border-[#00E5FF]/35 bg-[linear-gradient(180deg,rgba(40,65,70,0.8),rgba(20,35,40,0.9))] font-bold text-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.2),0_6px_16px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.15)]"
+                          : "border border-transparent text-gray-400 hover:border-white/5 hover:bg-white/[0.02] hover:text-gray-200"
                       }`}
                     >
                       {/* Left: icon + title */}

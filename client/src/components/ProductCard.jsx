@@ -25,6 +25,8 @@ function ProductCard({
   reviews = 0,
   stock = 0,
   brand = "",
+  description = "",
+  onCardClick,
 }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
@@ -277,11 +279,52 @@ function ProductCard({
       />
     ));
 
+  const productData = {
+    _id: id,
+    name,
+    category,
+    price,
+    oldPrice,
+    discount,
+    image,
+    rating,
+    reviews,
+    stock,
+    brand,
+    description,
+  };
+
+  const CardWrapper = ({ children }) => {
+    if (onCardClick) {
+      return (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onCardClick(productData)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onCardClick(productData);
+            }
+          }}
+          className="block text-left cursor-pointer outline-none"
+        >
+          {children}
+        </div>
+      );
+    }
+    return (
+      <Link to={`/products/${id}`} className="block">
+        {children}
+      </Link>
+    );
+  };
+
   return (
     <motion.article
       whileHover={{ y: -5 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md transition-all duration-300 hover:border-[#00E5FF]/40 hover:shadow-[0_8px_30px_rgba(0,0,0,0.5),0_0_25px_rgba(0,229,255,0.08)]"
+      className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl transition-all duration-300 hover:border-[#00E5FF]/40 hover:bg-black/60 hover:shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(0,229,255,0.12)]"
     >
       {numericDiscount > 0 && (
         <span className="absolute left-3 top-3 z-10 bg-[#00E5FF] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-black">
@@ -298,7 +341,7 @@ function ProductCard({
             ? `Remove ${name} from wishlist`
             : `Add ${name} to wishlist`
         }
-        className={`absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center border transition ${
+        className={`absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border transition ${
           isWishlisted
             ? "border-[#00E5FF]/50 bg-[#00E5FF]/10 text-[#00E5FF]"
             : "border-white/10 bg-[#050505]/80 text-gray-500 hover:border-[#00E5FF]/40 hover:text-[#00E5FF]"
@@ -310,7 +353,7 @@ function ProductCard({
         />
       </button>
 
-      <Link to={`/products/${id}`} className="block">
+      <CardWrapper>
         <div className="aspect-square overflow-hidden bg-white/[0.02]">
           {image ? (
             <img
@@ -380,7 +423,7 @@ function ProductCard({
                   ? `Add ${name} to cart`
                   : `${name} is out of stock`
               }
-              className={`flex h-10 w-10 items-center justify-center border transition ${
+              className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
                 numericStock <= 0
                   ? "cursor-not-allowed border-white/5 text-gray-700"
                   : "border-white/10 text-gray-500 hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/10 hover:text-[#00E5FF]"
@@ -414,16 +457,27 @@ function ProductCard({
             )}
           </div>
 
-          <div className="mt-5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-600 transition group-hover:text-[#00E5FF]">
-            View Product
+          <div className="mt-5 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500 transition group-hover:text-[#00E5FF]">
+              {onCardClick ? "Quick Focus" : "View Product"}
+              <ArrowUpRight
+                size={13}
+                className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+              />
+            </span>
 
-            <ArrowUpRight
-              size={13}
-              className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-            />
+            {onCardClick && (
+              <Link
+                to={`/products/${id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-[10px] uppercase tracking-wider text-gray-600 transition hover:text-[#00E5FF]"
+              >
+                Full Page →
+              </Link>
+            )}
           </div>
         </div>
-      </Link>
+      </CardWrapper>
 
       {cartMessage && (
         <div className="absolute bottom-3 left-3 right-3 z-30 rounded-lg border border-[#00E5FF]/20 bg-[#050505]/95 px-3 py-2 text-center text-[10px] font-medium text-[#00E5FF] shadow-lg">

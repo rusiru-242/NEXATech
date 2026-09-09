@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { migrateGuestCartToUser } from "../utils/cartStorage";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 const API_URL = "http://localhost:5000/api/auth";
 
@@ -112,17 +113,21 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
+
       {/* ================= AUTH NAVBAR ================= */}
 
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
           <Link
             to="/"
-            className="text-xl font-black tracking-[-0.06em]"
+            className="shrink-0"
           >
-            <span className="text-white">NEXA</span>
-            <span className="text-[#00E5FF]">TECH</span>
+            <div className="text-xl font-bold tracking-[0.2em] text-white">
+              NEXA
+              <span className="text-[#00E5FF]">TECH</span>
+            </div>
           </Link>
 
           <Link
@@ -136,7 +141,7 @@ function Login() {
 
       {/* ================= MAIN ================= */}
 
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pb-16 pt-28">
+      <main className="relative z-10 flex min-h-[calc(100vh-80px)] items-center justify-center px-6 pb-16 pt-6">
         {/* Background Glow */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00e5ff]/[0.05] blur-[140px]" />
 
@@ -168,7 +173,7 @@ function Login() {
 
           {/* Login Card */}
 
-          <div className="border border-white/10 bg-[#090909] p-6 shadow-2xl sm:p-8">
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 shadow-2xl sm:p-8">
             <form
               onSubmit={handleSubmit}
               className="space-y-5"

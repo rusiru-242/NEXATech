@@ -18,6 +18,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 const API_URL = "http://localhost:5000";
 
@@ -504,11 +505,11 @@ function Account() {
   // PAGE
   // ==============================
   return (
-    <div className="min-h-screen bg-[#050505] px-5 pb-12 text-white">
-
+    <div className="relative min-h-screen bg-[#050505] px-5 pb-12 text-white">
+      <CyanLinesBackground />
       <Navbar />
 
-      <div className="mx-auto max-w-6xl pt-6 md:pt-20">
+      <div className="relative z-10 mx-auto max-w-6xl pt-6 md:pt-20">
 
         {/* ==============================
             HEADER
@@ -562,7 +563,7 @@ function Account() {
             TOP ACCOUNT CARD
         ============================== */}
 
-        <div className="mb-6 border border-white/10 bg-[#090909] p-6 sm:p-8">
+        <div className="mb-6 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl">
 
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
 
@@ -613,7 +614,7 @@ function Account() {
               MY ORDERS
           ============================== */}
 
-          <div className="border border-white/10 bg-[#090909] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl">
 
             <div className="mb-6 flex items-start justify-between">
 
@@ -743,7 +744,7 @@ function Account() {
               WISHLIST
           ============================== */}
 
-          <div className="border border-white/10 bg-[#090909] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl">
 
             <div className="mb-6 flex items-start justify-between">
 
@@ -906,7 +907,7 @@ function Account() {
               PROFILE
           ============================== */}
 
-          <div className="border border-white/10 bg-[#090909] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl">
 
             <div className="mb-7">
 
@@ -1047,7 +1048,7 @@ function Account() {
               PASSWORD
           ============================== */}
 
-          <div className="border border-white/10 bg-[#090909] p-6 sm:p-8">
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-xl">
 
             <div className="mb-7">
 

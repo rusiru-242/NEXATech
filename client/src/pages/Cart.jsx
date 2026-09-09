@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getCart, saveCart } from "../utils/cartStorage";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 function Cart() {
   const navigate = useNavigate();
@@ -205,11 +206,12 @@ function Cart() {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white">
+      <div className="relative min-h-screen bg-[#050505] text-white">
+        <CyanLinesBackground />
         <Navbar />
 
-        <main className="mx-auto flex min-h-[80vh] max-w-7xl items-center justify-center px-6">
-          <div className="text-center">
+        <main className="relative z-10 mx-auto flex min-h-[80vh] max-w-7xl items-center justify-center px-6">
+          <div className="rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-10 text-center shadow-2xl">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-[#00E5FF]/10 text-[#00E5FF]">
               <ShoppingCart size={36} />
             </div>
@@ -238,10 +240,11 @@ function Cart() {
   // ================= UI =================
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="relative z-10 mx-auto max-w-7xl px-6 py-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <Link
@@ -285,10 +288,10 @@ function Cart() {
               return (
                 <div
                   key={item._id}
-                  className={`rounded-2xl border p-5 ${
+                  className={`rounded-2xl border p-5 backdrop-blur-xl shadow-lg transition ${
                     isOutOfStock
-                      ? "border-red-500/20 bg-red-500/[0.03]"
-                      : "border-white/10 bg-white/[0.03]"
+                      ? "border-red-500/20 bg-red-500/[0.05]"
+                      : "border-white/10 bg-black/40 hover:border-white/20 hover:bg-black/55"
                   }`}
                 >
                   <div className="flex gap-5">
@@ -417,7 +420,7 @@ function Cart() {
             })}
           </section>
 
-          <aside className="h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-6 lg:sticky lg:top-24">
+          <aside className="h-fit rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 lg:sticky lg:top-24 shadow-xl">
             <h2 className="text-xl font-bold">Order Summary</h2>
 
             <div className="mt-6 space-y-4">

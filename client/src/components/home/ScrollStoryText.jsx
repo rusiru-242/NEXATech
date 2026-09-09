@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Sparkles } from "lucide-react";
+import { LiquidButton, MetalButton } from "../ui/LiquidButton";
 
 /**
  * ScrollStoryText
@@ -94,28 +95,31 @@ export function ScrollStoryText({
 
         {/* CTA buttons */}
         {ctas && ctas.length > 0 && (
-          <div className="pointer-events-auto mt-4 flex flex-wrap items-center gap-3">
+          <div className="pointer-events-auto mt-6 flex flex-wrap items-center gap-4">
             {ctas.map((cta, i) =>
               cta.variant === "primary" ? (
-                <Link
-                  key={i}
-                  to={cta.to}
-                  className="group flex items-center gap-2 rounded-xl border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#00E5FF] backdrop-blur-md transition-all duration-300 hover:border-[#00E5FF]/80 hover:bg-[#00E5FF]/20"
-                >
-                  <span>{cta.label}</span>
-                  <ArrowUpRight
-                    size={14}
-                    className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  />
+                <Link key={i} to={cta.to} className="focus:outline-none">
+                  <LiquidButton
+                    variant="cyan"
+                    size="md"
+                    className="group gap-2.5 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                  >
+                    <span>{cta.label}</span>
+                    <ArrowUpRight
+                      size={15}
+                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    />
+                  </LiquidButton>
                 </Link>
               ) : (
-                <Link
-                  key={i}
-                  to={cta.to}
-                  className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-6 py-3 text-xs font-bold uppercase tracking-wider text-white/70 backdrop-blur-md transition-all duration-300 hover:border-white/20 hover:text-white"
-                >
-                  <Sparkles size={13} className="text-[#00E5FF]" />
-                  <span>{cta.label}</span>
+                <Link key={i} to={cta.to} className="focus:outline-none">
+                  <MetalButton
+                    variant="dark"
+                    className="gap-2.5 px-7 py-3.5 text-xs uppercase tracking-wider"
+                  >
+                    <Sparkles size={14} className="text-[#00E5FF]" />
+                    <span className="text-[#00E5FF]">{cta.label}</span>
+                  </MetalButton>
                 </Link>
               )
             )}

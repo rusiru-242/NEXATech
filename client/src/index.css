@@ -17,11 +17,14 @@ html {
   scroll-behavior: smooth;
   font-family: "Google Sans", system-ui, -apple-system, sans-serif;
   font-optical-sizing: auto;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  min-height: calc(100vh + 1px);
   background: #050505;
   font-family: "Google Sans", system-ui, -apple-system, sans-serif;
   font-optical-sizing: auto;

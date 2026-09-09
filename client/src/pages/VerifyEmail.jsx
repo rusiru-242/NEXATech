@@ -7,6 +7,7 @@ import {
   Mail,
   RefreshCw,
 } from "lucide-react";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 const API_URL = "http://localhost:5000/api/auth";
 
@@ -120,14 +121,18 @@ function VerifyEmail() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
+
       {/* Navbar */}
 
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 sm:px-8">
-          <Link to="/" className="text-xl font-black tracking-[-0.06em]">
-            <span>NEXA</span>
-            <span className="text-[#00E5FF]">TECH</span>
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+          <Link to="/" className="shrink-0">
+            <div className="text-xl font-bold tracking-[0.2em] text-white">
+              NEXA
+              <span className="text-[#00E5FF]">TECH</span>
+            </div>
           </Link>
 
           <Link
@@ -142,7 +147,7 @@ function VerifyEmail() {
 
       {/* Main */}
 
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pb-16 pt-28">
+      <main className="relative z-10 flex min-h-screen items-center justify-center overflow-hidden px-6 pb-16 pt-28">
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5FF]/5 blur-[140px]" />
 
         <motion.div
@@ -150,7 +155,7 @@ function VerifyEmail() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 w-full max-w-md"
         >
-          <div className="border border-white/10 bg-[#090909] p-8 shadow-2xl">
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 shadow-2xl">
             {!verified ? (
               <>
                 <div className="mb-8 text-center">

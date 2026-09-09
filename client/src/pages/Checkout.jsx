@@ -11,6 +11,7 @@ import {
 
 import Navbar from "../components/Navbar";
 import { getCart, clearCart } from "../utils/cartStorage";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -723,10 +724,11 @@ function Checkout() {
   // =====================================================
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+      <main className="relative z-10 mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
 
         {/* BACK */}
 
@@ -771,7 +773,7 @@ function Checkout() {
 
             {/* DELIVERY */}
 
-            <section className="border border-white/10 bg-white/[0.02] p-5 sm:p-6">
+            <section className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
 
               <div className="mb-6 flex items-center gap-3">
 
@@ -874,7 +876,7 @@ function Checkout() {
 
             {/* PAYMENT */}
 
-            <section className="border border-white/10 bg-white/[0.02] p-5 sm:p-6">
+            <section className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
 
               <div className="mb-6 flex items-center gap-3">
 
@@ -1016,7 +1018,7 @@ function Checkout() {
 
           <aside>
 
-            <div className="sticky top-24 border border-white/10 bg-white/[0.02] p-5 sm:p-6">
+            <div className="sticky top-24 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
 
               <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-gray-600">
                 Order Summary

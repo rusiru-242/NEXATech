@@ -7,6 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 function Wishlist() {
   const navigate = useNavigate();
@@ -138,10 +139,11 @@ function Wishlist() {
   // Page
   // ==============================
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
       <Navbar />
 
-      <main className="mx-auto max-w-5xl px-5 pb-20 pt-10">
+      <main className="relative z-10 mx-auto max-w-5xl px-5 pb-20 pt-10">
 
         {/* Header */}
         <div className="mb-10">
@@ -178,7 +180,7 @@ function Wishlist() {
             EMPTY WISHLIST
         ============================== */}
         {wishlist.length === 0 ? (
-          <div className="border border-white/10 bg-[#090909] px-6 py-16 text-center sm:px-10">
+          <div className="rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl px-6 py-16 text-center shadow-2xl sm:px-10">
 
             <div className="mx-auto flex h-16 w-16 items-center justify-center border border-white/10 bg-white/[0.02]">
               <Heart
@@ -217,7 +219,7 @@ function Wishlist() {
             {wishlist.map((product) => (
               <div
                 key={product._id}
-                className="group overflow-hidden border border-white/10 bg-[#090909] transition hover:border-[#00E5FF]/40"
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl transition hover:border-[#00E5FF]/40 hover:bg-black/60 shadow-xl"
               >
 
                 {/* Product Image */}

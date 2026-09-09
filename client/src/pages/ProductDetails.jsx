@@ -11,7 +11,9 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getCart, saveCart } from "../utils/cartStorage";
+import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -432,21 +434,24 @@ function ProductDetails() {
   // UI
   // =========================================================
   return (
-  <div className="min-h-screen bg-[#050505] text-white">
-    <main className="mx-auto max-w-7xl px-6 py-10">
-      {/* BACK */}
-      <Link
-        to="/products"
-        className="mb-8 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-[#00E5FF]"
-      >
-        <ArrowLeft size={17} />
-        Back to Products
-      </Link>
+    <div className="relative min-h-screen bg-[#050505] text-white">
+      <CyanLinesBackground />
+      <Navbar />
 
-      {/* PRODUCT */}
-      <section className="grid gap-10 lg:grid-cols-2">
-        {/* IMAGE */}
-        <div className="relative flex min-h-[450px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+      <main className="relative z-10 mx-auto max-w-7xl px-6 py-10">
+        {/* BACK */}
+        <Link
+          to="/products"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-[#00E5FF]"
+        >
+          <ArrowLeft size={17} />
+          Back to Products
+        </Link>
+
+        {/* PRODUCT FOCUSED GLASS CONTAINER */}
+        <section className="grid gap-10 lg:grid-cols-2 rounded-3xl border border-white/15 bg-black/45 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_0_80px_rgba(0,229,255,0.12)]">
+          {/* IMAGE */}
+          <div className="relative flex min-h-[450px] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-8">
           {discountPercentage > 0 && (
             <div className="absolute left-5 top-5 rounded-full bg-red-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
               -{discountPercentage}%
@@ -658,7 +663,7 @@ function ProductDetails() {
         </div>
 
         {/* REVIEW FORM */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 shadow-xl">
           <h3 className="text-xl font-semibold">
             Write a Review
           </h3>
@@ -721,7 +726,7 @@ function ProductDetails() {
           {reviewLoading ? (
             <p className="text-gray-500">Loading reviews...</p>
           ) : reviews.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+            <div className="rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl p-8 text-center">
               <p className="text-gray-500">
                 No approved reviews yet.
               </p>
@@ -730,7 +735,7 @@ function ProductDetails() {
             reviews.map((review)=>(
               <div
                 key={review._id}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+                className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 shadow-md"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
