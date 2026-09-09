@@ -85,7 +85,7 @@ export function GamingPCSequence({ sectionRef, className = "", fullBleed = false
     if (!canvas) return;
 
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       // fullBleed: always use full viewport; otherwise use parent dimensions
       const w = fullBleed ? window.innerWidth  : (canvas.parentElement?.clientWidth  ?? window.innerWidth);
       const h = fullBleed ? window.innerHeight : (canvas.parentElement?.clientHeight ?? window.innerHeight);
@@ -94,6 +94,8 @@ export function GamingPCSequence({ sectionRef, className = "", fullBleed = false
       canvas.style.width  = `${w}px`;
       canvas.style.height = `${h}px`;
       drawnRef.current = -1; // force redraw at new size
+      const f = Math.round(smoothRef.current);
+      if (f >= 0) drawFrame(f);
     }
 
     resize();
@@ -140,57 +142,91 @@ export function GamingPCSequence({ sectionRef, className = "", fullBleed = false
 
   // ── Scroll + RAF ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    let alive  = true;
+    let alive = true;
+    let isRunning = false;
     let target = 0;
+    let cachedScrollable = 1;
+    let cachedTop = 0;
 
-    // IntersectionObserver to gate expensive work
-    let observer = null;
-    if (sectionRef?.current && "IntersectionObserver" in window) {
-      observer = new IntersectionObserver(
-        ([e]) => { inViewRef.current = e.isIntersecting; },
-        { rootMargin: "400px 0px 400px 0px" }
-      );
-      observer.observe(sectionRef.current);
-    } else {
-      inViewRef.current = true;
+    function measure() {
+      const sec = sectionRef?.current;
+      if (!sec) return;
+      cachedScrollable = Math.max(sec.offsetHeight - window.innerHeight, 1);
+      cachedTop = sec.offsetTop;
+    }
+    measure();
+
+    function startLoop() {
+      if (!isRunning && inViewRef.current && alive) {
+        isRunning = true;
+        rafRef.current = requestAnimationFrame(tick);
+      }
     }
 
     function onScroll() {
-      const sec = sectionRef?.current;
-      if (!sec) return;
-      // scrollable = tall outer height minus one viewport height (the sticky window)
-      const scrollable = sec.offsetHeight - window.innerHeight;
-      const scrolledIn = window.scrollY - sec.offsetTop;
-      const progress   = clamp(scrolledIn / Math.max(scrollable, 1), 0, 1);
+      if (!inViewRef.current) return;
+      const scrolledIn = window.scrollY - cachedTop;
+      const progress   = clamp(scrolledIn / cachedScrollable, 0, 1);
       target = Math.round(progress * (FRAME_COUNT - 1));
+      startLoop();
     }
 
     function tick() {
-      if (!alive) return;
+      if (!alive || !inViewRef.current) {
+        isRunning = false;
+        return;
+      }
 
       if (reduceMotion) {
         // Show first frame static
         if (drawnRef.current !== 0) { drawFrame(0); drawnRef.current = 0; }
-        rafRef.current = requestAnimationFrame(tick);
+        isRunning = false;
         return;
       }
 
-      if (inViewRef.current) {
-        smoothRef.current += (target - smoothRef.current) * LERP;
-        const f = clamp(Math.round(smoothRef.current), 0, FRAME_COUNT - 1);
-        if (f !== drawnRef.current) { drawFrame(f); drawnRef.current = f; }
+      smoothRef.current += (target - smoothRef.current) * LERP;
+      const f = clamp(Math.round(smoothRef.current), 0, FRAME_COUNT - 1);
+      if (f !== drawnRef.current) { drawFrame(f); drawnRef.current = f; }
+
+      // Idle sleep: stop loop when settled
+      if (Math.abs(target - smoothRef.current) < 0.05 && f === drawnRef.current) {
+        isRunning = false;
+        return;
       }
 
       rafRef.current = requestAnimationFrame(tick);
     }
 
+    // IntersectionObserver to gate expensive work
+    let observer = null;
+    if (sectionRef?.current && "IntersectionObserver" in window) {
+      observer = new IntersectionObserver(
+        ([e]) => {
+          inViewRef.current = e.isIntersecting;
+          if (inViewRef.current) {
+            measure();
+            onScroll();
+            startLoop();
+          } else {
+            isRunning = false;
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          }
+        },
+        { rootMargin: "300px 0px 300px 0px" }
+      );
+      observer.observe(sectionRef.current);
+    } else {
+      inViewRef.current = true;
+      startLoop();
+    }
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    rafRef.current = requestAnimationFrame(tick);
+    window.addEventListener("resize", measure, { passive: true });
 
     return () => {
       alive = false;
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (observer) observer.disconnect();
     };

@@ -25,6 +25,7 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const scrolledRef = useRef(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -41,7 +42,11 @@ function Navbar() {
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== scrolledRef.current) {
+        scrolledRef.current = isScrolled;
+        setScrolled(isScrolled);
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();

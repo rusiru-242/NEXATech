@@ -206,13 +206,16 @@ export function ProductSequence() {
     if (!canvas) return;
 
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const w = window.innerWidth;
       const h = window.innerHeight;
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
+      if (currentFrameRef.current >= 0) {
+        drawFrame(currentFrameRef.current);
+      }
     }
 
     resize();
@@ -256,9 +259,6 @@ export function ProductSequence() {
       const { start, end } = phase;
       const fadeWindow = 0.04; // cross-fade width
 
-      // How deep are we into this phase (0 → 1)?
-      const phaseProgress = (progress - start) / (end - start);
-
       let opacity = 0;
       let ty = 28;
 
@@ -284,40 +284,57 @@ export function ProductSequence() {
   // ── Scroll + RAF loop ───────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
+    let inView = false;
+    let isRunning = false;
     const section = sectionRef.current;
     if (!section) return;
 
     let targetFrame = 0;
+    let cachedSectionTop = 0;
+    let cachedSectionHeight = 0;
+
+    function measure() {
+      if (!section) return;
+      cachedSectionTop = section.offsetTop;
+      cachedSectionHeight = section.offsetHeight;
+    }
+    measure();
+
+    function startLoop() {
+      if (!isRunning && inView && isMounted) {
+        isRunning = true;
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    }
 
     function onScroll() {
-      const rect = section.getBoundingClientRect();
-      const sectionTop = section.offsetTop;
-      const sectionHeight = section.offsetHeight;
+      if (!inView) return;
       const viewportHeight = window.innerHeight;
-
-      // Scroll progress within the sticky range
-      // scrollY goes from sectionTop to sectionTop + (sectionHeight - viewportHeight)
-      const scrollable = sectionHeight - viewportHeight;
-      const scrolledIn = window.scrollY - sectionTop;
-      const raw = scrolledIn / scrollable;
+      const scrollable = cachedSectionHeight - viewportHeight;
+      const scrolledIn = window.scrollY - cachedSectionTop;
+      const raw = scrolledIn / Math.max(scrollable, 1);
       const progress = clamp(raw, 0, 1);
 
       targetFrame = Math.round(progress * (FRAME_COUNT - 1));
 
       // Update text overlays directly — no React state
       updateTextOverlays(progress);
+
+      startLoop();
     }
 
     function tick() {
-      if (!isMounted) return;
+      if (!isMounted || !inView) {
+        isRunning = false;
+        return;
+      }
 
       if (prefersReducedMotion.current) {
-        // Static: always show frame 0
         if (currentFrameRef.current !== 0) {
           drawFrame(0);
           currentFrameRef.current = 0;
         }
-        rafRef.current = requestAnimationFrame(tick);
+        isRunning = false;
         return;
       }
 
@@ -331,17 +348,47 @@ export function ProductSequence() {
         currentFrameRef.current = displayFrame;
       }
 
+      // Idle sleep: if animation has settled at target frame, stop looping until next scroll
+      if (Math.abs(targetFrame - smoothedFrameRef.current) < 0.05 && displayFrame === currentFrameRef.current) {
+        isRunning = false;
+        return;
+      }
+
       rafRef.current = requestAnimationFrame(tick);
     }
 
+    // IntersectionObserver to pause loop completely when offscreen
+    let observer = null;
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          if (inView) {
+            measure();
+            onScroll();
+            startLoop();
+          } else {
+            isRunning = false;
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          }
+        },
+        { rootMargin: "300px 0px 300px 0px" }
+      );
+      observer.observe(section);
+    } else {
+      inView = true;
+      startLoop();
+    }
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll(); // initial sync
-    rafRef.current = requestAnimationFrame(tick);
+    window.addEventListener("resize", measure, { passive: true });
 
     return () => {
       isMounted = false;
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (observer) observer.disconnect();
     };
   }, []);
 

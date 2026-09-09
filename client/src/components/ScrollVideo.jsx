@@ -26,23 +26,10 @@ export function ScrollVideo({ videoUrl = HERO_VIDEO_URL, className = "" }) {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    // Update target progress on scroll
-    const handleScroll = () => {
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      const maxScroll = Math.max(
-        document.documentElement.scrollHeight - window.innerHeight,
-        1
-      );
-      targetProgress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-
-    // Resize canvas with DPR capping (max 2)
+    // Resize canvas with DPR capping (max 1.5 for smooth fill-rate)
     const resizeCanvas = () => {
       if (!canvas) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const width = window.innerWidth;
       const height = window.innerHeight;
       canvas.width = Math.floor(width * dpr);
@@ -51,8 +38,34 @@ export function ScrollVideo({ videoUrl = HERO_VIDEO_URL, className = "" }) {
       canvas.style.height = `${height}px`;
     };
 
+    let isRunning = false;
+    let isInView = true;
+
+    // Update target progress on scroll and manage loop activity
+    const handleScroll = () => {
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const heroThreshold = (window.innerHeight || 900) * 2.5;
+      const inHeroArea = scrollY < heroThreshold;
+
+      if (inHeroArea !== isInView) {
+        isInView = inHeroArea;
+        if (isInView && !isRunning && isMounted) {
+          isRunning = true;
+          animId = requestAnimationFrame(tick);
+        }
+      }
+
+      const maxScroll = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1
+      );
+      targetProgress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
+    handleScroll();
 
     // ============================================================
     // PROCEDURAL CYBERNETIC AMBIENT FALLBACK (when video is absent)
@@ -202,9 +215,14 @@ export function ScrollVideo({ videoUrl = HERO_VIDEO_URL, className = "" }) {
         renderProcedural(smoothedProgress);
       }
 
-      animId = requestAnimationFrame(tick);
+      if (isInView && isMounted) {
+        animId = requestAnimationFrame(tick);
+      } else {
+        isRunning = false;
+      }
     };
 
+    isRunning = true;
     animId = requestAnimationFrame(tick);
 
     return () => {

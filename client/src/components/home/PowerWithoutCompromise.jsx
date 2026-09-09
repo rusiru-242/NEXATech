@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from "framer-motion";
 import { Cpu, Tv, Bot } from "lucide-react";
 import Reveal from "../Reveal";
@@ -13,7 +13,8 @@ export function PowerWithoutCompromise() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const imagesRef = useRef([]);
-  const [imagesLoaded, setImagesLoaded] = useState(0);
+  const inViewRef = useRef(false);
+  const lastRenderedIndex = useRef(0);
 
   // Scroll tracking (height = 300vh provides a long scrub distance)
   const { scrollYProgress } = useScroll({
@@ -28,42 +29,108 @@ export function PowerWithoutCompromise() {
     mass: 0.25,
   });
 
-  // Preload image sequence
+  // Gate canvas rendering with IntersectionObserver
   useEffect(() => {
-    let loadedCount = 0;
-    for (let i = 1; i <= TOTAL_FRAMES; i++) {
-      const img = new Image();
-      img.src = getFrameSrc(i);
-      img.onload = () => {
-        loadedCount++;
-        setImagesLoaded(loadedCount);
-      };
-      imagesRef.current[i] = img;
+    const el = containerRef.current;
+    if (!el || !("IntersectionObserver" in window)) {
+      inViewRef.current = true;
+      return;
     }
-    
-    // Draw frame 1 immediately if possible
-    if (imagesRef.current[1] && imagesRef.current[1].complete) {
-      renderFrame(1);
-    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inViewRef.current = entry.isIntersecting;
+        if (entry.isIntersecting && lastRenderedIndex.current > 0) {
+          renderFrame(lastRenderedIndex.current);
+        }
+      },
+      { rootMargin: "300px 0px 300px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
+
+  // Preload image sequence in non-blocking batches
+  useEffect(() => {
+    let dead = false;
+    const images = new Array(TOTAL_FRAMES + 1);
+    imagesRef.current = images;
+
+    function loadFrame(i) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          if (!dead && i === 1) renderFrame(1);
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = getFrameSrc(i);
+        images[i] = img;
+      });
+    }
+
+    // Load first 25 frames immediately for instant responsiveness
+    const EAGER = 25;
+    const eagerLoads = [];
+    for (let i = 1; i <= Math.min(EAGER, TOTAL_FRAMES); i++) {
+      eagerLoads.push(loadFrame(i));
+    }
+
+    // Batch remaining frames into idle chunks
+    Promise.all(eagerLoads).then(() => {
+      let idx = EAGER + 1;
+      function loadBatch() {
+        if (dead) return;
+        const BATCH = 25;
+        const end = Math.min(idx + BATCH, TOTAL_FRAMES + 1);
+        const promises = [];
+        for (let i = idx; i < end; i++) {
+          promises.push(loadFrame(i));
+        }
+        idx = end;
+        Promise.all(promises).then(() => {
+          if (idx <= TOTAL_FRAMES && !dead) {
+            if ("requestIdleCallback" in window) {
+              window.requestIdleCallback(loadBatch, { timeout: 400 });
+            } else {
+              setTimeout(loadBatch, 40);
+            }
+          }
+        });
+      }
+      if (idx <= TOTAL_FRAMES && !dead) {
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(loadBatch, { timeout: 400 });
+        } else {
+          setTimeout(loadBatch, 40);
+        }
+      }
+    });
+
+    return () => {
+      dead = true;
+    };
+  }, []);
+
+  const renderFrame = (index) => {
+    if (index === lastRenderedIndex.current && index !== 1) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const img = imagesRef.current[index];
+    if (img && img.complete && img.naturalWidth > 0) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      lastRenderedIndex.current = index;
+    }
+  };
 
   // Scrub canvas as scroll progress changes
   useMotionValueEvent(smoothProgress, "change", (latest) => {
+    if (!inViewRef.current) return;
     // Map 0 -> 1 progress to 1 -> 300 frames
     const frameIndex = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(latest * TOTAL_FRAMES)));
     renderFrame(frameIndex);
   });
-
-  const renderFrame = (index) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const img = imagesRef.current[index];
-    if (img && img.complete) {
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    }
-  };
 
   // --- CARD ANIMATION MAPPINGS ---
   

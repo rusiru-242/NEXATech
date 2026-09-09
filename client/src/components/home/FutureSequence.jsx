@@ -103,7 +103,7 @@ export function FutureSequence({ sectionRef }) {
     if (!canvas) return;
 
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const parent = canvas.parentElement;
       const w = parent ? parent.clientWidth : window.innerWidth;
       const h = parent ? parent.clientHeight : window.innerHeight;
@@ -151,61 +151,94 @@ export function FutureSequence({ sectionRef }) {
   // ── Scroll + RAF ───────────────────────────────────────────────────────────
   useEffect(() => {
     let alive = true;
+    let isRunning = false;
     let target = 0;
+    let cachedScrollable = 1;
+    let cachedTop = 0;
+
+    function measure() {
+      const sec = sectionRef?.current;
+      if (!sec) return;
+      cachedScrollable = Math.max(sec.offsetHeight - window.innerHeight, 1);
+      cachedTop = sec.offsetTop;
+    }
+    measure();
+
+    function startLoop() {
+      if (!isRunning && inViewRef.current && alive) {
+        isRunning = true;
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    }
+
+    function onScroll() {
+      if (!inViewRef.current) return;
+      const scrolledIn = window.scrollY - cachedTop;
+      const progress = clamp(scrolledIn / cachedScrollable, 0, 1);
+      target = Math.round(progress * (FRAME_COUNT - 1));
+      startLoop();
+    }
+
+    function tick() {
+      if (!alive || !inViewRef.current) {
+        isRunning = false;
+        return;
+      }
+
+      if (prefersReducedMotion) {
+        if (drawnRef.current !== 0) {
+          if (drawFrame(0)) drawnRef.current = 0;
+        }
+        isRunning = false;
+        return;
+      }
+
+      smoothRef.current += (target - smoothRef.current) * LERP;
+      const f = clamp(Math.round(smoothRef.current), 0, FRAME_COUNT - 1);
+      if (f !== drawnRef.current) {
+        if (drawFrame(f)) {
+          drawnRef.current = f;
+        }
+      }
+
+      // Idle sleep: stop loop when settled
+      if (Math.abs(target - smoothRef.current) < 0.05 && f === drawnRef.current) {
+        isRunning = false;
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    }
 
     let observer = null;
     if (sectionRef?.current && "IntersectionObserver" in window) {
       observer = new IntersectionObserver(
         ([e]) => {
           inViewRef.current = e.isIntersecting;
+          if (inViewRef.current) {
+            measure();
+            onScroll();
+            startLoop();
+          } else {
+            isRunning = false;
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          }
         },
         { rootMargin: "300px 0px 300px 0px" }
       );
       observer.observe(sectionRef.current);
     } else {
       inViewRef.current = true;
-    }
-
-    function onScroll() {
-      const sec = sectionRef?.current;
-      if (!sec) return;
-      const scrollable = sec.offsetHeight - window.innerHeight;
-      const scrolledIn = window.scrollY - sec.offsetTop;
-      const progress = clamp(scrolledIn / Math.max(scrollable, 1), 0, 1);
-      target = Math.round(progress * (FRAME_COUNT - 1));
-    }
-
-    function tick() {
-      if (!alive) return;
-
-      if (prefersReducedMotion) {
-        if (drawnRef.current !== 0) {
-          if (drawFrame(0)) drawnRef.current = 0;
-        }
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      if (inViewRef.current) {
-        smoothRef.current += (target - smoothRef.current) * LERP;
-        const f = clamp(Math.round(smoothRef.current), 0, FRAME_COUNT - 1);
-        if (f !== drawnRef.current) {
-          if (drawFrame(f)) {
-            drawnRef.current = f;
-          }
-        }
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
+      startLoop();
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    rafRef.current = requestAnimationFrame(tick);
+    window.addEventListener("resize", measure, { passive: true });
 
     return () => {
       alive = false;
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (observer) observer.disconnect();
     };

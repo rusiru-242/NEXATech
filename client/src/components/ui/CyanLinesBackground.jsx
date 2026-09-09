@@ -13,6 +13,7 @@ export default function CyanLinesBackground({
         loop
         muted
         playsInline
+        preload="metadata"
         className={`h-full w-full object-cover ${opacity}`}
         src="/videos/cyan_lines.mp4"
       />
