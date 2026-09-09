@@ -94,3 +94,64 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Hero MacBook Sequence — Responsive Breakpoints
+   Desktop (min-width: 1025px): 100% pixel-identical to original
+   Tablet (768px - 1024px): Centered, 85vw, max-w 720px
+   Mobile (< 768px): Centered, 92vw, max-w 420px
+───────────────────────────────────────────────────────────── */
+@media (min-width: 1025px) {
+  .hero-macbook-container {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    right: -1vw;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    width: clamp(680px, 58vw, 1150px);
+    aspect-ratio: 16 / 9;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 18%, black 82%, rgba(0,0,0,0.6) 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 18%, black 82%, rgba(0,0,0,0.6) 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+    mask-composite: intersect;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hero-macbook-container {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    left: 50%;
+    right: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 85vw;
+    max-width: 720px;
+    aspect-ratio: 16 / 9;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-macbook-container {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    left: 50%;
+    right: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 92vw;
+    max-width: 420px;
+    aspect-ratio: 16 / 9;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}

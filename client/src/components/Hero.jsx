@@ -29,28 +29,16 @@ export function Hero() {
         ───────────────────────────────────────────────────────────── */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute z-0 hidden lg:block"
-          style={{
-            right: "-1vw",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "clamp(680px, 58vw, 1150px)",
-            aspectRatio: "16 / 9",
-            // Apply dual-axis feathering masks
-            WebkitMaskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 18%, black 82%, rgba(0,0,0,0.6) 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-            WebkitMaskComposite: "source-in",
-            maskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 18%, black 82%, rgba(0,0,0,0.6) 95%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
-            maskComposite: "intersect"
-          }}
+          className="hero-macbook-container pointer-events-none absolute z-0"
         >
           {/* Subtle cyan ambient glow behind the video to match existing theme */}
           <div className="absolute inset-0 z-[-1] bg-[radial-gradient(circle_at_65%_45%,rgba(0,229,255,0.035),transparent_60%)]" />
 
           <MacBookSequence sectionRef={sectionRef} />
 
-          {/* Left-side dark gradient overlay to blend seamlessly into the #050505 background */}
+          {/* Left-side dark gradient overlay to blend seamlessly into the #050505 background (desktop only) */}
           <div 
-            className="absolute inset-0 z-10"
+            className="absolute inset-0 z-10 hidden lg:block"
             style={{
               background: "linear-gradient(90deg, #050505 0%, rgba(5,5,5,0.85) 15%, rgba(5,5,5,0.35) 35%, transparent 55%)"
             }}

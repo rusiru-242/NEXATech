@@ -232,9 +232,9 @@ export function MacBookSequence({ sectionRef }) {
         className="pointer-events-none absolute inset-0 z-[5] block h-full w-full object-contain"
       />
 
-      {/* Left fade — seamlessly merges into hero left content */}
+      {/* Left fade — seamlessly merges into hero left content (desktop only) */}
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-20 w-[22%]"
+        className="pointer-events-none absolute inset-y-0 left-0 z-20 w-[22%] hidden lg:block"
         style={{
           background:
             "linear-gradient(to right, rgba(3,7,18,0.95) 0%, rgba(3,7,18,0.5) 45%, transparent 100%)",
