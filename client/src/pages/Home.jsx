@@ -29,7 +29,7 @@ import PowerWithoutCompromise from "../components/home/PowerWithoutCompromise";
 import FutureCTASection from "../components/home/FutureCTASection";
 import WhyShopWithUs from "../components/home/WhyShopWithUs";
 import Footer from "../components/Footer";
-import { LiquidButton, MetalButton } from "../components/ui/LiquidButton";
+import NexaButton from "../components/ui/NexaButton";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
@@ -396,11 +396,13 @@ function Home() {
                   <p className="text-sm text-gray-400">
                     No active products found in the catalog.
                   </p>
-                  <Link
-                    to="/products"
-                    className="mt-4 inline-block rounded-xl border border-white/20 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
-                  >
-                    Browse Products
+                  <Link to="/products" className="focus:outline-none mt-4 inline-block">
+                    <NexaButton
+                      variant="primary"
+                      size="sm"
+                    >
+                      Browse Products
+                    </NexaButton>
                   </Link>
                 </div>
               )}

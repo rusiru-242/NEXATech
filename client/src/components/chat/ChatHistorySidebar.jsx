@@ -10,6 +10,7 @@ import {
   Bot,
 } from "lucide-react";
 import { useState } from "react";
+import { NexaButton } from "../ui/NexaButton";
 import { DarkGlassButton } from "../ui/DarkGlassButton";
 
 function ChatHistorySidebar({
@@ -127,13 +128,17 @@ function ChatHistorySidebar({
 
       {/* ================= NEW CHAT BUTTON ================= */}
       <div className="p-4">
-        <DarkGlassButton
+        <NexaButton
           onClick={onNewChat}
-          className="w-full text-sm font-semibold rounded-[16px] py-3.5"
+          variant="ai"
+          size="default"
+          icon={<Plus size={16} />}
+          className="w-full justify-center text-sm font-semibold"
         >
-          <Plus size={16} />
-          <span>New Chat</span>
-        </DarkGlassButton>
+          <span>
+            New <span className="text-[#00E5FF]">Chat</span>
+          </span>
+        </NexaButton>
       </div>
 
       {/* ================= CONVERSATION LIST ================= */}
@@ -172,8 +177,8 @@ function ChatHistorySidebar({
                       onClick={() => onSelectChat(chat._id)}
                       className={`group relative flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-xs transition-all duration-300 ${
                         isActive
-                          ? "border border-[#00E5FF]/35 bg-[linear-gradient(180deg,rgba(40,65,70,0.8),rgba(20,35,40,0.9))] font-bold text-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.2),0_6px_16px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.15)]"
-                          : "border border-transparent text-gray-400 hover:border-white/5 hover:bg-white/[0.02] hover:text-gray-200"
+                          ? "border border-[#00E5FF]/40 bg-[#00E5FF]/10 font-semibold text-white shadow-[0_0_12px_rgba(0,229,255,0.12)]"
+                          : "border border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-gray-200"
                       }`}
                     >
                       {/* Left: icon + title */}

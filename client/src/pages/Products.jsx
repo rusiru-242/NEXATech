@@ -944,10 +944,12 @@ function Products() {
                 preferences.
               </p>
 
-              <DarkGlassButton asChild className="mt-6 rounded-xl text-[10px] uppercase">
-                <Link to="/ai-chat">
-                  <Sparkles size={14} />
-                  Ask NexaTech AI
+              <DarkGlassButton asChild className="mt-6 rounded-2xl text-xs font-semibold normal-case">
+                <Link to="/ai-chat" className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-[#00E5FF]" />
+                  <span>
+                    Ask <span className="text-[#00E5FF]">NexaTech</span> AI
+                  </span>
                 </Link>
               </DarkGlassButton>
             </div>

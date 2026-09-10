@@ -134,32 +134,32 @@ export function PowerWithoutCompromise() {
 
   // --- CARD ANIMATION MAPPINGS ---
   
-  // Card 1: High Performance (0 - 34% active)
-  const c1Opacity = useTransform(smoothProgress, [0, 0.08, 0.3, 0.38], [0.45, 1, 1, 0.45]);
-  const c1Scale = useTransform(smoothProgress, [0, 0.08, 0.3, 0.38], [0.97, 1, 1, 0.97]);
-  const c1Border = useTransform(smoothProgress, [0, 0.08, 0.3, 0.38], ["rgba(255,255,255,0.1)", "rgba(0,229,255,0.3)", "rgba(0,229,255,0.3)", "rgba(255,255,255,0.1)"]);
-  const c1Color = useTransform(smoothProgress, [0, 0.08, 0.3, 0.38], ["rgba(156,163,175,1)", "rgba(0,229,255,1)", "rgba(0,229,255,1)", "rgba(156,163,175,1)"]);
+  // Card 1: High Performance (0 - 32% active)
+  const c1Opacity = useTransform(smoothProgress, [0, 0.06, 0.26, 0.32], [0.45, 1, 1, 0.45]);
+  const c1Scale = useTransform(smoothProgress, [0, 0.06, 0.26, 0.32], [0.97, 1, 1, 0.97]);
+  const c1Border = useTransform(smoothProgress, [0, 0.06, 0.26, 0.32], ["rgba(255,255,255,0.1)", "rgba(0,229,255,0.3)", "rgba(0,229,255,0.3)", "rgba(255,255,255,0.1)"]);
+  const c1Color = useTransform(smoothProgress, [0, 0.06, 0.26, 0.32], ["rgba(156,163,175,1)", "rgba(0,229,255,1)", "rgba(0,229,255,1)", "rgba(156,163,175,1)"]);
 
-  // Card 2: Premium Displays (34% - 68% active)
-  const c2Opacity = useTransform(smoothProgress, [0.3, 0.38, 0.62, 0.7], [0.45, 1, 1, 0.45]);
-  const c2Scale = useTransform(smoothProgress, [0.3, 0.38, 0.62, 0.7], [0.97, 1, 1, 0.97]);
-  const c2Border = useTransform(smoothProgress, [0.3, 0.38, 0.62, 0.7], ["rgba(255,255,255,0.1)", "rgba(0,229,255,0.3)", "rgba(0,229,255,0.3)", "rgba(255,255,255,0.1)"]);
-  const c2Color = useTransform(smoothProgress, [0.3, 0.38, 0.62, 0.7], ["rgba(156,163,175,1)", "rgba(0,229,255,1)", "rgba(0,229,255,1)", "rgba(156,163,175,1)"]);
+  // Card 2: Premium Displays (32% - 58% active)
+  const c2Opacity = useTransform(smoothProgress, [0.26, 0.32, 0.52, 0.58], [0.45, 1, 1, 0.45]);
+  const c2Scale = useTransform(smoothProgress, [0.26, 0.32, 0.52, 0.58], [0.97, 1, 1, 0.97]);
+  const c2Border = useTransform(smoothProgress, [0.26, 0.32, 0.52, 0.58], ["rgba(255,255,255,0.1)", "rgba(0,229,255,0.3)", "rgba(0,229,255,0.3)", "rgba(255,255,255,0.1)"]);
+  const c2Color = useTransform(smoothProgress, [0.26, 0.32, 0.52, 0.58], ["rgba(156,163,175,1)", "rgba(0,229,255,1)", "rgba(0,229,255,1)", "rgba(156,163,175,1)"]);
 
-  // Card 3: Smart Selection (68% - 100% active)
-  const c3Opacity = useTransform(smoothProgress, [0.62, 0.7, 0.92, 1], [0.45, 1, 1, 0.45]);
-  const c3Scale = useTransform(smoothProgress, [0.62, 0.7, 0.92, 1], [0.97, 1, 1, 0.97]);
-  const c3Border = useTransform(smoothProgress, [0.62, 0.7, 0.92, 1], ["rgba(255,255,255,0.1)", "rgba(0,229,255,0.3)", "rgba(0,229,255,0.3)", "rgba(255,255,255,0.1)"]);
-  const c3Color = useTransform(smoothProgress, [0.62, 0.7, 0.92, 1], ["rgba(156,163,175,1)", "rgba(0,229,255,1)", "rgba(0,229,255,1)", "rgba(156,163,175,1)"]);
+  // Card 3: Smart Selection (58% - 100% active - extended time and stays stable at end)
+  const c3Opacity = useTransform(smoothProgress, [0.52, 0.58, 0.98, 1], [0.45, 1, 1, 1]);
+  const c3Scale = useTransform(smoothProgress, [0.52, 0.58, 0.98, 1], [0.97, 1, 1, 1]);
+  const c3Border = useTransform(smoothProgress, [0.52, 0.58, 0.98, 1], ["rgba(255,255,255,0.1)", "rgba(0,229,255,0.3)", "rgba(0,229,255,0.3)", "rgba(0,229,255,0.3)"]);
+  const c3Color = useTransform(smoothProgress, [0.52, 0.58, 0.98, 1], ["rgba(156,163,175,1)", "rgba(0,229,255,1)", "rgba(0,229,255,1)", "rgba(0,229,255,1)"]);
 
   // Header "Compromise." word transition
   const titleColor = useTransform(smoothProgress, [0, 0.1], ["rgba(107,114,128,1)", "rgba(209,213,219,1)"]);
 
   // Overall visual layer opacity (keeps sequence subdued but highly visible now)
-  const videoOpacity = useTransform(smoothProgress, [0, 0.1, 0.9, 1], [0.3, 0.85, 0.85, 0.3]);
+  const videoOpacity = useTransform(smoothProgress, [0, 0.08, 0.96, 1], [0.3, 0.85, 0.85, 0.7]);
 
   return (
-    <section ref={containerRef} className="relative bg-[#050505]" style={{ height: "400vh" }}>
+    <section ref={containerRef} className="relative bg-[#050505]" style={{ height: "550vh" }}>
       {/* ── STICKY CONTAINER ── */}
       <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden pt-16 lg:pt-20">
         

@@ -2,8 +2,8 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Bot, ArrowUpRight } from "lucide-react";
 import Reveal from "../Reveal";
-import { LiquidButton } from "../ui/LiquidButton";
 import HandshakeSequence from "./HandshakeSequence";
+import NexaButton from "../ui/NexaButton";
 
 /**
  * AISectionWithHandshake
@@ -131,14 +131,13 @@ export function AISectionWithHandshake() {
                   {/* CTA */}
                   <div className="mt-8 flex flex-wrap items-center gap-4">
                     <Link to="/ai-chat" className="focus:outline-none">
-                      <LiquidButton
-                        variant="cyan"
+                      <NexaButton
+                        variant="ai"
                         size="lg"
-                        className="group gap-2.5 px-7 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                        icon={<Sparkles size={17} />}
                       >
-                        <Sparkles size={15} />
-                        <span>Start Chat with AI</span>
-                      </LiquidButton>
+                        <span>Start Chat with <span className="text-[#00E5FF]">NexaTech AI</span></span>
+                      </NexaButton>
                     </Link>
                   </div>
                 </Reveal>

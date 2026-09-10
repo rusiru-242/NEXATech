@@ -252,12 +252,13 @@ export function ProductSequence() {
 
   // ── Update text phase overlays (direct DOM mutation, no React state) ────────
   function updateTextOverlays(progress) {
-    PHASES.forEach((phase) => {
+    PHASES.forEach((phase, index) => {
       const el = document.getElementById(phase.id);
       if (!el) return;
 
       const { start, end } = phase;
       const fadeWindow = 0.04; // cross-fade width
+      const isLastPhase = index === PHASES.length - 1;
 
       let opacity = 0;
       let ty = 28;
@@ -265,14 +266,18 @@ export function ProductSequence() {
       if (progress >= start && progress <= end) {
         // Fade in during first fadeWindow of phase
         const fadeIn = clamp((progress - start) / fadeWindow, 0, 1);
-        // Fade out during last fadeWindow of phase
-        const fadeOut = clamp((end - progress) / fadeWindow, 0, 1);
+        // Fade out during last fadeWindow of phase (except for the last phase which stays stable)
+        const fadeOut = isLastPhase ? 1 : clamp((end - progress) / fadeWindow, 0, 1);
         opacity = Math.min(fadeIn, fadeOut);
         ty = (1 - Math.min(fadeIn, 1)) * 28; // slides up as it fades in
+      } else if (isLastPhase && progress > end) {
+        // Keep final phase visible and stable when scrolled to or past end
+        opacity = 1;
+        ty = 0;
       }
 
       if (prefersReducedMotion.current) {
-        opacity = progress >= start && progress <= end ? 1 : 0;
+        opacity = progress >= start && (isLastPhase || progress <= end) ? 1 : 0;
         ty = 0;
       }
 

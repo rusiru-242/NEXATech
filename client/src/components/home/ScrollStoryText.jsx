@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Sparkles } from "lucide-react";
-import { LiquidButton, MetalButton } from "../ui/LiquidButton";
+import { Sparkles, Headphones } from "lucide-react";
+import NexaButton from "../ui/NexaButton";
 
 /**
  * ScrollStoryText
@@ -99,27 +99,23 @@ export function ScrollStoryText({
             {ctas.map((cta, i) =>
               cta.variant === "primary" ? (
                 <Link key={i} to={cta.to} className="focus:outline-none">
-                  <LiquidButton
-                    variant="cyan"
-                    size="md"
-                    className="group gap-2.5 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                  <NexaButton
+                    variant="primary"
+                    size="default"
+                    icon={<Headphones size={16} />}
                   >
-                    <span>{cta.label}</span>
-                    <ArrowUpRight
-                      size={15}
-                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    />
-                  </LiquidButton>
+                    {cta.label}
+                  </NexaButton>
                 </Link>
               ) : (
                 <Link key={i} to={cta.to} className="focus:outline-none">
-                  <MetalButton
-                    variant="dark"
-                    className="gap-2.5 px-7 py-3.5 text-xs uppercase tracking-wider"
+                  <NexaButton
+                    variant="ai"
+                    size="default"
+                    icon={<Sparkles size={15} />}
                   >
-                    <Sparkles size={14} className="text-[#00E5FF]" />
-                    <span className="text-[#00E5FF]">{cta.label}</span>
-                  </MetalButton>
+                    <span>Ask <span className="text-[#00E5FF]">NexaTech</span> AI</span>
+                  </NexaButton>
                 </Link>
               )
             )}

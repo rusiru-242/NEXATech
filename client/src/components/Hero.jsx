@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { Sparkles, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import MacBookSequence from "./home/MacBookSequence";
-import { LiquidButton, MetalButton } from "./ui/LiquidButton";
+import NexaButton from "./ui/NexaButton";
 
 export function Hero() {
   const sectionRef = useRef(null);
@@ -137,27 +137,28 @@ export function Hero() {
                 transition={{ duration: 0.8, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
                 className="mt-8 flex flex-wrap items-center gap-4 sm:gap-5"
               >
-                {/* Primary CTA — Liquid Glass */}
+                {/* Primary CTA — Solid Cyan with Reduced Glow & Black Text */}
                 <Link to="/products" className="focus:outline-none">
-                  <LiquidButton
-                    variant="cyan"
+                  <NexaButton
+                    variant="primary"
                     size="lg"
-                    className="group gap-3 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                    icon={<ShoppingBag size={18} />}
                   >
-                    <span>Shop Products</span>
-                    <ArrowUpRight
-                      size={16}
-                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    />
-                  </LiquidButton>
+                    Start Shopping
+                  </NexaButton>
                 </Link>
 
-                {/* Secondary CTA — Metal Glass */}
+                {/* Secondary CTA — Dark Glass with Cyan Sparkles */}
                 <Link to="/ai-chat" className="focus:outline-none">
-                  <MetalButton variant="dark" className="gap-2.5 px-7 text-xs uppercase tracking-wider">
-                    <Sparkles size={15} className="text-[#00E5FF]" />
-                    <span className="text-[#00E5FF]">Ask NexaTech AI</span>
-                  </MetalButton>
+                  <NexaButton
+                    variant="ai"
+                    size="lg"
+                    icon={<Sparkles size={18} />}
+                  >
+                    <span>
+                      Ask <span className="text-[#00E5FF]">NexaTech</span> AI
+                    </span>
+                  </NexaButton>
                 </Link>
               </motion.div>
             </div>

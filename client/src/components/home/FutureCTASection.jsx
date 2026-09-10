@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { Sparkles, ShoppingBag } from "lucide-react";
 import Reveal from "../Reveal";
-import { LiquidButton, MetalButton } from "../ui/LiquidButton";
 import FutureSequence from "./FutureSequence";
+import NexaButton from "../ui/NexaButton";
 
 /**
  * FutureCTASection
@@ -76,30 +76,26 @@ export function FutureCTASection() {
             </p>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-5">
-              {/* Primary glass CTA */}
+              {/* Primary matching cyan CTA */}
               <Link to="/products" className="focus:outline-none">
-                <LiquidButton
-                  variant="cyan"
-                  size="xl"
-                  className="group gap-3 px-10 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                <NexaButton
+                  variant="primary"
+                  size="lg"
+                  icon={<ShoppingBag size={18} />}
                 >
-                  <span>Explore Collection</span>
-                  <ArrowUpRight
-                    size={16}
-                    className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  />
-                </LiquidButton>
+                  Explore Collection
+                </NexaButton>
               </Link>
 
-              {/* Secondary metal CTA */}
+              {/* Secondary matching AI glass CTA */}
               <Link to="/ai-chat" className="focus:outline-none">
-                <MetalButton
-                  variant="dark"
-                  className="gap-2 px-7 text-xs uppercase tracking-wider"
+                <NexaButton
+                  variant="ai"
+                  size="lg"
+                  icon={<Sparkles size={17} />}
                 >
-                  <Sparkles size={15} className="text-[#00E5FF]" />
-                  <span className="text-[#00E5FF]">Consult AI</span>
-                </MetalButton>
+                  <span>Consult <span className="text-[#00E5FF]">NexaTech</span> AI</span>
+                </NexaButton>
               </Link>
             </div>
           </Reveal>

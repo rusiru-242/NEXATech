@@ -711,7 +711,7 @@ function AIChat() {
                               <button
                                 type="button"
                                 onClick={() => handleViewProduct(product)}
-                                className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#00E5FF] text-xs font-bold text-black transition hover:bg-white"
+                                className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#00E5FF] text-xs font-bold text-black shadow-[0_2px_10px_rgba(0,229,255,0.2)] transition-all duration-200 hover:bg-[#00d6ee] hover:shadow-[0_4px_16px_rgba(0,229,255,0.3)] active:scale-[0.98]"
                               >
                                 View Product
                                 <ExternalLink size={13} />
@@ -764,7 +764,7 @@ function AIChat() {
                   type="button"
                   disabled={loading}
                   onClick={() => handleSuggestion(question)}
-                  className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-xs text-gray-300 transition hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/10 hover:text-[#00E5FF] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="shrink-0 rounded-full border border-white/10 bg-[#0c0d12]/85 backdrop-blur-md px-3.5 py-1.5 text-xs text-gray-300 transition-all duration-200 hover:border-[#00E5FF]/40 hover:bg-white/[0.06] hover:text-white hover:shadow-[0_0_12px_rgba(0,229,255,0.12)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {question}
                 </button>
@@ -786,7 +786,7 @@ function AIChat() {
               <button
                 type="submit"
                 disabled={!message.trim() || loading}
-                className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg bg-[#00E5FF] text-black shadow-[0_0_15px_rgba(0,229,255,0.25)] transition hover:bg-[#00cce6] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-[#00E5FF] text-black shadow-[0_2px_10px_rgba(0,229,255,0.2)] transition-all duration-200 hover:bg-[#00d6ee] hover:shadow-[0_4px_16px_rgba(0,229,255,0.3)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 aria-label="Send message"
               >
                 {loading ? (

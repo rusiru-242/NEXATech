@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Reveal from "../components/Reveal";
-import { LiquidButton, MetalButton } from "../components/ui/LiquidButton";
+import NexaButton from "../components/ui/NexaButton";
 
 function About() {
   return (
@@ -186,27 +186,26 @@ function About() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-5">
-                {/* Primary CTA — Liquid Glass */}
+                {/* Primary CTA — NexaButton */}
                 <Link to="/products" className="focus:outline-none">
-                  <LiquidButton
-                    variant="cyan"
+                  <NexaButton
+                    variant="primary"
                     size="lg"
-                    className="group gap-3 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                    icon={<ShoppingBag size={18} />}
                   >
-                    <span>Shop Products</span>
-                    <ArrowUpRight
-                      size={16}
-                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    />
-                  </LiquidButton>
+                    Shop Products
+                  </NexaButton>
                 </Link>
 
-                {/* Secondary CTA — Metal Glass */}
+                {/* Secondary CTA — NexaButton AI */}
                 <Link to="/ai-chat" className="focus:outline-none">
-                  <MetalButton variant="dark" className="gap-2.5 px-7 text-xs uppercase tracking-wider">
-                    <Sparkles size={15} className="text-[#00E5FF]" />
-                    <span className="text-[#00E5FF]">Ask NexaTech AI</span>
-                  </MetalButton>
+                  <NexaButton
+                    variant="ai"
+                    size="lg"
+                    icon={<Sparkles size={17} />}
+                  >
+                    <span>Ask <span className="text-[#00E5FF]">NexaTech</span> AI</span>
+                  </NexaButton>
                 </Link>
               </div>
             </div>

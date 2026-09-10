@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { Flame, ArrowUpRight } from "lucide-react";
+import { Flame } from "lucide-react";
 import Reveal from "../Reveal";
-import { LiquidButton } from "../ui/LiquidButton";
 import GamingPCSequence from "./GamingPCSequence";
+import NexaButton from "../ui/NexaButton";
 
 /**
  * GamingSectionWithPC
@@ -142,17 +142,13 @@ export function GamingSectionWithPC() {
                 <Reveal delay={300}>
                   <div className="mt-8">
                     <Link to="/products?category=Gaming" className="focus:outline-none">
-                      <LiquidButton
-                        variant="cyan"
+                      <NexaButton
+                        variant="primary"
                         size="lg"
-                        className="group gap-3 px-8 text-xs font-bold uppercase tracking-wider text-[#00E5FF]"
+                        icon={<Flame size={18} />}
                       >
-                        <span>Explore Gaming Rigs</span>
-                        <ArrowUpRight
-                          size={16}
-                          className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                        />
-                      </LiquidButton>
+                        Explore Gaming Rigs
+                      </NexaButton>
                     </Link>
                   </div>
                 </Reveal>
