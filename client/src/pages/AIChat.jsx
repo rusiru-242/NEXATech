@@ -578,7 +578,7 @@ function AIChat() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 overflow-hidden px-4 py-4 sm:px-6 sm:py-6 lg:gap-6"
+        className="relative z-10 mx-auto flex w-full max-w-[1550px] flex-1 overflow-hidden px-3 pt-1 pb-3 sm:px-6 sm:pt-2 sm:pb-4 lg:gap-6"
       >
         {/* ================= DESKTOP SIDEBAR ================= */}
         <div className="hidden w-72 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#070707] lg:block">
@@ -596,7 +596,7 @@ function AIChat() {
         {/* ================= CHAT CONVERSATION CONTAINER ================= */}
         <section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           {/* ================= CHAT HEADER ================= */}
-          <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6">
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 sm:px-6 sm:py-3.5">
             <div className="flex items-center gap-3">
               {/* Mobile open history button */}
               <button
@@ -642,7 +642,7 @@ function AIChat() {
           </div>
 
           {/* ================= MESSAGES FEED ================= */}
-          <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
+          <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:px-6 sm:py-4">
             {messages.map((item) => (
               <div
                 key={item.id}
@@ -657,16 +657,18 @@ function AIChat() {
                 )}
 
                 <div
-                  className={`flex max-w-[85%] flex-col ${item.sender === "user" ? "items-end" : "items-start"
+                  className={`flex flex-col ${item.sender === "user"
+                    ? "max-w-[85%] sm:max-w-[75%] items-end"
+                    : "w-full max-w-full sm:max-w-[95%] items-start"
                     }`}
                 >
                   {/* MESSAGE BUBBLE */}
                   <div
-                    className={`max-w-full rounded-2xl px-4 py-3 text-sm leading-6 ${item.sender === "user"
+                    className={`max-w-full rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 text-sm sm:text-[15px] leading-relaxed ${item.sender === "user"
                       ? "bg-[#00E5FF] text-black font-medium"
                       : item.isError
                         ? "border border-red-500/20 bg-red-500/5 text-red-300"
-                        : "bg-white/[0.06] text-gray-300"
+                        : "bg-white/[0.06] text-gray-200"
                       }`}
                   >
                     {item.sender === "bot"
@@ -781,18 +783,18 @@ function AIChat() {
           </div>
 
           {/* ================= SUGGESTIONS ================= */}
-          <div className="border-t border-white/10 px-5 py-4 sm:px-6">
-            <p className="mb-2.5 text-[10px] uppercase tracking-[0.15em] text-gray-500">
-              Suggested Questions
-            </p>
-            <div className="flex flex-wrap gap-2">
+          <div className="border-t border-white/10 px-4 py-2 sm:px-6">
+            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
+              <span className="shrink-0 text-[10px] uppercase tracking-[0.15em] text-gray-500 font-semibold mr-1">
+                Suggested:
+              </span>
               {suggestedQuestions.map((question) => (
                 <button
                   key={question}
                   type="button"
                   disabled={loading}
                   onClick={() => handleSuggestion(question)}
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs text-gray-400 transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-xs text-gray-300 transition hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/10 hover:text-[#00E5FF] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {question}
                 </button>
@@ -801,20 +803,20 @@ function AIChat() {
           </div>
 
           {/* ================= INPUT FORM ================= */}
-          <form onSubmit={handleSubmit} className="border-t border-white/10 p-4 sm:p-5">
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 p-2 transition focus-within:border-[#00E5FF]/40">
+          <form onSubmit={handleSubmit} className="border-t border-white/10 p-3 sm:px-6 sm:py-3.5">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/40 p-2 sm:p-2.5 transition focus-within:border-[#00E5FF]/50 focus-within:ring-1 focus-within:ring-[#00E5FF]/20">
               <input
                 type="text"
                 value={message}
                 disabled={loading}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Ask about laptops, specs, Intel vs Ryzen, or recommend products..."
-                className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white outline-none placeholder:text-gray-600 disabled:cursor-not-allowed"
+                className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm sm:text-base text-white outline-none placeholder:text-gray-500 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
                 disabled={!message.trim() || loading}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00E5FF] text-black transition hover:bg-[#00cce6] disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg bg-[#00E5FF] text-black shadow-[0_0_15px_rgba(0,229,255,0.25)] transition hover:bg-[#00cce6] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 aria-label="Send message"
               >
                 {loading ? (
