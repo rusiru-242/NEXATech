@@ -3,8 +3,11 @@
  * Uses JWT stored in localStorage under 'nexatech_token'.
  */
 
-const BACKEND_URL =
-  import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "";
+const BACKEND_URL = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  "http://localhost:5000"
+).replace(/\/+$/, "");
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("nexatech_token");

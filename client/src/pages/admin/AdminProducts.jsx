@@ -13,9 +13,9 @@ import { useEffect, useState } from "react";
 
 import AdminNavbar from "../../components/AdminNavbar";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
-const API_URL = `${API_BASE}/api/products`;
-const CATEGORY_API_URL = `${API_BASE}/api/products/categories`;
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+const PRODUCT_API_URL = `${API_URL}/api/products`;
+const CATEGORY_API_URL = `${API_URL}/api/products/categories`;
 
 const emptyForm = {
   name: "",
@@ -58,7 +58,7 @@ function AdminProducts() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(API_URL);
+      const response = await fetch(PRODUCT_API_URL);
       const data = await response.json();
 
       if (!response.ok) {
@@ -280,8 +280,8 @@ function AdminProducts() {
       };
 
       const url = editingProduct
-        ? `${API_URL}/${editingProduct._id}`
-        : API_URL;
+        ? `${PRODUCT_API_URL}/${editingProduct._id}`
+        : PRODUCT_API_URL;
 
       const method = editingProduct
         ? "PUT"
@@ -356,7 +356,7 @@ function AdminProducts() {
       }
 
       const response = await fetch(
-        `${API_URL}/${product._id}`,
+        `${PRODUCT_API_URL}/${product._id}`,
         {
           method: "DELETE",
           headers: {

@@ -10,8 +10,7 @@ import {
 } from "lucide-react";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
-const API_URL = `${API_BASE}/api/auth`;
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 function Register() {
   const navigate = useNavigate();
@@ -72,7 +71,7 @@ function Register() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_URL}/send-otp`, {
+      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

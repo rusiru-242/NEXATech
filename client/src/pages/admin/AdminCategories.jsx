@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import AdminNavbar from "../../components/AdminNavbar";
 
-const API_URL = `${import.meta.env.VITE_API_URL || ""}/api`;
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -43,7 +43,7 @@ function AdminCategories() {
         localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/categories`,
+        `${API_URL}/api/admin/categories`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -128,7 +128,7 @@ function AdminCategories() {
         localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/categories`,
+        `${API_URL}/api/admin/categories`,
         {
           method: "POST",
 
@@ -193,7 +193,7 @@ function AdminCategories() {
         localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/categories/${encodeURIComponent(
+        `${API_URL}/api/admin/categories/${encodeURIComponent(
           category.name
         )}`,
         {

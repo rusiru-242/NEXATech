@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import AdminNavbar from "../../components/AdminNavbar";
 
-const API_URL = `${import.meta.env.VITE_API_URL || ""}/api`;
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 function AdminReviews() {
   const [reviews, setReviews] = useState([]);
@@ -39,7 +39,7 @@ function AdminReviews() {
         localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/reviews`,
+        `${API_URL}/api/admin/reviews`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -86,7 +86,7 @@ function AdminReviews() {
         localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/reviews/${id}/status`,
+        `${API_URL}/api/admin/reviews/${id}/status`,
         {
           method: "PUT",
 
@@ -152,7 +152,7 @@ function AdminReviews() {
         localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/reviews/${id}`,
+        `${API_URL}/api/admin/reviews/${id}`,
         {
           method: "DELETE",
 

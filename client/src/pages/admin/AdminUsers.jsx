@@ -12,7 +12,7 @@ import {
 import { useEffect, useState } from "react";
 import AdminNavbar from "../../components/AdminNavbar";
 
-const API_URL = `${import.meta.env.VITE_API_URL || ""}/api`;
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 function AdminUsers() {
   const [customers, setCustomers] = useState([]);
@@ -34,7 +34,7 @@ function AdminUsers() {
       const token = localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/users`,
+        `${API_URL}/api/admin/users`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ function AdminUsers() {
       const token = localStorage.getItem("nexatech_token");
 
       const response = await fetch(
-        `${API_URL}/admin/users/${id}`,
+        `${API_URL}/api/admin/users/${id}`,
         {
           method: "DELETE",
           headers: {

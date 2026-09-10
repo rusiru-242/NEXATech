@@ -26,11 +26,10 @@ import {
 
 // In production, AI requests route through Node proxy at /api/ai/chat (FastAPI port 8000 is internal)
 // In local dev without proxy, VITE_AI_API_URL points directly to FastAPI on localhost:8000
-const API_URL = import.meta.env.VITE_API_URL || "";
-const AI_API_URL =
-  import.meta.env.VITE_AI_API_URL
-    ? import.meta.env.VITE_AI_API_URL
-    : `${API_URL}/api/ai`;
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+const AI_API_URL = import.meta.env.VITE_AI_API_URL
+  ? import.meta.env.VITE_AI_API_URL.replace(/\/+$/, "")
+  : `${API_URL}/api/ai`;
 
 const INITIAL_WELCOME_MESSAGE = {
   id: "welcome-1",

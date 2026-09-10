@@ -9,8 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { migrateGuestCartToUser } from "../utils/cartStorage";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
-const API_URL = `${API_BASE}/api/auth`;
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 function Login() {
   const navigate = useNavigate();
@@ -53,7 +52,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -31,7 +31,7 @@ import WhyShopWithUs from "../components/home/WhyShopWithUs";
 import Footer from "../components/Footer";
 import { LiquidButton, MetalButton } from "../components/ui/LiquidButton";
 
-const API_URL = import.meta.env.VITE_API_URL || "";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 function Home() {
   const [products, setProducts] = useState([]);
