@@ -7,6 +7,7 @@ import {
   Loader2,
   Edit2,
   Check,
+  Bot,
 } from "lucide-react";
 import { useState } from "react";
 import { DarkGlassButton } from "../ui/DarkGlassButton";
@@ -90,17 +91,23 @@ function ChatHistorySidebar({
   return (
     <aside className="flex h-full w-full flex-col bg-[#070707] text-white">
       {/* ================= SIDEBAR HEADER ================= */}
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00E5FF]/10 text-[#00E5FF]">
-            <Sparkles size={16} />
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5 sm:px-5 sm:py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.15)]">
+            <Bot size={20} />
           </div>
-          <div>
-            <h2 className="text-sm font-bold tracking-wide text-white">
-              NexaTech AI
-            </h2>
-            <p className="text-[10px] uppercase tracking-widest text-[#00E5FF]">
-              Chat History
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="truncate text-sm font-bold tracking-wide text-white">
+                NexaTech Assistant
+              </h2>
+              <span className="flex shrink-0 items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-green-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                Online
+              </span>
+            </div>
+            <p className="truncate text-[11px] text-gray-400">
+              AI Tech & Shopping Assistant
             </p>
           </div>
         </div>

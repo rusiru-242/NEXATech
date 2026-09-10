@@ -6,7 +6,6 @@ import {
   Loader2,
   ExternalLink,
   History,
-  Plus,
 } from "lucide-react";
 
 import { useEffect, useRef, useState } from "react";
@@ -558,7 +557,7 @@ function AIChat() {
 
       {/* ================= MOBILE SLIDE-OVER DRAWER ================= */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-[#070707] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] transform bg-[#070707] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         <ChatHistorySidebar
@@ -578,10 +577,10 @@ function AIChat() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 mx-auto flex w-full max-w-[1550px] flex-1 overflow-hidden px-3 pt-1 pb-3 sm:px-6 sm:pt-2 sm:pb-4 lg:gap-6"
+        className="relative z-10 mx-auto flex w-full max-w-[1550px] flex-1 overflow-hidden px-3 pt-3 pb-3 sm:px-6 sm:pt-6 sm:pb-5 lg:gap-6"
       >
         {/* ================= DESKTOP SIDEBAR ================= */}
-        <div className="hidden w-72 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#070707] lg:block">
+        <div className="hidden w-80 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#070707] lg:block">
           <ChatHistorySidebar
             chats={chats}
             activeChatId={activeChatId}
@@ -595,54 +594,25 @@ function AIChat() {
 
         {/* ================= CHAT CONVERSATION CONTAINER ================= */}
         <section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-          {/* ================= CHAT HEADER ================= */}
-          <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 sm:px-6 sm:py-3.5">
-            <div className="flex items-center gap-3">
-              {/* Mobile open history button */}
-              <button
-                type="button"
-                onClick={() => setMobileSidebarOpen(true)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-300 transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF] lg:hidden"
-                title="Open Chat History"
-              >
-                <History size={18} />
-              </button>
-
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00E5FF]/10 text-[#00E5FF]">
-                <Bot size={21} />
-              </div>
-
-              <div>
-                <h2 className="text-sm font-semibold sm:text-base">
-                  {activeChatTitle || "NexaTech Assistant"}
-                </h2>
-                <p className="text-xs text-gray-500">
-                  AI Technology & Shopping Assistant
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* New chat button for quick access */}
-              <button
-                type="button"
-                onClick={handleNewChat}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-gray-300 transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF]"
-                title="Start new conversation"
-              >
-                <Plus size={13} />
-                <span className="hidden sm:inline">New Chat</span>
-              </button>
-
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-gray-400">
-                <span className="h-2 w-2 rounded-full bg-green-400" />
-                <span className="hidden sm:inline">AI Online</span>
-              </div>
+          {/* Mobile open history button bar (mobile-only) */}
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300 transition hover:border-[#00E5FF]/40 hover:text-[#00E5FF]"
+              title="Open Chat History"
+            >
+              <History size={15} />
+              <span>Chat History</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-green-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span>AI Online</span>
             </div>
           </div>
 
           {/* ================= MESSAGES FEED ================= */}
-          <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:px-6 sm:py-4">
+          <div className="flex-1 space-y-4 overflow-y-auto px-4 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
             {messages.map((item) => (
               <div
                 key={item.id}
