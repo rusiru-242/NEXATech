@@ -131,8 +131,8 @@ const clientDist = path.join(__dirname, "../client/dist");
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
 
-  // React Router fallback — serve index.html for any non-API path
-  app.get("*", (req, res) => {
+  // React Router fallback — serve index.html for any non-API path (Express 5 compatible)
+  app.get("/{*splat}", (req, res) => {
     res.sendFile(path.join(clientDist, "index.html"));
   });
 } else {
