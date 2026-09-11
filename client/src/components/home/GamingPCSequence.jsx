@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 // CONFIGURATION — edit these to swap the sequence
 // ─────────────────────────────────────────────────────────────────────────────
 const FRAME_COUNT   = 240;
-const FRAME_PATH    = "/sequence/gamingpc/ezgif-frame-";
+const FRAME_PATH    = "/animations/gaming-pc/ezgif-frame-";
 const FRAME_EXT     = ".png";
 const FRAME_PAD     = 3;   // zero-pad to 001 … 240
 const LERP          = 0.11; // smoothing (lower = smoother/slower)

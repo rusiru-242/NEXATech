@@ -537,7 +537,7 @@ function AIChat() {
           muted
           playsInline
           className="h-full w-full object-cover opacity-40"
-          src="/videos/neural_network.mp4"
+          src="/animations/back-video/neural_network.mp4"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-[#050505]/70 to-[#050505]" />
       </div>

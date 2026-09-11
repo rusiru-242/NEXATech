@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 // CONFIGURATION
 // ─────────────────────────────────────────────────────────────────────────────
 const FRAME_COUNT = 300;
-const FRAME_BASE  = "/sequence/macbook/ezgif-frame-";
+const FRAME_BASE  = "/animations/macbook/ezgif-frame-";
 const FRAME_EXT   = ".png";
 const FRAME_PAD   = 3;   // zero-pad: 001 … 300
 const LERP        = 0.1; // smoothing (lower = smoother / slower catch-up)
@@ -258,7 +258,7 @@ export function MacBookSequence({ sectionRef }) {
 
       {/* Instant 1st-Frame Poster (renders immediately with HTML, zero blank flash) */}
       <img
-        src="/sequence/macbook/ezgif-frame-001.png"
+        src="/animations/macbook/ezgif-frame-001.png"
         alt="Apple Silicon M6 Architecture"
         fetchPriority="high"
         loading="eager"

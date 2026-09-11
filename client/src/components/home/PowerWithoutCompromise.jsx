@@ -6,7 +6,7 @@ import Reveal from "../Reveal";
 const TOTAL_FRAMES = 300;
 
 function getFrameSrc(index) {
-  return `/sequence/carvid/ezgif-frame-${String(index).padStart(3, "0")}.png`;
+  return `/animations/car/ezgif-frame-${String(index).padStart(3, "0")}.png`;
 }
 
 export function PowerWithoutCompromise() {
