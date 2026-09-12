@@ -858,13 +858,13 @@ function Checkout() {
       <CyanLinesBackground />
       <Navbar />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
 
         {/* BACK */}
 
         <Link
           to="/cart"
-          className="mb-8 inline-flex items-center gap-2 text-xs text-gray-500 transition hover:text-white"
+          className="mb-4 inline-flex items-center gap-2 text-xs text-gray-500 transition hover:text-white"
         >
           <ArrowLeft size={14} />
           Back to Cart
@@ -872,12 +872,12 @@ function Checkout() {
 
         {/* HEADER */}
 
-        <div className="mb-8">
+        <div className="mb-6">
           <p className="text-[9px] font-semibold uppercase tracking-[0.35em] text-[#00e5ff]">
             Secure Checkout
           </p>
 
-          <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+          <h1 className="mt-1.5 text-2xl font-black tracking-tight sm:text-3xl">
             Complete your order.
           </h1>
         </div>
@@ -1190,15 +1190,15 @@ function Checkout() {
               RIGHT
           ================================================= */}
 
-          <aside>
+          <aside className="lg:sticky lg:top-24 lg:self-start">
 
-            <div className="sticky top-24 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
+            <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-4 sm:p-5 shadow-xl">
 
-              <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-gray-600">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-gray-500">
                 Order Summary
               </p>
 
-              <h2 className="mt-2 text-lg font-semibold">
+              <h2 className="mt-1 text-base font-semibold">
                 Your Order
               </h2>
 
@@ -1206,7 +1206,7 @@ function Checkout() {
                   PRODUCTS
               ================================================= */}
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-3.5 max-h-[180px] sm:max-h-[220px] overflow-y-auto space-y-3 pr-1 [scrollbar-width:thin]">
 
                 {cart.map((item) => {
                   const currentPrice =
@@ -1227,12 +1227,12 @@ function Checkout() {
                   return (
                     <div
                       key={item._id}
-                      className="flex gap-3"
+                      className="flex gap-3 items-center"
                     >
 
                       {/* IMAGE */}
 
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden border border-white/10 bg-black">
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden border border-white/10 bg-black">
 
                         {discount > 0 && (
                           <span className="absolute left-0 top-0 z-10 bg-[#00e5ff] px-1 text-[7px] font-bold text-black">
@@ -1263,16 +1263,16 @@ function Checkout() {
                         </p>
 
                         {item.brand && (
-                          <p className="mt-1 truncate text-[9px] text-gray-700">
+                          <p className="mt-0.5 truncate text-[9px] text-gray-600">
                             {item.brand}
                           </p>
                         )}
 
-                        <p className="mt-1 text-[10px] text-gray-600">
+                        <p className="mt-0.5 text-[10px] text-gray-500">
                           Qty: {quantity}
                         </p>
 
-                        <div className="mt-1 flex items-center gap-2">
+                        <div className="mt-0.5 flex items-center gap-2">
 
                           <span className="text-[10px] font-semibold text-[#00e5ff]">
                             ${currentPrice.toFixed(2)}
@@ -1308,13 +1308,13 @@ function Checkout() {
                   PRICE SUMMARY
               ================================================= */}
 
-              <div className="mt-6 space-y-3 border-t border-white/10 pt-5">
+              <div className="mt-4 space-y-2.5 border-t border-white/10 pt-3.5">
 
                 {/* SUBTOTAL */}
 
                 <div className="flex justify-between text-xs">
 
-                  <span className="text-gray-600">
+                  <span className="text-gray-500">
                     Subtotal
                   </span>
 
@@ -1329,7 +1329,7 @@ function Checkout() {
                 {totalSavings > 0 && (
                   <div className="flex justify-between text-xs">
 
-                    <span className="flex items-center gap-1 text-gray-600">
+                    <span className="flex items-center gap-1 text-gray-500">
                       <Tag size={11} />
                       Discount Savings
                     </span>
@@ -1346,7 +1346,7 @@ function Checkout() {
 
                 <div className="flex justify-between text-xs">
 
-                  <span className="text-gray-600">
+                  <span className="text-gray-500">
                     Shipping
                   </span>
 
@@ -1362,7 +1362,7 @@ function Checkout() {
 
                 {subtotal > 0 &&
                   subtotal < 100 && (
-                    <p className="border border-[#00e5ff]/10 bg-[#00e5ff]/[0.03] px-3 py-2 text-[9px] leading-4 text-[#00e5ff]">
+                    <p className="border border-[#00e5ff]/10 bg-[#00e5ff]/[0.03] px-2.5 py-1.5 text-[9px] leading-4 text-[#00e5ff]">
                       Add $
                       {(100 - subtotal).toFixed(2)}{" "}
                       more to get free shipping.
@@ -1371,20 +1371,20 @@ function Checkout() {
 
                 {shippingFee === 0 &&
                   subtotal >= 100 && (
-                    <p className="border border-green-500/10 bg-green-500/[0.03] px-3 py-2 text-[9px] text-green-400">
+                    <p className="border border-green-500/10 bg-green-500/[0.03] px-2.5 py-1.5 text-[9px] text-green-400">
                       ✓ You qualify for free shipping.
                     </p>
                   )}
 
                 {/* TOTAL */}
 
-                <div className="flex justify-between border-t border-white/10 pt-4">
+                <div className="flex justify-between border-t border-white/10 pt-3">
 
                   <span className="text-sm font-semibold">
                     Total
                   </span>
 
-                  <span className="text-lg font-bold text-[#00e5ff]">
+                  <span className="text-base font-bold text-[#00e5ff]">
                     ${total.toFixed(2)}
                   </span>
 
@@ -1399,7 +1399,7 @@ function Checkout() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-6 flex h-12 w-full items-center justify-center border border-[#00e5ff]/40 bg-[#00e5ff] text-xs font-bold uppercase tracking-wider text-black transition hover:bg-transparent hover:text-[#00e5ff] disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-4 flex h-11 w-full items-center justify-center border border-[#00e5ff]/40 bg-[#00e5ff] text-xs font-bold uppercase tracking-wider text-black transition hover:bg-transparent hover:text-[#00e5ff] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading
                   ? "Processing..."
@@ -1408,7 +1408,7 @@ function Checkout() {
                   : "Place Order"}
               </button>
 
-              <p className="mt-4 text-center text-[9px] leading-4 text-gray-700">
+              <p className="mt-3 text-center text-[9px] leading-4 text-gray-700">
                 By placing your order, you agree
                 to NexaTech's terms and conditions.
               </p>

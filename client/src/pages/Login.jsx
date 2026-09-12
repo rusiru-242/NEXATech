@@ -132,7 +132,7 @@ function Login() {
 
           <Link
             to="/register"
-            className="hidden h-10 items-center border border-white/20 px-5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black sm:flex"
+            className="flex h-9 sm:h-10 items-center border border-white/20 px-3.5 sm:px-5 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black"
           >
             Register
           </Link>
@@ -308,6 +308,18 @@ function Login() {
                 )}
               </button>
             </form>
+
+            {/* Register */}
+
+            <div className="mt-8 text-center text-xs text-gray-500">
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                className="text-[#00e5ff] hover:underline"
+              >
+                Register
+              </Link>
+            </div>
           </div>
 
           {/* Security */}

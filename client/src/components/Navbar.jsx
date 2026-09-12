@@ -492,15 +492,27 @@ const loadCart = () => {
                 </button>
               </div>
             ) : (
-              <Link
-                to="/login"
-                onClick={() =>
-                  setMobileOpen(false)
-                }
-                className="mt-4 flex items-center justify-center rounded-xl bg-[#00E5FF] px-4 py-3 text-sm font-bold text-black"
-              >
-                Login
-              </Link>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Link
+                  to="/login"
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
+                  className="flex items-center justify-center rounded-xl bg-[#00E5FF] px-4 py-3 text-sm font-bold text-black transition hover:bg-[#00cce6]"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  to="/register"
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
+                  className="flex items-center justify-center rounded-xl border border-white/20 bg-white/[0.04] px-4 py-3 text-sm font-bold text-white transition hover:border-[#00E5FF] hover:text-[#00E5FF]"
+                >
+                  Register
+                </Link>
+              </div>
             )}
           </div>
         </div>
