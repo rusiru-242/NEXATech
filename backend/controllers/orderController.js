@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const { sendOrderConfirmationEmail } = require("../utils/orderEmail");
 
 // ==============================
 // GET MY ORDERS
@@ -98,6 +99,17 @@ const createOrder = async (req, res) => {
       });
     }
 
+    if (shippingAddress.phone) {
+      const cleanPhone = String(shippingAddress.phone).replace(/[\s-]/g, "").trim();
+      const isValidPhone = /^07\d{8}$/.test(cleanPhone) || /^\+947\d{8}$/.test(cleanPhone);
+      if (!isValidPhone) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid Sri Lankan mobile number (07XXXXXXXX)",
+        });
+      }
+    }
+
     // ==============================
     // Create order
     // ==============================
@@ -132,6 +144,11 @@ const createOrder = async (req, res) => {
     // ==============================
     const populatedOrder = await Order.findById(order._id).populate(
       "items.product"
+    );
+
+    // Send order confirmation email notification (async, non-blocking)
+    sendOrderConfirmationEmail({ order: populatedOrder, user: req.user }).catch(
+      (err) => console.error("Failed to send order confirmation email:", err.message)
     );
 
     return res.status(201).json({

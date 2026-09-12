@@ -591,9 +591,36 @@ const sendOTP = async (req, res) => {
 
     // Send email (or log in dev)
     const subject = "Your NexaTech verification code";
-    const html = `<p>Your NexaTech verification code is: <strong>${otp}</strong></p><p>This code expires in 10 minutes.</p>`;
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0b0b; color: #ffffff; margin: 0; padding: 20px; }
+    .card { max-width: 480px; margin: 0 auto; background: #121212; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px; text-align: center; }
+    .brand { font-size: 20px; font-weight: bold; letter-spacing: 0.2em; color: #ffffff; margin-bottom: 20px; }
+    .cyan { color: #00E5FF; }
+    .otp-box { background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 12px; padding: 16px 28px; font-size: 32px; font-weight: 800; letter-spacing: 0.3em; color: #00E5FF; margin: 20px 0; display: inline-block; }
+    .desc { font-size: 13px; color: #a1a1aa; line-height: 1.6; }
+    .footer { font-size: 11px; color: #71717a; margin-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">NEXA<span class="cyan">TECH</span></div>
+    <h2 style="margin: 0; font-size: 20px; color: #ffffff;">Verify Your Email</h2>
+    <p class="desc" style="margin-top: 10px;">Use the 6-digit verification code below to complete your registration:</p>
+    <div class="otp-box">${otp}</div>
+    <p class="desc">This code expires in <strong>10 minutes</strong>. If you did not request this code, you can safely ignore this email.</p>
+    <div class="footer">NexaTech Account Verification · Secure Authentication</div>
+  </div>
+</body>
+</html>`;
 
-    const result = await sendEmail({ to: normalizedEmail, subject, html });
+    const text = `Your NexaTech verification code is: ${otp}. It expires in 10 minutes.`;
+
+    const result = await sendEmail({ to: normalizedEmail, subject, html, text });
 
     if (result.devFallback) {
       return res.status(200).json({ success: true, message: "OTP generated and logged to server (dev fallback).", devFallback: true });
@@ -703,9 +730,36 @@ const resendOTP = async (req, res) => {
     await pending.save();
 
     const subject = "Your NexaTech verification code (resend)";
-    const html = `<p>Your NexaTech verification code is: <strong>${otp}</strong></p><p>This code expires in 10 minutes.</p>`;
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0b0b; color: #ffffff; margin: 0; padding: 20px; }
+    .card { max-width: 480px; margin: 0 auto; background: #121212; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px; text-align: center; }
+    .brand { font-size: 20px; font-weight: bold; letter-spacing: 0.2em; color: #ffffff; margin-bottom: 20px; }
+    .cyan { color: #00E5FF; }
+    .otp-box { background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 12px; padding: 16px 28px; font-size: 32px; font-weight: 800; letter-spacing: 0.3em; color: #00E5FF; margin: 20px 0; display: inline-block; }
+    .desc { font-size: 13px; color: #a1a1aa; line-height: 1.6; }
+    .footer { font-size: 11px; color: #71717a; margin-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">NEXA<span class="cyan">TECH</span></div>
+    <h2 style="margin: 0; font-size: 20px; color: #ffffff;">Your New Verification Code</h2>
+    <p class="desc" style="margin-top: 10px;">Use the 6-digit verification code below to complete your registration:</p>
+    <div class="otp-box">${otp}</div>
+    <p class="desc">This code expires in <strong>10 minutes</strong>. If you did not request this code, you can safely ignore this email.</p>
+    <div class="footer">NexaTech Account Verification · Secure Authentication</div>
+  </div>
+</body>
+</html>`;
 
-    const result = await sendEmail({ to: normalizedEmail, subject, html });
+    const text = `Your NexaTech verification code is: ${otp}. It expires in 10 minutes.`;
+
+    const result = await sendEmail({ to: normalizedEmail, subject, html, text });
 
     if (result.devFallback) {
       return res.status(200).json({ success: true, message: "OTP resent and logged to server (dev fallback).", devFallback: true });

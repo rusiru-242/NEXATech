@@ -22,6 +22,16 @@ import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
+const normalizePhone = (value) => {
+  if (!value) return "";
+  return String(value).replace(/[\s-]/g, "").trim();
+};
+
+const isValidSriLankanPhone = (value) => {
+  const normalized = normalizePhone(value);
+  return /^07\d{8}$/.test(normalized) || /^\+947\d{8}$/.test(normalized);
+};
+
 function Account() {
   const navigate = useNavigate();
 
@@ -46,6 +56,9 @@ function Account() {
     phone: "",
     address: "",
   });
+
+  const [phoneError, setPhoneError] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   // ==============================
   // PASSWORD FORM
@@ -264,6 +277,44 @@ function Account() {
     setError("");
   };
 
+  const handlePhoneChange = (e) => {
+    let raw = e.target.value;
+
+    let cleaned = "";
+    if (raw.startsWith("+")) {
+      cleaned = "+" + raw.slice(1).replace(/\D/g, "").slice(0, 11);
+    } else {
+      cleaned = raw.replace(/\D/g, "").slice(0, 10);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      phone: cleaned,
+    }));
+
+    setMessage("");
+    setError("");
+
+    if (phoneTouched) {
+      if (!cleaned) {
+        setPhoneError("");
+      } else if (!isValidSriLankanPhone(cleaned)) {
+        setPhoneError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+      } else {
+        setPhoneError("");
+      }
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    setPhoneTouched(true);
+    if (formData.phone && !isValidSriLankanPhone(formData.phone)) {
+      setPhoneError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+    } else {
+      setPhoneError("");
+    }
+  };
+
   // ==============================
   // PASSWORD INPUT
   // ==============================
@@ -287,18 +338,14 @@ function Account() {
 
     setMessage("");
     setError("");
+    setPhoneTouched(true);
 
     const phoneTrim = formData.phone.trim();
 
-    if (phoneTrim) {
-      const phoneRegex = /^(07\d{8}|\+947\d{8})$/;
-
-      if (!phoneRegex.test(phoneTrim)) {
-        setError(
-          "Phone number is invalid. Use 07XXXXXXXX or +947XXXXXXXX."
-        );
-        return;
-      }
+    if (phoneTrim && !isValidSriLankanPhone(phoneTrim)) {
+      setPhoneError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+      setError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+      return;
     }
 
     const addressTrim = formData.address.trim();
@@ -982,7 +1029,7 @@ function Account() {
               <div>
 
                 <label className="mb-2 block text-[10px] uppercase tracking-[0.2em] text-gray-500">
-                  Phone
+                  Phone Number
                 </label>
 
                 <div className="relative">
@@ -993,14 +1040,27 @@ function Account() {
                   />
 
                   <input
+                    type="tel"
+                    inputMode="numeric"
                     name="phone"
                     value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="Your phone number"
-                    className="h-12 w-full border border-white/10 bg-white/[0.02] pl-11 pr-4 text-sm text-white outline-none transition focus:border-[#00E5FF]/60"
+                    onChange={handlePhoneChange}
+                    onBlur={handlePhoneBlur}
+                    placeholder="07X XXX XXXX"
+                    className={`h-12 w-full border bg-white/[0.02] pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-700 ${
+                      phoneError
+                        ? "border-red-500/50 focus:border-red-500/70"
+                        : "border-white/10 focus:border-[#00E5FF]/60"
+                    }`}
                   />
 
                 </div>
+
+                {phoneError && (
+                  <p className="mt-1.5 text-[11px] leading-tight text-red-400">
+                    {phoneError}
+                  </p>
+                )}
 
               </div>
 

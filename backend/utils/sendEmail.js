@@ -1,53 +1,71 @@
 const nodemailer = require("nodemailer");
 
 let transporter = null;
-let emailEnabled = false;
 
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+/**
+ * Get or initialize Nodemailer transporter.
+ */
+const getTransporter = () => {
+  if (transporter) return transporter;
+
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+
+  if (!user || !pass) {
+    return null;
+  }
+
   transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: Number(process.env.EMAIL_PORT) || 465,
+    secure:
+      process.env.EMAIL_SECURE === "true" ||
+      Number(process.env.EMAIL_PORT) === 465,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user,
+      pass,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
-  // Verify transporter in background; if verification fails we fallback to dev logging
-  transporter.verify().then(() => {
-    emailEnabled = true;
-    console.info("Email transporter verified");
-  }).catch((err) => {
-    emailEnabled = false;
-    console.warn("Email transporter verification failed, falling back to dev logging:", err.message);
-  });
-} else {
-  console.info("EMAIL_USER or EMAIL_PASS not set — using dev email fallback (logs only)");
-}
+  return transporter;
+};
 
 /**
- * Send email. In production when credentials are available the message will be sent.
- * Otherwise the OTP/message will be logged to the server console (dev fallback).
- * Returns an object describing whether it was sent or logged.
+ * Send email using Nodemailer with dev fallback.
  */
-const sendEmail = async ({ to, subject, html }) => {
-  // Dev fallback when transporter isn't configured or verification failed
-  if (!emailEnabled || !transporter) {
-    console.info(`\n=== DEV EMAIL FALLBACK ===\nTo: ${to}\nSubject: ${subject}\n${html}\n========================\n`);
+const sendEmail = async ({ to, subject, html, text }) => {
+  const mailTransporter = getTransporter();
+
+  if (!mailTransporter) {
+    console.info(
+      `\n=== DEV EMAIL FALLBACK (NO CREDENTIALS) ===\nTo: ${to}\nSubject: ${subject}\n${html}\n==========================================\n`
+    );
     return { sent: false, devFallback: true };
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: `"NexaTech" <${process.env.EMAIL_USER}>`,
+    const from =
+      process.env.EMAIL_FROM ||
+      `"NexaTech" <${process.env.EMAIL_USER}>`;
+
+    const info = await mailTransporter.sendMail({
+      from,
       to,
       subject,
+      text: text || undefined,
       html,
     });
 
+    console.info(`[sendEmail] Email sent to ${to} (${info.messageId})`);
     return { sent: true, devFallback: false, info };
   } catch (err) {
-    console.error("sendEmail error — falling back to dev log:", err.message);
-    console.info(`\n=== EMAIL FAILED, LOGGING MESSAGE ===\nTo: ${to}\nSubject: ${subject}\n${html}\n====================================\n`);
+    console.error(`[sendEmail] Failed to send email to ${to}:`, err.message);
+    console.info(
+      `\n=== EMAIL FAILED, LOGGED IN DEV ===\nTo: ${to}\nSubject: ${subject}\nError: ${err.message}\n${html}\n===================================\n`
+    );
     return { sent: false, devFallback: true, error: err.message };
   }
 };

@@ -147,39 +147,43 @@ function VerifyEmail() {
 
       {/* Main */}
 
-      <main className="relative z-10 flex min-h-screen items-center justify-center overflow-hidden px-6 pb-16 pt-28">
+      <main className="relative z-10 flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5FF]/5 blur-[140px]" />
 
         <motion.div
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 w-full max-w-md"
+          transition={{ duration: 0.4 }}
+          className="relative z-10 my-auto w-full max-w-md"
         >
-          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 shadow-2xl">
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 sm:p-8 shadow-2xl">
             {!verified ? (
               <>
-                <div className="mb-8 text-center">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#00E5FF]/10">
-                    <Mail size={28} className="text-[#00E5FF]" />
+                <div className="mb-6 text-center sm:mb-8">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#00E5FF]/10 sm:h-16 sm:w-16">
+                    <Mail size={24} className="text-[#00E5FF] sm:hidden" />
+                    <Mail size={28} className="hidden text-[#00E5FF] sm:block" />
                   </div>
 
-                  <h1 className="mt-5 text-3xl font-black">
+                  <h1 className="mt-4 text-2xl font-black sm:mt-5 sm:text-3xl">
                     Verify Email
                   </h1>
 
-                  <p className="mt-3 text-sm text-gray-500">
+                  <p className="mt-2 text-xs text-gray-500 sm:mt-3 sm:text-sm">
                     Enter the 6-digit code sent to
                   </p>
 
-                  <p className="mt-2 text-sm font-semibold text-[#00E5FF] break-all">
+                  <p className="mt-1.5 break-all text-xs font-semibold text-[#00E5FF] sm:mt-2 sm:text-sm">
                     {email}
                   </p>
                 </div>
 
-                <form onSubmit={handleVerify} className="space-y-5">
+                <form onSubmit={handleVerify} className="space-y-4 sm:space-y-5">
                   <div>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
                       value={otp}
                       onChange={(e) =>
                         setOtp(
@@ -190,7 +194,7 @@ function VerifyEmail() {
                       }
                       maxLength={6}
                       placeholder="000000"
-                      className="h-14 w-full border border-white/10 bg-white/[0.02] text-center text-2xl font-bold tracking-[0.5em] outline-none focus:border-[#00E5FF]"
+                      className="h-12 w-full border border-white/10 bg-white/[0.02] text-center text-xl font-bold tracking-[0.4em] outline-none transition focus:border-[#00E5FF] sm:h-14 sm:text-2xl sm:tracking-[0.5em]"
                     />
                   </div>
 
@@ -209,7 +213,7 @@ function VerifyEmail() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex h-12 w-full items-center justify-center gap-2 bg-[#00E5FF] font-bold text-black"
+                    className="flex h-12 w-full items-center justify-center gap-2 bg-[#00E5FF] text-sm font-bold text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {loading ? (
                       <>
@@ -229,7 +233,7 @@ function VerifyEmail() {
                   <button
                     onClick={resendOtp}
                     disabled={seconds > 0 || resendLoading}
-                    className="text-sm text-[#00E5FF] disabled:text-gray-600"
+                    className="text-xs text-[#00E5FF] transition disabled:text-gray-600 sm:text-sm"
                   >
                     {resendLoading
                       ? "Sending..."
@@ -246,11 +250,11 @@ function VerifyEmail() {
                   className="mx-auto text-[#00E5FF]"
                 />
 
-                <h2 className="mt-5 text-3xl font-black">
+                <h2 className="mt-5 text-2xl font-black sm:text-3xl">
                   Verified!
                 </h2>
 
-                <p className="mt-3 text-gray-500">
+                <p className="mt-3 text-xs text-gray-500 sm:text-sm">
                   Redirecting to login...
                 </p>
               </div>
