@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Package,
   Clock,
@@ -15,10 +15,12 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
+import { clearAuthSession } from "../utils/auth";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 function Orders() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,10 +44,8 @@ function Orders() {
         );
 
       if (!token) {
-        setError(
-          "Please login to view your orders."
-        );
-        setLoading(false);
+        clearAuthSession();
+        navigate("/login", { replace: true });
         return;
       }
 
@@ -63,6 +63,12 @@ function Orders() {
         await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           data.message ||
             "Failed to load orders."

@@ -13,6 +13,7 @@ import {
 import Navbar from "../components/Navbar";
 import { getCart, clearCart } from "../utils/cartStorage";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
+import { clearAuthSession, verifyAuthSession } from "../utils/auth";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
@@ -139,9 +140,19 @@ function Checkout() {
   useEffect(() => {
     const token = localStorage.getItem("nexatech_token");
     if (!token) {
-      navigate("/login");
+      clearAuthSession();
+      navigate("/login", { replace: true });
       return;
     }
+
+    let isMounted = true;
+    verifyAuthSession(API_URL).then((validUser) => {
+      if (!isMounted) return;
+      if (!validUser) {
+        clearAuthSession();
+        navigate("/login", { replace: true });
+      }
+    });
 
     try {
       const rawUser = localStorage.getItem("nexatech_user");
@@ -169,6 +180,7 @@ function Checkout() {
     window.addEventListener("storage", handleCartUpdated);
 
     return () => {
+      isMounted = false;
       window.removeEventListener(
         "cartUpdated",
         handleCartUpdated
@@ -622,6 +634,12 @@ function Checkout() {
       // =================================================
 
       if (!orderResponse.ok) {
+        if (orderResponse.status === 401 || orderResponse.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           orderData.message ||
             `Unable to create order. HTTP ${orderResponse.status}`
@@ -762,6 +780,12 @@ function Checkout() {
       // =================================================
 
       if (!paymentResponse.ok) {
+        if (paymentResponse.status === 401 || paymentResponse.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           paymentData.message ||
             "Unable to start card payment."
@@ -808,6 +832,17 @@ function Checkout() {
       console.error(
         "================================"
       );
+
+      const msg = err.message || "";
+      if (
+        msg.toLowerCase().includes("token") ||
+        msg.toLowerCase().includes("user no longer exists") ||
+        msg.toLowerCase().includes("access denied")
+      ) {
+        clearAuthSession();
+        navigate("/login", { replace: true });
+        return;
+      }
 
       setError(
         err.message ||

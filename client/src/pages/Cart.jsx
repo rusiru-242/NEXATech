@@ -13,6 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getCart, saveCart } from "../utils/cartStorage";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
+import { clearAuthSession, verifyAuthSession } from "../utils/auth";
 
 function Cart() {
   const navigate = useNavigate();
@@ -68,9 +69,19 @@ function Cart() {
 
   useEffect(() => {
     if (!token) {
-      navigate("/login");
+      clearAuthSession();
+      navigate("/login", { replace: true });
       return;
     }
+
+    let isMounted = true;
+    verifyAuthSession().then((validUser) => {
+      if (!isMounted) return;
+      if (!validUser) {
+        clearAuthSession();
+        navigate("/login", { replace: true });
+      }
+    });
 
     loadCart();
 
@@ -80,6 +91,7 @@ function Cart() {
     window.addEventListener("storage", handleCartUpdated);
 
     return () => {
+      isMounted = false;
       window.removeEventListener("cartUpdated", handleCartUpdated);
       window.removeEventListener("storage", handleCartUpdated);
     };

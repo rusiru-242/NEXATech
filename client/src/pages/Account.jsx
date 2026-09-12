@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
+import { clearAuthSession } from "../utils/auth";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
@@ -83,9 +84,7 @@ function Account() {
   // LOGOUT
   // ==============================
   const handleLogout = () => {
-    localStorage.removeItem("nexatech_token");
-    localStorage.removeItem("nexatech_user");
-
+    clearAuthSession();
     navigate("/login");
   };
 
@@ -96,7 +95,8 @@ function Account() {
     const token = getToken();
 
     if (!token) {
-      navigate("/login");
+      clearAuthSession();
+      navigate("/login", { replace: true });
       return null;
     }
 
@@ -111,6 +111,17 @@ function Account() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (
+          response.status === 401 ||
+          response.status === 403 ||
+          response.status === 404 ||
+          data?.message?.toLowerCase().includes("user no longer exists")
+        ) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return null;
+        }
+
         throw new Error(
           data.message || "Unable to load account."
         );
@@ -144,12 +155,11 @@ function Account() {
         if (
           msg.toLowerCase().includes("token") ||
           msg.toLowerCase().includes("authentication") ||
-          msg.toLowerCase().includes("access denied")
+          msg.toLowerCase().includes("access denied") ||
+          msg.toLowerCase().includes("user no longer exists")
         ) {
-          localStorage.removeItem("nexatech_token");
-          localStorage.removeItem("nexatech_user");
-
-          navigate("/login");
+          clearAuthSession();
+          navigate("/login", { replace: true });
           return null;
         }
 
@@ -186,6 +196,12 @@ function Account() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           data.message || "Unable to load orders."
         );
@@ -226,6 +242,12 @@ function Account() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           data.message || "Unable to load wishlist."
         );
@@ -385,6 +407,12 @@ function Account() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           data.message || "Failed to update profile."
         );
@@ -480,6 +508,12 @@ function Account() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           data.message ||
             "Failed to change password."

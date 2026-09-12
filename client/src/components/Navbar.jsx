@@ -15,6 +15,11 @@ import { useEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { getCart } from "../utils/cartStorage";
+import { clearAuthSession, verifyAuthSession } from "../utils/auth";
+
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+
+const PROTECTED_PATHS = ["/account", "/orders", "/wishlist", "/checkout", "/admin", "/cart"];
 
 function Navbar() {
   const navigate = useNavigate();
@@ -54,21 +59,43 @@ function Navbar() {
   }, []);
 
   // =========================================================
-  // LOAD USER
+  // LOAD USER & VERIFY SESSION WITH BACKEND
   // =========================================================
 
-  const loadUser = () => {
+  const loadUser = async () => {
+    const token = localStorage.getItem("nexatech_token");
+
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    // Display cached user immediately to avoid flicker
     try {
       const savedUser = localStorage.getItem("nexatech_user");
-
       if (savedUser) {
         setUser(JSON.parse(savedUser));
-      } else {
-        setUser(null);
       }
-    } catch (error) {
-      console.error("User load error:", error);
+    } catch {
+      // ignore
+    }
+
+    // Verify against backend (detects deleted user / invalid token immediately)
+    const validUser = await verifyAuthSession(API_URL);
+
+    if (!validUser) {
       setUser(null);
+      setAccountOpen(false);
+
+      // If user was on a page that requires login, immediately sign out and redirect
+      const isProtected = PROTECTED_PATHS.some((path) =>
+        location.pathname.startsWith(path)
+      );
+      if (isProtected) {
+        navigate("/login", { replace: true });
+      }
+    } else {
+      setUser(validUser);
     }
   };
 
@@ -76,24 +103,24 @@ function Navbar() {
   // LOAD CART COUNT
   // =========================================================
 
-const loadCart = () => {
-  const token = localStorage.getItem("nexatech_token");
-  if (!token) {
-    setCartCount(0);
-    return;
-  }
-  const cart = getCart();
+  const loadCart = () => {
+    const token = localStorage.getItem("nexatech_token");
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+    const cart = getCart();
 
-  const count = cart.reduce(
-    (total, item) => total + Number(item.quantity || 0),
-    0
-  );
+    const count = cart.reduce(
+      (total, item) => total + Number(item.quantity || 0),
+      0
+    );
 
-  setCartCount(count);
-};
+    setCartCount(count);
+  };
 
   // =========================================================
-  // INITIAL LOAD
+  // INITIAL LOAD & EVENTS
   // =========================================================
 
   useEffect(() => {
@@ -126,19 +153,13 @@ const loadCart = () => {
   // =========================================================
 
   const handleLogout = () => {
-  localStorage.removeItem("nexatech_token");
-  localStorage.removeItem("nexatech_user");
-
-  setUser(null);
-  setAccountOpen(false);
-  setMobileOpen(false);
-  setCartCount(0);
-
-  window.dispatchEvent(new Event("cartUpdated"));
-  window.dispatchEvent(new Event("authChanged"));
-
-  navigate("/");
-};
+    clearAuthSession();
+    setUser(null);
+    setAccountOpen(false);
+    setMobileOpen(false);
+    setCartCount(0);
+    navigate("/");
+  };
   // =========================================================
   // ACTIVE LINK
   // =========================================================

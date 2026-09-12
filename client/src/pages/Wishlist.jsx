@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
+import { clearAuthSession } from "../utils/auth";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
@@ -26,7 +27,8 @@ function Wishlist() {
       const token = localStorage.getItem("nexatech_token");
 
       if (!token) {
-        navigate("/login");
+        clearAuthSession();
+        navigate("/login", { replace: true });
         return;
       }
 
@@ -44,6 +46,12 @@ function Wishlist() {
         const data = await response.json();
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            clearAuthSession();
+            navigate("/login", { replace: true });
+            return;
+          }
+
           throw new Error(
             data.message || "Unable to load wishlist."
           );
@@ -52,6 +60,17 @@ function Wishlist() {
         setWishlist(data.wishlist || []);
       } catch (err) {
         console.error("Wishlist error:", err);
+
+        const msg = err.message || "";
+        if (
+          msg.toLowerCase().includes("token") ||
+          msg.toLowerCase().includes("user no longer exists") ||
+          msg.toLowerCase().includes("access denied")
+        ) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
 
         if (err instanceof TypeError) {
           setError(
@@ -77,7 +96,8 @@ function Wishlist() {
     const token = localStorage.getItem("nexatech_token");
 
     if (!token) {
-      navigate("/login");
+      clearAuthSession();
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -95,6 +115,12 @@ function Wishlist() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          clearAuthSession();
+          navigate("/login", { replace: true });
+          return;
+        }
+
         throw new Error(
           data.message || "Unable to remove item."
         );
@@ -117,6 +143,17 @@ function Wishlist() {
       }
     } catch (err) {
       console.error("Remove wishlist error:", err);
+
+      const msg = err.message || "";
+      if (
+        msg.toLowerCase().includes("token") ||
+        msg.toLowerCase().includes("user no longer exists") ||
+        msg.toLowerCase().includes("access denied")
+      ) {
+        clearAuthSession();
+        navigate("/login", { replace: true });
+        return;
+      }
 
       setError(
         err.message || "Unable to remove wishlist item."
