@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 
 // =========================================================
@@ -23,7 +24,85 @@ const getProducts = async (req, res) => {
 // =========================================================
 const getProductById = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const { id } = req.params;
+        let targetId = id;
+        const HISTORICAL_ALIASES = {
+            "6aa5781284ca26f1210c460e": "6a847ef0d2a7ee4b68a3e8f7", // Samsung Galaxy S24 Ultra
+            "6aa5781284ca26f1210c460d": "6a847ef0d2a7ee4b68a3e8f6", // iPhone 15 Pro
+            "6aa5781284ca26f1210c460f": "6a847ef0d2a7ee4b68a3e8fb", // Samsung Galaxy A55
+            "6aa5781284ca26f1210c4610": "6a847ef0d2a7ee4b68a3e8fa", // Xiaomi 14
+            "6aa5764184ca26f1210c45b7": "6a847ef0d2a7ee4b68a3e8f1", // MacBook Air M3
+            "6aa5764184ca26f1210c45b8": "6a847ef0d2a7ee4b68a3e8ee", // ASUS ROG Strix G16
+            "6aa5764184ca26f1210c45b9": "6a847ef0d2a7ee4b68a3e8f2", // Dell XPS 15
+            "6aa5764184ca26f1210c45ba": "6a847ef0d2a7ee4b68a3e8ef", // Lenovo Legion 5
+            "6a9ee445128bbceca0411336": "6a847ef0d2a7ee4b68a3e8f0", // HP Victus 16
+            "6a9ee445128bbceca0411337": "6a847ef0d2a7ee4b68a3e8f3", // Acer Nitro V15
+            "6aa0dae85bab676165a259b9": "6a847ef0d2a7ee4b68a3e906", // Apple AirPods Pro 2
+            "6aa0dae85bab676165a259ba": "6a847ef0d2a7ee4b68a3e909", // Sennheiser Momentum 4
+            "6aa0dae85bab676165a259bb": "6a847ef0d2a7ee4b68a3e907", // JBL Charge 5
+            "6aa0dae85bab676165a259bc": "6a847ef0d2a7ee4b68a3e90a", // Anker Soundcore Motion+
+            "6aa0db925bab676165a259d9": "6a847ef0d2a7ee4b68a3e8f6", // iPhone 15 Pro
+            "6aa0db925bab676165a259da": "6a847ef0d2a7ee4b68a3e8f7", // Samsung Galaxy S24 Ultra
+            "6aa0db925bab676165a259db": "6a847ef0d2a7ee4b68a3e8fb", // Samsung Galaxy A55
+            "6aa0db925bab676165a259dc": "6a847ef0d2a7ee4b68a3e8fa", // Xiaomi 14
+            "6aa2e1984aa5a2493ad642bd": "6a847ef0d2a7ee4b68a3e8f0", // HP Victus 16
+            "6aa2e1984aa5a2493ad642be": "6a847ef0d2a7ee4b68a3e8f3", // Acer Nitro V15
+        };
+
+        if (HISTORICAL_ALIASES[id]) {
+            targetId = HISTORICAL_ALIASES[id];
+        }
+
+        let product = null;
+
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            product = await Product.findById(targetId);
+        }
+
+        // Fallback: If not found by direct ID, check if this ID belongs to an AI chat message product
+        if (!product && mongoose.Types.ObjectId.isValid(id)) {
+            try {
+                const AIChat = require("../models/AIChat");
+                const chatWithProd = await AIChat.findOne(
+                    {
+                        $or: [
+                            { "messages.products._id": id },
+                            { "messages.products.productId": id },
+                        ],
+                    },
+                    { "messages.products.$": 1 }
+                );
+
+                if (chatWithProd && chatWithProd.messages?.[0]?.products?.length > 0) {
+                    const matchedSub = chatWithProd.messages[0].products.find(
+                        (p) => String(p._id) === String(id) || String(p.productId) === String(id)
+                    ) || chatWithProd.messages[0].products[0];
+
+                    if (matchedSub?.productId && mongoose.Types.ObjectId.isValid(matchedSub.productId)) {
+                        product = await Product.findById(matchedSub.productId);
+                    }
+                    if (!product && matchedSub?.name) {
+                        product = await Product.findOne({
+                            name: { $regex: `^${matchedSub.name.trim()}$`, $options: "i" },
+                        });
+                    }
+                }
+            } catch (fallbackErr) {
+                console.warn("AI Chat subdocument product lookup fallback error:", fallbackErr);
+            }
+        }
+
+        // Fallback: Search by clean name if id looks like a product name/slug
+        if (!product && typeof id === "string" && id.trim().length > 1) {
+            try {
+                const cleanName = decodeURIComponent(id).replace(/[-_]/g, " ").trim();
+                product = await Product.findOne({
+                    name: { $regex: cleanName, $options: "i" },
+                });
+            } catch (nameErr) {
+                // Ignore decoding error
+            }
+        }
 
         if (!product) {
             return res.status(404).json({
@@ -32,7 +111,10 @@ const getProductById = async (req, res) => {
             });
         }
 
-        res.status(200).json({ product });
+        res.status(200).json({
+            success: true,
+            product,
+        });
     } catch (error) {
         console.error("Get Product Error:", error);
 

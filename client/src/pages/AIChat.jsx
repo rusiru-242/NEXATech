@@ -407,9 +407,9 @@ function AIChat() {
 
   const handleViewProduct = (product) => {
     const productId =
+      product.productId ||
       product._id ||
-      product.id ||
-      product.productId;
+      product.id;
 
     if (!productId) {
       return;
@@ -430,7 +430,7 @@ function AIChat() {
     }
 
     const productId =
-      product._id || product.id || product.productId;
+      product.productId || product._id || product.id;
     if (!productId) return;
 
     const idStr = String(productId);
@@ -744,9 +744,9 @@ function AIChat() {
                     <div className="mt-4 grid w-full gap-3 sm:grid-cols-2">
                       {item.products.map((product, index) => {
                         const productId =
+                          product.productId ||
                           product._id ||
                           product.id ||
-                          product.productId ||
                           index;
                         const idStr = String(productId);
                         const isWishlisted = wishlistIds.has(idStr);
@@ -811,22 +811,24 @@ function AIChat() {
                               </p>
 
                               <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] text-gray-500">
-                                {product.rating !== undefined && (
-                                  <span>★ {product.rating}</span>
+                                {product.rating !== undefined && Number(product.rating) > 0 && (
+                                  <span className="text-amber-400 font-medium">★ {Number(product.rating).toFixed(1)}</span>
                                 )}
 
-                                {product.stock !== undefined && (
+                                {product.stock !== undefined && product.stock !== null ? (
                                   <span
                                     className={
                                       Number(product.stock) > 0
-                                        ? "text-green-400"
-                                        : "text-red-400"
+                                        ? "text-green-400 font-medium"
+                                        : "text-red-400 font-medium"
                                     }
                                   >
                                     {Number(product.stock) > 0
                                       ? `${product.stock} in stock`
                                       : "Out of stock"}
                                   </span>
+                                ) : (
+                                  <span className="text-green-400 font-medium">In stock</span>
                                 )}
                               </div>
 

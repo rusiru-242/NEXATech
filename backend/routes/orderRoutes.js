@@ -47,6 +47,16 @@ router.post("/", authMiddleware, async (req, res) => {
       });
     }
 
+    // Validate Sri Lankan phone number format
+    const cleanPhone = (shippingAddress.phone || "").replace(/[\s-]/g, "").trim();
+    const isValidPhone = /^07\d{8}$/.test(cleanPhone) || /^\+947\d{8}$/.test(cleanPhone);
+    if (!isValidPhone) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid Sri Lankan mobile number (07XXXXXXXX)",
+      });
+    }
+
     // ------------------------------------------------------
     // Validate payment method
     // ------------------------------------------------------

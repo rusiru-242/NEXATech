@@ -1,5 +1,45 @@
 const mongoose = require("mongoose");
 
+const aiChatProductSchema = new mongoose.Schema(
+  {
+    productId: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    _id: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    name: {
+      type: String,
+      default: "",
+    },
+    price: {
+      type: Number,
+      default: 0,
+    },
+    image: {
+      type: String,
+      default: "",
+    },
+    category: {
+      type: String,
+      default: "",
+    },
+    brand: {
+      type: String,
+      default: "",
+    },
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    stock: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { _id: false }
+);
+
 const aiChatMessageSchema = new mongoose.Schema({
   sender: {
     type: String,
@@ -10,25 +50,7 @@ const aiChatMessageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  products: [
-    {
-      productId: {
-        type: mongoose.Schema.Types.Mixed,
-      },
-      name: {
-        type: String,
-        default: "",
-      },
-      price: {
-        type: Number,
-        default: 0,
-      },
-      image: {
-        type: String,
-        default: "",
-      },
-    },
-  ],
+  products: [aiChatProductSchema],
   createdAt: {
     type: Date,
     default: Date.now,

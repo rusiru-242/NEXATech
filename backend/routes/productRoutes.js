@@ -113,32 +113,7 @@ router.get("/search", searchProducts);
 // GET /api/products/:id
 // Public
 // =====================================================
-router.get("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const product = await Product.findById(id);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found.",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      product,
-    });
-  } catch (error) {
-    console.error("Get product error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch product.",
-    });
-  }
-});
+router.get("/:id", getProductById);
 
 // =====================================================
 // CREATE PRODUCT
@@ -299,11 +274,5 @@ router.delete(
     }
   }
 );
-
-router.get("/", getProducts);
-router.get("/:id", getProductById);
-router.post("/", createProduct);
-router.put("/:id", updateProduct);
-router.delete("/:id", deleteProduct);
 
 module.exports = router;

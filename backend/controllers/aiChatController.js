@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const AIChat = require("../models/AIChat");
+const Product = require("../models/Product");
 const { generateChatTitle } = require("../utils/chatTitleGenerator");
 
 // =========================================================
@@ -19,7 +20,6 @@ const createChat = async (req, res) => {
       chat: {
         _id: chat._id,
         title: chat.title,
-        messages: chat.messages,
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
       },
@@ -34,24 +34,37 @@ const createChat = async (req, res) => {
 };
 
 // =========================================================
-// GET ALL USER CHATS (Lightweight list for sidebar)
+// GET USER CHATS LIST (Sidebar history)
 // GET /api/ai-chats/my
 // =========================================================
 const getMyChats = async (req, res) => {
   try {
     const chats = await AIChat.find({ user: req.user._id })
-      .select("_id title updatedAt createdAt")
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .select("title createdAt updatedAt messages")
+      .lean();
+
+    const formattedChats = chats.map((c) => ({
+      _id: c._id,
+      title: c.title || "New Chat",
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      messageCount: Array.isArray(c.messages) ? c.messages.length : 0,
+      lastMessage:
+        c.messages && c.messages.length > 0
+          ? c.messages[c.messages.length - 1].text.substring(0, 60)
+          : "",
+    }));
 
     res.status(200).json({
       success: true,
-      chats,
+      chats: formattedChats,
     });
   } catch (error) {
     console.error("Get My AI Chats Error:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to retrieve conversations.",
+      message: "Failed to retrieve chat conversations.",
     });
   }
 };
@@ -71,21 +84,56 @@ const getChatById = async (req, res) => {
       });
     }
 
-    const chat = await AIChat.findOne({
+    const chatDoc = await AIChat.findOne({
       _id: chatId,
       user: req.user._id,
-    });
+    }).lean();
 
-    if (!chat) {
+    if (!chatDoc) {
       return res.status(404).json({
         success: false,
         message: "Chat conversation not found or access denied.",
       });
     }
 
+    // Collect all product IDs to fetch live store data
+    const productIds = [];
+    (chatDoc.messages || []).forEach((m) => {
+      (m.products || []).forEach((p) => {
+        const pId = p.productId || p._id;
+        if (pId && mongoose.Types.ObjectId.isValid(pId)) {
+          productIds.push(pId);
+        }
+      });
+    });
+
+    if (productIds.length > 0) {
+      const liveProducts = await Product.find({ _id: { $in: productIds } }).lean();
+      const productMap = new Map();
+      liveProducts.forEach((lp) => {
+        productMap.set(String(lp._id), lp);
+      });
+
+      (chatDoc.messages || []).forEach((m) => {
+        (m.products || []).forEach((p) => {
+          const pId = String(p.productId || p._id || "");
+          const live = productMap.get(pId);
+          if (live) {
+            p.stock = live.stock !== undefined ? live.stock : (p.stock || 0);
+            p.rating = live.rating !== undefined ? live.rating : (p.rating || 0);
+            p.brand = live.brand || p.brand || "";
+            p.category = live.category || p.category || "";
+            p.price = live.price !== undefined ? live.price : p.price;
+            p.image = live.image || p.image || "";
+            p.name = live.name || p.name || "";
+          }
+        });
+      });
+    }
+
     res.status(200).json({
       success: true,
-      chat,
+      chat: chatDoc,
     });
   } catch (error) {
     console.error("Get AI Chat By ID Error:", error);
@@ -146,12 +194,20 @@ const saveMessage = async (req, res) => {
 
     // Format recommended products if any
     const formattedProducts = Array.isArray(products)
-      ? products.map((p) => ({
-          productId: p._id || p.id || p.productId || null,
-          name: p.name || "",
-          price: Number(p.price || 0),
-          image: p.image || "",
-        }))
+      ? products.map((p) => {
+          const actualId = p.productId || p._id || p.id || null;
+          return {
+            productId: actualId,
+            _id: actualId,
+            name: p.name || "",
+            price: Number(p.price || 0),
+            image: p.image || "",
+            category: p.category || "",
+            brand: p.brand || "",
+            rating: Number(p.rating || 0),
+            stock: Number(p.stock || 0),
+          };
+        })
       : [];
 
     chat.messages.push({

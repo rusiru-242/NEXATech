@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
+  ChevronDown,
   CreditCard,
   MapPin,
   ShieldCheck,
@@ -14,6 +15,49 @@ import { getCart, clearCart } from "../utils/cartStorage";
 import CyanLinesBackground from "../components/ui/CyanLinesBackground";
 
 const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+
+const SRI_LANKAN_CITIES = [
+  "Colombo",
+  "Dehiwala-Mount Lavinia",
+  "Sri Jayawardenepura Kotte",
+  "Moratuwa",
+  "Negombo",
+  "Kandy",
+  "Gampaha",
+  "Kalutara",
+  "Panadura",
+  "Horana",
+  "Galle",
+  "Matara",
+  "Hambantota",
+  "Jaffna",
+  "Kilinochchi",
+  "Mannar",
+  "Vavuniya",
+  "Mullaitivu",
+  "Batticaloa",
+  "Ampara",
+  "Trincomalee",
+  "Kurunegala",
+  "Puttalam",
+  "Anuradhapura",
+  "Polonnaruwa",
+  "Badulla",
+  "Bandarawela",
+  "Nuwara Eliya",
+  "Ratnapura",
+  "Kegalle",
+];
+
+const normalizePhone = (value) => {
+  if (!value) return "";
+  return String(value).replace(/[\s-]/g, "").trim();
+};
+
+const isValidSriLankanPhone = (value) => {
+  const normalized = normalizePhone(value);
+  return /^07\d{8}$/.test(normalized) || /^\+947\d{8}$/.test(normalized);
+};
 
 function Checkout() {
   const navigate = useNavigate();
@@ -30,6 +74,18 @@ function Checkout() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [phoneError, setPhoneError] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [cityError, setCityError] = useState("");
+  const [cityTouched, setCityTouched] = useState(false);
+
+  const citiesList = useMemo(() => {
+    if (form.city && !SRI_LANKAN_CITIES.includes(form.city)) {
+      return [form.city, ...SRI_LANKAN_CITIES];
+    }
+    return SRI_LANKAN_CITIES;
+  }, [form.city]);
 
   // =====================================================
   // LOAD CART
@@ -256,6 +312,68 @@ function Checkout() {
     }));
   };
 
+  const handlePhoneChange = (e) => {
+    let raw = e.target.value;
+
+    let cleaned = "";
+    if (raw.startsWith("+")) {
+      cleaned = "+" + raw.slice(1).replace(/\D/g, "").slice(0, 11);
+    } else {
+      cleaned = raw.replace(/\D/g, "").slice(0, 10);
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      phone: cleaned,
+    }));
+
+    if (phoneTouched) {
+      if (!cleaned) {
+        setPhoneError("Phone number is required.");
+      } else if (!isValidSriLankanPhone(cleaned)) {
+        setPhoneError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+      } else {
+        setPhoneError("");
+      }
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    setPhoneTouched(true);
+    if (!form.phone) {
+      setPhoneError("Phone number is required.");
+    } else if (!isValidSriLankanPhone(form.phone)) {
+      setPhoneError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+    } else {
+      setPhoneError("");
+    }
+  };
+
+  const handleCityChange = (e) => {
+    const val = e.target.value;
+    setForm((prev) => ({
+      ...prev,
+      city: val,
+    }));
+
+    if (cityTouched) {
+      if (!val) {
+        setCityError("Please select your city");
+      } else {
+        setCityError("");
+      }
+    }
+  };
+
+  const handleCityBlur = () => {
+    setCityTouched(true);
+    if (!form.city) {
+      setCityError("Please select your city");
+    } else {
+      setCityError("");
+    }
+  };
+
   // =====================================================
   // SUBMIT ORDER
   // =====================================================
@@ -358,16 +476,28 @@ function Checkout() {
     // FORM VALIDATION
     // ===================================================
 
-    if (
-      !form.name.trim() ||
-      !form.phone.trim() ||
-      !form.address.trim() ||
-      !form.city.trim()
-    ) {
-      setError(
-        "Please complete all delivery details."
-      );
+    setPhoneTouched(true);
+    setCityTouched(true);
 
+    if (!form.name.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    if (!form.phone.trim() || !isValidSriLankanPhone(form.phone)) {
+      setPhoneError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+      setError("Enter a valid Sri Lankan mobile number (07XXXXXXXX)");
+      return;
+    }
+
+    if (!form.city.trim()) {
+      setCityError("Please select your city");
+      setError("Please select your city");
+      return;
+    }
+
+    if (!form.address.trim()) {
+      setError("Please enter your delivery address.");
       return;
     }
 
@@ -824,12 +954,24 @@ function Checkout() {
 
                   <input
                     type="tel"
+                    inputMode="numeric"
                     name="phone"
                     value={form.phone}
-                    onChange={handleChange}
+                    onChange={handlePhoneChange}
+                    onBlur={handlePhoneBlur}
                     placeholder="07X XXX XXXX"
-                    className="h-11 w-full border border-white/10 bg-black/30 px-4 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
+                    className={`h-11 w-full border bg-black/30 px-4 text-xs text-white outline-none transition placeholder:text-gray-700 ${
+                      phoneError
+                        ? "border-red-500/50 focus:border-red-500/70"
+                        : "border-white/10 focus:border-[#00e5ff]/40"
+                    }`}
                   />
+
+                  {phoneError && (
+                    <p className="mt-1.5 text-[11px] leading-tight text-red-400">
+                      {phoneError}
+                    </p>
+                  )}
 
                 </div>
 
@@ -841,14 +983,46 @@ function Checkout() {
                     City
                   </label>
 
-                  <input
-                    type="text"
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
-                    placeholder="Your city"
-                    className="h-11 w-full border border-white/10 bg-black/30 px-4 text-xs text-white outline-none transition placeholder:text-gray-700 focus:border-[#00e5ff]/40"
-                  />
+                  <div className="relative">
+                    <select
+                      name="city"
+                      value={form.city}
+                      onChange={handleCityChange}
+                      onBlur={handleCityBlur}
+                      required
+                      className={`h-11 w-full appearance-none border bg-black/30 px-4 pr-10 text-xs outline-none transition cursor-pointer ${
+                        form.city ? "text-white" : "text-gray-600"
+                      } ${
+                        cityError
+                          ? "border-red-500/50 focus:border-red-500/70"
+                          : "border-white/10 hover:border-white/20 focus:border-[#00e5ff]/40"
+                      }`}
+                    >
+                      <option value="" disabled className="bg-[#0b0b0b] text-gray-600">
+                        Select your city
+                      </option>
+                      {citiesList.map((cityName) => (
+                        <option
+                          key={cityName}
+                          value={cityName}
+                          className="bg-[#0b0b0b] text-white"
+                        >
+                          {cityName}
+                        </option>
+                      ))}
+                    </select>
+
+                    <ChevronDown
+                      size={14}
+                      className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500"
+                    />
+                  </div>
+
+                  {cityError && (
+                    <p className="mt-1.5 text-[11px] leading-tight text-red-400">
+                      {cityError}
+                    </p>
+                  )}
 
                 </div>
 
