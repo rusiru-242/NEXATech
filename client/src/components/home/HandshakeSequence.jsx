@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 // ─────────────────────────────────────────────────────────────────────────────
 const FRAME_COUNT = 240;
 const FRAME_BASE_PATH = "/animations/handshake/ezgif-frame-";
-const FRAME_EXT = ".png";
+const FRAME_EXT = ".webp";
 const FRAME_PAD_LENGTH = 3; // 001 … 240
 const LERP = 0.1;
 

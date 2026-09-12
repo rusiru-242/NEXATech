@@ -15,8 +15,9 @@ export default function CyanLinesBackground({
         playsInline
         preload="metadata"
         className={`h-full w-full object-cover ${opacity}`}
-        src="/animations/back-video/cyan_lines.mp4"
-      />
+      >
+        <source src="/animations/back-video/cyan_lines.webm" type="video/webm" />
+      </video>
       {overlay && (
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/70 via-[#050505]/40 to-[#050505]/80 pointer-events-none" />
       )}

@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CONFIGURATION: 300 frames from /animations/last/ezgif-frame-001.png … 300.png
+// CONFIGURATION: 300 frames from /animations/last/ezgif-frame-001.webp … 300.webp
 // ─────────────────────────────────────────────────────────────────────────────
 const FRAME_COUNT = 300;
 const FRAME_BASE_PATH = "/animations/last/ezgif-frame-";
-const FRAME_EXT = ".png";
+const FRAME_EXT = ".webp";
 const FRAME_PAD_LENGTH = 3;
 const LERP = 0.1;
 
@@ -248,7 +248,7 @@ export function FutureSequence({ sectionRef }) {
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
       {/* 1st-frame instant poster to prevent any blank paint */}
       <img
-        src="/animations/last/ezgif-frame-001.png"
+        src="/animations/last/ezgif-frame-001.webp"
         alt="Future sequence initial frame"
         fetchPriority="high"
         loading="eager"

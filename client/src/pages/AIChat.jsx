@@ -6,6 +6,7 @@ import {
   Loader2,
   ExternalLink,
   History,
+  Heart,
 } from "lucide-react";
 
 import { useEffect, useRef, useState } from "react";
@@ -49,6 +50,10 @@ function AIChat() {
   const [sidebarLoading, setSidebarLoading] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  // Wishlist state for AI recommended products
+  const [wishlistIds, setWishlistIds] = useState(new Set());
+  const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
+
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
@@ -66,6 +71,36 @@ function AIChat() {
 
     loadInitialChatHistory();
   }, [navigate]);
+
+  // Sync authenticated user's wishlist
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      const token = localStorage.getItem("nexatech_token");
+      if (!token) {
+        setWishlistIds(new Set());
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/api/auth/wishlist`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const ids = new Set(
+            (data.wishlist || []).map((item) => String(item?._id || item))
+          );
+          setWishlistIds(ids);
+        }
+      } catch (err) {
+        console.error("Failed to load wishlist in AI Chat:", err);
+      }
+    };
+
+    fetchWishlist();
+    window.addEventListener("wishlistUpdated", fetchWishlist);
+    return () => window.removeEventListener("wishlistUpdated", fetchWishlist);
+  }, []);
 
   // =========================================================
   // LOAD CHATS FROM MONGODB
@@ -384,6 +419,63 @@ function AIChat() {
   };
 
   // =========================================================
+  // TOGGLE WISHLIST FOR RECOMMENDED PRODUCT
+  // =========================================================
+
+  const handleToggleWishlist = async (product) => {
+    const token = localStorage.getItem("nexatech_token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const productId =
+      product._id || product.id || product.productId;
+    if (!productId) return;
+
+    const idStr = String(productId);
+    const isCurrentlyWishlisted = wishlistIds.has(idStr);
+
+    try {
+      setWishlistLoadingId(idStr);
+      const res = await fetch(`${API_URL}/api/auth/wishlist/${idStr}`, {
+        method: isCurrentlyWishlisted ? "DELETE" : "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update wishlist.");
+      }
+
+      setWishlistIds((prev) => {
+        const next = new Set(prev);
+        if (isCurrentlyWishlisted) {
+          next.delete(idStr);
+        } else {
+          next.add(idStr);
+        }
+        return next;
+      });
+
+      const saved = localStorage.getItem("nexatech_user");
+      if (saved) {
+        const user = JSON.parse(saved);
+        user.wishlist = data.wishlist || [];
+        localStorage.setItem("nexatech_user", JSON.stringify(user));
+      }
+
+      window.dispatchEvent(new Event("wishlistUpdated"));
+    } catch (err) {
+      console.error("Wishlist toggle error in AI Chat:", err);
+    } finally {
+      setWishlistLoadingId(null);
+    }
+  };
+
+  // =========================================================
   // FORMAT PRICE
   // =========================================================
 
@@ -537,8 +629,9 @@ function AIChat() {
           muted
           playsInline
           className="h-full w-full object-cover opacity-40"
-          src="/animations/back-video/neural_network.mp4"
-        />
+        >
+          <source src="/animations/back-video/neural_network.webm" type="video/webm" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-[#050505]/70 to-[#050505]" />
       </div>
 
@@ -655,12 +748,41 @@ function AIChat() {
                           product.id ||
                           product.productId ||
                           index;
+                        const idStr = String(productId);
+                        const isWishlisted = wishlistIds.has(idStr);
+                        const isToggling = wishlistLoadingId === idStr;
 
                         return (
                           <div
                             key={productId}
-                            className="overflow-hidden rounded-xl border border-white/10 bg-[#090909] transition hover:border-[#00E5FF]/30"
+                            className="group relative overflow-hidden rounded-xl border border-white/10 bg-[#090909] transition hover:border-[#00E5FF]/30"
                           >
+                            {/* WISHLIST / FAVORITE BUTTON */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleWishlist(product);
+                              }}
+                              disabled={isToggling}
+                              aria-label={
+                                isWishlisted
+                                  ? "Remove from wishlist"
+                                  : "Add to wishlist"
+                              }
+                              className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-all duration-200 ${
+                                isWishlisted
+                                  ? "border-red-500/50 bg-red-500/20 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.35)]"
+                                  : "border-white/15 bg-black/60 text-gray-400 hover:border-white/30 hover:text-white hover:bg-black/80"
+                              } ${isToggling ? "scale-90 opacity-60" : "hover:scale-105 active:scale-95"}`}
+                            >
+                              <Heart
+                                size={14}
+                                fill={isWishlisted ? "currentColor" : "none"}
+                                className={isWishlisted ? "text-red-400" : ""}
+                              />
+                            </button>
+
                             {/* PRODUCT IMAGE */}
                             {product.image && (
                               <div className="flex h-36 items-center justify-center overflow-hidden bg-white/[0.02]">

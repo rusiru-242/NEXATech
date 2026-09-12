@@ -6,6 +6,10 @@ import {
   Plus,
   Minus,
   Zap,
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -25,11 +29,21 @@ function ProductDetails() {
   const [loading, setLoading] = useState(true);
 
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const [quantity, setQuantity] = useState(1);
 
   const [reviews, setReviews] = useState([]);
   const [reviewLoading, setReviewLoading] = useState(false);
+
+  // Verified buyer review eligibility
+  const [reviewEligibility, setReviewEligibility] = useState({
+    loading: true,
+    canReview: false,
+    hasPurchased: false,
+    hasReviewed: false,
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
@@ -98,57 +112,135 @@ function ProductDetails() {
   }, [id]);
 
   // =========================================================
-  // WISHLIST
+  // WISHLIST (CONNECTED TO BACKEND DATABASE)
   // =========================================================
 
   useEffect(() => {
-    const wishlist = JSON.parse(
-      localStorage.getItem("nexatech_wishlist") || "[]"
-    );
+    const checkWishlist = async () => {
+      const token = localStorage.getItem("nexatech_token");
+      if (!token || !id) {
+        setIsWishlisted(false);
+        return;
+      }
 
-    const exists = wishlist.some(
-      (item) => String(item._id) === String(id)
-    );
+      try {
+        const response = await fetch(`${API_URL}/api/auth/wishlist`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        setIsWishlisted(
+          (data.wishlist || []).some(
+            (item) => String(item?._id || item) === String(id)
+          )
+        );
+      } catch (err) {
+        console.error("Check wishlist error:", err);
+      }
+    };
 
-    setIsWishlisted(exists);
+    checkWishlist();
+
+    const onWishlistUpdate = () => checkWishlist();
+    window.addEventListener("wishlistUpdated", onWishlistUpdate);
+    return () => window.removeEventListener("wishlistUpdated", onWishlistUpdate);
   }, [id]);
 
-  const handleWishlist = () => {
+  const handleWishlist = async () => {
     const token = localStorage.getItem("nexatech_token");
 
     if (!token) {
-      window.location.href = "/login";
+      navigate("/login");
       return;
     }
 
-    if (!product) return;
+    if (!product || wishlistLoading) return;
 
-    const wishlist = JSON.parse(
-      localStorage.getItem("nexatech_wishlist") || "[]"
-    );
-
-    if (isWishlisted) {
-      const updatedWishlist = wishlist.filter(
-        (item) => String(item._id) !== String(product._id)
+    try {
+      setWishlistLoading(true);
+      const targetId = product._id || id;
+      const response = await fetch(
+        `${API_URL}/api/auth/wishlist/${targetId}`,
+        {
+          method: isWishlisted ? "DELETE" : "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      localStorage.setItem(
-        "nexatech_wishlist",
-        JSON.stringify(updatedWishlist)
-      );
+      const data = await response.json();
 
-      setIsWishlisted(false);
-    } else {
-      wishlist.push(product);
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update wishlist.");
+      }
 
-      localStorage.setItem(
-        "nexatech_wishlist",
-        JSON.stringify(wishlist)
-      );
+      setIsWishlisted(!isWishlisted);
 
-      setIsWishlisted(true);
+      const saved = localStorage.getItem("nexatech_user");
+      if (saved) {
+        const user = JSON.parse(saved);
+        user.wishlist = data.wishlist || [];
+        localStorage.setItem("nexatech_user", JSON.stringify(user));
+      }
+
+      window.dispatchEvent(new Event("wishlistUpdated"));
+    } catch (err) {
+      console.error("Wishlist error:", err);
+    } finally {
+      setWishlistLoading(false);
     }
   };
+
+  // =========================================================
+  // REVIEW ELIGIBILITY (VERIFIED PURCHASER CHECK)
+  // =========================================================
+
+  useEffect(() => {
+    const checkReviewEligibility = async () => {
+      const token = localStorage.getItem("nexatech_token");
+      if (!token || !id) {
+        setIsLoggedIn(false);
+        setReviewEligibility({
+          loading: false,
+          canReview: false,
+          hasPurchased: false,
+          hasReviewed: false,
+        });
+        return;
+      }
+
+      setIsLoggedIn(true);
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/reviews/can-review/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setReviewEligibility({
+            loading: false,
+            canReview: Boolean(data.canReview),
+            hasPurchased: Boolean(data.hasPurchased),
+            hasReviewed: Boolean(data.hasReviewed),
+          });
+        } else {
+          setReviewEligibility((prev) => ({ ...prev, loading: false }));
+        }
+      } catch (err) {
+        console.error("Error checking review eligibility:", err);
+        setReviewEligibility((prev) => ({ ...prev, loading: false }));
+      }
+    };
+
+    checkReviewEligibility();
+  }, [id]);
 
   // =========================================================
   // PRICE
@@ -360,6 +452,13 @@ function ProductDetails() {
       setReviewMessage(
         "Review submitted successfully. Waiting for admin approval."
       );
+
+      setReviewEligibility({
+        loading: false,
+        canReview: false,
+        hasPurchased: true,
+        hasReviewed: true,
+      });
 
       setReviewComment("");
       setReviewRating(5);
@@ -631,11 +730,13 @@ function ProductDetails() {
             <button
               type="button"
               onClick={handleWishlist}
+              disabled={wishlistLoading}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
               className={`flex h-[56px] items-center justify-center rounded-xl border px-5 transition ${
                 isWishlisted
                   ? "border-red-500/40 bg-red-500/10 text-red-400"
                   : "border-white/10 bg-white/[0.03] text-gray-400 hover:border-white/20 hover:text-white"
-              }`}
+              } ${wishlistLoading ? "cursor-not-allowed opacity-50" : ""}`}
             >
               <Heart
                 size={21}
@@ -664,64 +765,110 @@ function ProductDetails() {
           </h2>
         </div>
 
-        {/* REVIEW FORM */}
-        <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 shadow-xl">
-          <h3 className="text-xl font-semibold">
-            Write a Review
-          </h3>
-
-          <form onSubmit={handleSubmitReview} className="mt-6">
-            <div>
-              <p className="mb-3 text-sm text-gray-400">Rating</p>
-
-              <div className="flex gap-1">
-                {[1,2,3,4,5].map((star)=>(
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={()=>setReviewRating(star)}
-                  >
-                    <Star
-                      size={25}
-                      fill={star <= reviewRating ? "currentColor" : "transparent"}
-                      className={star <= reviewRating
-                        ? "text-[#00E5FF]"
-                        : "text-gray-600"}
-                    />
-                  </button>
-                ))}
-              </div>
+        {/* REVIEW FORM / VERIFIED BUYER GATE */}
+        {!isLoggedIn ? (
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 text-center shadow-xl">
+            <Lock className="mx-auto mb-3 text-gray-500" size={32} />
+            <h4 className="text-lg font-semibold text-white">Verified Customer Reviews</h4>
+            <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
+              Only verified buyers who have purchased this product can leave a review. Please sign in to check your purchase eligibility.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#00E5FF] px-6 py-2.5 text-xs font-bold text-black transition hover:bg-[#00cce6]"
+            >
+              Sign In to Review
+            </button>
+          </div>
+        ) : reviewEligibility.loading ? (
+          <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 text-gray-500 shadow-xl">
+            <Loader2 className="mr-2 animate-spin text-[#00E5FF]" size={18} />
+            <span className="text-sm">Checking purchase verification...</span>
+          </div>
+        ) : reviewEligibility.hasReviewed ? (
+          <div className="rounded-2xl border border-[#00E5FF]/20 bg-[#00E5FF]/5 backdrop-blur-xl p-6 text-center shadow-xl">
+            <CheckCircle2 className="mx-auto mb-2 text-[#00E5FF]" size={30} />
+            <h4 className="text-base font-semibold text-white">Review Already Submitted</h4>
+            <p className="mt-1 text-xs text-gray-400">
+              You have already reviewed this product. Thank you for helping the NexaTech community!
+            </p>
+          </div>
+        ) : !reviewEligibility.hasPurchased ? (
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 text-center shadow-xl">
+            <ShieldCheck className="mx-auto mb-3 text-gray-500" size={34} />
+            <h4 className="text-lg font-semibold text-white">Verified Purchase Required</h4>
+            <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
+              To ensure authentic feedback, only customers who have purchased this product can submit a review.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 shadow-xl">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-xl font-semibold">Write a Review</h3>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#00E5FF]/30 bg-[#00E5FF]/10 px-3 py-1 text-[11px] font-semibold text-[#00E5FF]">
+                <ShieldCheck size={14} />
+                Verified Buyer
+              </span>
             </div>
 
-            <textarea
-              value={reviewComment}
-              onChange={(e)=>setReviewComment(e.target.value)}
-              placeholder="Write your review..."
-              rows={4}
-              maxLength={1000}
-              className="mt-5 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white outline-none placeholder:text-gray-600 focus:border-[#00E5FF]/40"
-            />
+            <form onSubmit={handleSubmitReview} className="mt-6">
+              <div>
+                <p className="mb-3 text-sm text-gray-400">Rating</p>
 
-            <button
-              type="submit"
-              className="mt-4 rounded-xl bg-[#00E5FF] px-6 py-3 font-semibold text-black transition hover:bg-[#00cce6]"
-            >
-              Submit Review
-            </button>
-          </form>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                    >
+                      <Star
+                        size={25}
+                        fill={
+                          star <= reviewRating ? "currentColor" : "transparent"
+                        }
+                        className={
+                          star <= reviewRating
+                            ? "text-[#00E5FF]"
+                            : "text-gray-600"
+                        }
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {reviewMessage && (
-            <p className="mt-4 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-sm text-green-400">
-              {reviewMessage}
-            </p>
-          )}
+              <textarea
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Write your review as a verified buyer..."
+                rows={4}
+                maxLength={1000}
+                className="mt-5 w-full resize-none rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white outline-none placeholder:text-gray-600 focus:border-[#00E5FF]/40"
+              />
 
-          {reviewError && (
-            <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
-              {reviewError}
-            </p>
-          )}
-        </div>
+              <button
+                type="submit"
+                className="mt-4 rounded-xl bg-[#00E5FF] px-6 py-3 font-semibold text-black transition hover:bg-[#00cce6]"
+              >
+                Submit Review
+              </button>
+            </form>
+
+            {reviewMessage && (
+              <p className="mt-4 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-sm text-green-400">
+                {reviewMessage}
+              </p>
+            )}
+
+            {reviewError && (
+              <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+                {reviewError}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* EXISTING REVIEWS */}
         <div className="mt-8 space-y-4">

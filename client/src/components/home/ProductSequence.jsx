@@ -6,7 +6,7 @@ import ScrollStoryText from "./ScrollStoryText";
 // ─────────────────────────────────────────────────────────────────────────────
 const FRAME_COUNT = 240;
 const FRAME_BASE_PATH = "/animations/headphones/ezgif-frame-";
-const FRAME_EXT = ".png";
+const FRAME_EXT = ".webp";
 const FRAME_PAD_LENGTH = 3; // zero-pads to 001, 002, … 240
 
 // How many pixels of scroll distance drives the whole sequence

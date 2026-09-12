@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-// Configurable hero video path (place your video file at client/public/animations/back-video/nexatech-hero.mp4)
-export const HERO_VIDEO_URL = "/animations/back-video/nexatech-hero.mp4";
+// Configurable hero video path (place your video file at client/public/animations/back-video/nexatech-hero.webm)
+export const HERO_VIDEO_URL = "/animations/back-video/nexatech-hero.webm";
 
 export function ScrollVideo({ videoUrl = HERO_VIDEO_URL, className = "" }) {
   const canvasRef = useRef(null);

@@ -32,13 +32,24 @@ export default function ProductFocusModal({ product, onClose }) {
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = "hidden";
 
-    // Check wishlist status
-    const wishlist = JSON.parse(
-      localStorage.getItem("nexatech_wishlist") || "[]"
-    );
-    setIsWishlisted(
-      wishlist.some((item) => String(item._id) === String(product._id))
-    );
+    // Check wishlist status from API / storage
+    const token = localStorage.getItem("nexatech_token");
+    if (token) {
+      fetch(`${API_URL}/api/auth/wishlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.wishlist) {
+            setIsWishlisted(
+              data.wishlist.some(
+                (item) => String(item?._id || item) === String(product._id)
+              )
+            );
+          }
+        })
+        .catch((err) => console.error("Modal check wishlist error:", err));
+    }
 
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -133,18 +144,28 @@ export default function ProductFocusModal({ product, onClose }) {
       return;
     }
 
+    if (!product || wishlistLoading) return;
+
     try {
       setWishlistLoading(true);
-      const res = await fetch(`${API_URL}/api/auth/wishlist`, {
+      const res = await fetch(`${API_URL}/api/auth/wishlist/${product._id}`, {
         method: isWishlisted ? "DELETE" : "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ productId: product._id }),
       });
+      const data = await res.json();
       if (res.ok) {
         setIsWishlisted(!isWishlisted);
+
+        const saved = localStorage.getItem("nexatech_user");
+        if (saved) {
+          const user = JSON.parse(saved);
+          user.wishlist = data.wishlist || [];
+          localStorage.setItem("nexatech_user", JSON.stringify(user));
+        }
+
+        window.dispatchEvent(new Event("wishlistUpdated"));
       }
     } catch (e) {
       console.error(e);

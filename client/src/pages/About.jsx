@@ -26,8 +26,9 @@ function About() {
           muted
           playsInline
           className="h-full w-full object-cover opacity-60"
-          src="/animations/back-video/cyan_lines.mp4"
-        />
+        >
+          <source src="/animations/back-video/cyan_lines.webm" type="video/webm" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-[#050505]/60 to-[#050505]" />
       </div>
 

@@ -2,10 +2,50 @@ const express = require("express");
 
 const Review = require("../models/Review");
 const Product = require("../models/Product");
+const Order = require("../models/Order");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
+
+
+// ==========================================================
+// CHECK IF USER CAN REVIEW A PRODUCT
+// ==========================================================
+
+router.get(
+  "/can-review/:productId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { productId } = req.params;
+
+      const hasPurchased = await Order.findOne({
+        user: req.user._id,
+        "items.product": productId,
+        status: { $ne: "cancelled" },
+      });
+
+      const existingReview = await Review.findOne({
+        user: req.user._id,
+        product: productId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        canReview: Boolean(hasPurchased && !existingReview),
+        hasPurchased: Boolean(hasPurchased),
+        hasReviewed: Boolean(existingReview),
+      });
+    } catch (error) {
+      console.error("Check can review error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to check review eligibility.",
+      });
+    }
+  }
+);
 
 
 // ==========================================================
@@ -38,6 +78,20 @@ router.post(
         return res.status(404).json({
           success: false,
           message: "Product not found.",
+        });
+      }
+
+      const hasPurchased = await Order.findOne({
+        user: req.user._id,
+        "items.product": product,
+        status: { $ne: "cancelled" },
+      });
+
+      if (!hasPurchased) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Only verified buyers who have purchased this product can submit a review.",
         });
       }
 
