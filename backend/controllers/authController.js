@@ -622,6 +622,12 @@ const sendOTP = async (req, res) => {
 
     const result = await sendEmail({ to: normalizedEmail, subject, html, text });
 
+    console.log("\n==========================================");
+    console.log("📨 OTP SENT FOR EMAIL VERIFICATION");
+    console.log(`Recipient : ${normalizedEmail}`);
+    console.log(`Time      : ${new Date().toLocaleString()}`);
+    console.log("==========================================\n");
+
     if (result.devFallback) {
       return res.status(200).json({ success: true, message: "OTP generated and logged to server (dev fallback).", devFallback: true });
     }
@@ -672,21 +678,49 @@ const verifyOTP = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid OTP" });
     }
 
-    // Create the real user
-    const user = await User.create({
-      name: pending.name,
-      email: pending.email,
-      password: pending.password,
-      role: "customer",
-      wishlist: [],
-    });
+    // Check if user already exists or create new user
+    let user = await User.findOne({ email: normalizedEmail });
+    if (user) {
+      user.isEmailVerified = true;
+      await user.save();
+    } else {
+      user = await User.create({
+        name: pending.name,
+        email: pending.email,
+        password: pending.password,
+        role: "customer",
+        isEmailVerified: true,
+        wishlist: [],
+      });
+    }
 
     // Remove pending registration
     await PendingRegistration.deleteOne({ email: normalizedEmail });
 
+    console.log("\n==========================================");
+    console.log("✅ EMAIL VERIFIED SUCCESSFUL");
+    console.log(`User Name  : ${user.name}`);
+    console.log(`User Email : ${user.email}`);
+    console.log(`User ID    : ${user._id}`);
+    console.log(`Status     : VERIFIED`);
+    console.log(`Time       : ${new Date().toLocaleString()}`);
+    console.log("==========================================\n");
+
     const token = generateToken(user._id);
 
-    return res.status(201).json({ success: true, message: "Account verified and created", token, user: { id: user._id, name: user.name, email: user.email, role: user.role, wishlist: user.wishlist } });
+    return res.status(201).json({
+      success: true,
+      message: "Account verified and created",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        wishlist: user.wishlist,
+      },
+    });
   } catch (error) {
     console.error("verifyOTP error:", error);
     return res.status(500).json({ success: false, message: "Server error while verifying OTP" });
@@ -761,6 +795,12 @@ const resendOTP = async (req, res) => {
 
     const result = await sendEmail({ to: normalizedEmail, subject, html, text });
 
+    console.log("\n==========================================");
+    console.log("🔄 OTP RESENT FOR EMAIL VERIFICATION");
+    console.log(`Recipient : ${normalizedEmail}`);
+    console.log(`Time      : ${new Date().toLocaleString()}`);
+    console.log("==========================================\n");
+
     if (result.devFallback) {
       return res.status(200).json({ success: true, message: "OTP resent and logged to server (dev fallback).", devFallback: true });
     }
@@ -772,19 +812,19 @@ const resendOTP = async (req, res) => {
   }
 };
 
-  // ==============================
-  // EXPORT
-  // ==============================
-  module.exports = {
-    sendOTP,
-    verifyOTP,
-    resendOTP,
-    registerUser,
-    loginUser,
-    getMe,
-    updateProfile,
-    changePassword,
-    addToWishlist,
-    removeFromWishlist,
-    getWishlist,
-  };
+// ==============================
+// EXPORT
+// ==============================
+module.exports = {
+  sendOTP,
+  verifyOTP,
+  resendOTP,
+  registerUser,
+  loginUser,
+  getMe,
+  updateProfile,
+  changePassword,
+  addToWishlist,
+  removeFromWishlist,
+  getWishlist,
+};

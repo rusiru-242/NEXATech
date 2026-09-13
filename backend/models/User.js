@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

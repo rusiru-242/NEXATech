@@ -32,6 +32,7 @@ router.post("/register", registerUser);
 // ==============================
 router.post("/send-otp", sendOTP);
 router.post("/verify-otp", verifyOTP);
+router.post("/verify-email", verifyOTP);
 router.post("/resend-otp", resendOTP);
 
 // ==============================
